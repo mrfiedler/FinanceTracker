@@ -1,0 +1,637 @@
+import { useState, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCurrency } from "@/hooks/useCurrency";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import { bankAccounts } from "@/lib/constants";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Plus, 
+  Search, 
+  ArrowUpRight, 
+  ArrowDownRight, 
+  Filter,
+  Wallet,
+  BanknoteIcon,
+  Landmark,
+  Settings,
+  Calendar
+} from "lucide-react";
+import { 
+  SiChase, 
+  SiBankofamerica, 
+  SiWellsfargo, 
+  SiPaypal, 
+  SiStripe, 
+  SiSquare, 
+  SiVenmo 
+} from "react-icons/si";
+import { useModals } from "@/hooks/useModals";
+import AddExpenseModal from "@/components/modals/AddExpenseModal";
+import AddRevenueModal from "@/components/modals/AddRevenueModal";
+import FinanceSettingsModal from "@/components/modals/FinanceSettingsModal";
+import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+
+const Finance = () => {
+  const { currency } = useCurrency();
+  const [transactionType, setTransactionType] = useState("all");
+  const [dateRange, setDateRange] = useState("30");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("all"); // Added state for category filter
+  const [selectedAccount, setSelectedAccount] = useState("all"); // Added state for account filter
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [optimisticUpdates, setOptimisticUpdates] = useState<{[key: string]: boolean}>({});
+  const {
+    expenseModalOpen,
+    revenueModalOpen,
+    closeAllModals,
+    openAddExpenseModal,
+    openAddRevenueModal
+  } = useModals();
+
+  // Function to update transaction status instantly
+  const updateTransactionStatus = useCallback(async (transaction: any) => {
+    // Create a unique key for this transaction
+    const transactionKey = `${transaction.type}-${transaction.id}`;
+
+    // Get the current status
+    const currentStatus = transaction.isPaid;
+
+    // Set optimistic update
+    setOptimisticUpdates(prev => ({
+      ...prev,
+      [transactionKey]: !currentStatus
+    }));
+
+    try {
+      // Make the API call
+      const response = await fetch(`/api/${transaction.type === 'expense' ? 'expenses' : 'revenues'}/${transaction.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isPaid: !currentStatus }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update status');
+      }
+
+      // Invalidate query to refresh data in the background
+      queryClient.invalidateQueries({
+        queryKey: ['/api/finance/transactions', transactionType, dateRange, searchQuery, selectedCategory, selectedAccount]
+      });
+
+    } catch (error) {
+      console.error('Error updating status:', error);
+
+      // Revert optimistic update on error
+      setOptimisticUpdates(prev => ({
+        ...prev,
+        [transactionKey]: currentStatus
+      }));
+
+      // Show toast message
+      toast({
+        title: "Update failed",
+        description: "Failed to update transaction status",
+        variant: "destructive"
+      });
+    }
+  }, [transactionType, dateRange, searchQuery, selectedCategory, selectedAccount, queryClient, toast]);
+
+  const { data: financeData, isLoading } = useQuery({
+    queryKey: ['/api/finance/transactions', transactionType, dateRange, searchQuery, selectedCategory, selectedAccount],
+    queryFn: async () => {
+      const response = await fetch(`/api/finance/transactions?dateRange=${dateRange}&transactionType=${transactionType}&category=${selectedCategory}&account=${selectedAccount}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch transactions');
+      }
+      return response.json();
+    }
+  });
+
+  const filterTransactions = (transactions: any[]) => {
+    if (!transactions) return [];
+
+    return transactions.filter((transaction: any) => {
+      // Filter by transaction type
+      if (transactionType !== "all" && transaction.type !== transactionType) {
+        return false;
+      }
+
+      // Filter by search query
+      if (searchQuery && !transaction.description.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return false;
+      }
+
+      //Filter by category
+      if(selectedCategory !== "all" && transaction.category !== selectedCategory){
+        return false;
+      }
+
+      //Filter by account
+      if(selectedAccount !== "all" && transaction.account !== selectedAccount){
+        return false;
+      }
+
+      return true;
+    });
+  };
+
+  const filteredTransactions = financeData ? filterTransactions(financeData.transactions || [])
+    .map((transaction: any) => ({
+      ...transaction,
+      status: transaction.dueDate && new Date(transaction.dueDate) < new Date() ? 'Overdue' : 'Pending',
+      isPaid: transaction.isPaid || false
+    }))
+    .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()) : [];
+
+
+  return (
+    <main className="w-full h-full overflow-y-auto bg-background p-4 md:p-6 pb-20">
+      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Finance</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Manage your revenues and expenses
+          </p>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="mt-4 md:mt-0"
+          onClick={() => setSettingsModalOpen(true)}
+        >
+          <Settings className="h-4 w-4 mr-2" />
+          Settings
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        {transactionType === "all" && (
+          <>
+            <Card className="overflow-hidden border-l-4 border-l-[#3DAFC4] hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <CardDescription className="text-sm font-medium">Current Balance</CardDescription>
+                <CardTitle className="text-2xl font-bold text-[#3DAFC4] flex items-baseline">
+                  {isLoading ? (
+                    <Skeleton className="h-8 w-28" />
+                  ) : (
+                    <>
+                      {formatCurrency(financeData?.netProfit || 0, currency)}
+                    </>
+                  )}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+
+            <Card className="overflow-hidden border-l-4 border-l-[#A3E635] hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <CardDescription className="text-sm font-medium">Current Month Revenue</CardDescription>
+                <CardTitle className="text-2xl font-bold text-[#A3E635] flex items-baseline">
+                  {isLoading ? (
+                    <Skeleton className="h-8 w-28" />
+                  ) : (
+                    <>
+                      {formatCurrency(financeData?.totalRevenue || 0, currency)}
+                    </>
+                  )}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+            <Card className="overflow-hidden border-l-4 border-l-[#c6909a] hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <CardDescription className="text-sm font-medium">Current Month Expenses</CardDescription>
+                <CardTitle className="text-2xl font-bold text-[#c6909a] flex items-baseline">
+                  {isLoading ? (
+                    <Skeleton className="h-8 w-28" />
+                  ) : (
+                    <>
+                      {formatCurrency(financeData?.totalExpenses || 0, currency)}
+                    </>
+                  )}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+
+            <Card className="overflow-hidden border-l-4 border-l-[#9F7AEA] hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <CardDescription className="text-sm font-medium">Monthly Balance</CardDescription>
+                <CardTitle className="text-2xl font-bold text-[#9F7AEA] flex items-baseline">
+                  {isLoading ? (
+                    <Skeleton className="h-8 w-28" />
+                  ) : (
+                    <>
+                      {formatCurrency((financeData?.totalRevenue || 0) - (financeData?.totalExpenses || 0), currency)}
+                    </>
+                  )}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+          </>
+        )}
+
+        {transactionType === "expense" && (
+          <>
+            <Card className="overflow-hidden border-l-4 border-l-[#c6909a] hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <CardDescription className="text-sm font-medium">Outstanding Expenses</CardDescription>
+                <CardTitle className="text-2xl font-bold text-[#c6909a] flex items-baseline">
+                  {isLoading ? (
+                    <Skeleton className="h-8 w-28" />
+                  ) : (
+                    <>
+                      {formatCurrency(financeData?.outstandingExpenses || 0, currency)}
+                    </>
+                  )}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+
+            <Card className="overflow-hidden border-l-4 border-l-[#c6909a] hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <CardDescription className="text-sm font-medium">Expenses Paid</CardDescription>
+                <CardTitle className="text-2xl font-bold text-[#c6909a] flex items-baseline">
+                  {isLoading ? (
+                    <Skeleton className="h-8 w-28" />
+                  ) : (
+                    <>
+                      {formatCurrency((financeData?.totalExpenses || 0) - (financeData?.outstandingExpenses || 0), currency)}
+                    </>
+                  )}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+
+            <Card className="overflow-hidden border-l-4 border-l-[#c6909a] hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <CardDescription className="text-sm font-medium">Monthly Total</CardDescription>
+                <CardTitle className="text-2xl font-bold text-[#c6909a] flex items-baseline">
+                  {isLoading ? (
+                    <Skeleton className="h-8 w-28" />
+                  ) : (
+                    <>
+                      {formatCurrency(financeData?.totalExpenses || 0, currency)}
+                    </>
+                  )}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+          </>
+        )}
+
+        {transactionType === "revenue" && (
+          <>
+            <Card className="overflow-hidden border-l-4 border-l-[#A3E635] hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <CardDescription className="text-sm font-medium">Outstanding Revenue</CardDescription>
+                <CardTitle className="text-2xl font-bold text-[#A3E635] flex items-baseline">
+                  {isLoading ? (
+                    <Skeleton className="h-8 w-28" />
+                  ) : (
+                    <>
+                      {formatCurrency(financeData?.outstandingRevenue || 0, currency)}
+                    </>
+                  )}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+
+            <Card className="overflow-hidden border-l-4 border-l-[#A3E635] hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <CardDescription className="text-sm font-medium">Revenue Received</CardDescription>
+                <CardTitle className="text-2xl font-bold text-[#A3E635] flex items-baseline">
+                  {isLoading ? (
+                    <Skeleton className="h-8 w-28" />
+                  ) : (
+                    <>
+                      {formatCurrency((financeData?.totalRevenue || 0) - (financeData?.outstandingRevenue || 0), currency)}
+                    </>
+                  )}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+
+            <Card className="overflow-hidden border-l-4 border-l-[#A3E635] hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <CardDescription className="text-sm font-medium">Monthly Total</CardDescription>
+                <CardTitle className="text-2xl font-bold text-[#A3E635] flex items-baseline">
+                  {isLoading ? (
+                    <Skeleton className="h-8 w-28" />
+                  ) : (
+                    <>
+                      {formatCurrency(financeData?.totalRevenue || 0, currency)}
+                    </>
+                  )}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+          </>
+        )}
+      </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+            <CardTitle>Transactions</CardTitle>
+            <div className="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0">
+              <Button variant="outline" onClick={openAddExpenseModal}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Expense
+              </Button>
+              <Button onClick={openAddRevenueModal} style={{backgroundColor: '#A3E635', color: '#000'}}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Revenue
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="filter-container">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full">
+              <div className="flex gap-2">
+                <Button 
+                  variant={transactionType === "all" ? "secondary" : "outline"} 
+                  size="sm" 
+                  onClick={() => setTransactionType("all")}
+                  className="h-8"
+                >
+                  <Filter className="h-3.5 w-3.5 mr-1.5" />
+                  All
+                </Button>
+                <Button 
+                  variant={transactionType === "revenue" ? "secondary" : "outline"} 
+                  size="sm" 
+                  onClick={() => setTransactionType("revenue")}
+                  className={cn(
+                    "h-8",
+                    transactionType === "revenue" && "bg-green-100 text-green-700 border-green-200 hover:bg-green-200 hover:text-green-800 dark:bg-green-800/40 dark:text-green-300 dark:border-green-700 dark:hover:bg-green-800/60"
+                  )}
+                >
+                  <div className="h-2 w-2 rounded-full bg-green-500 mr-1.5" />
+                  Revenue
+                </Button>
+                <Button 
+                  variant={transactionType === "expense" ? "secondary" : "outline"} 
+                  size="sm" 
+                  onClick={() => setTransactionType("expense")}
+                  className={cn(
+                    "h-8",
+                    transactionType === "expense" && "bg-red-100 text-red-700 border-red-200 hover:bg-red-200 hover:text-red-800 dark:bg-red-800/40 dark:text-red-300 dark:border-red-700 dark:hover:bg-red-800/60"
+                  )}
+                >
+                  <div className="h-2 w-2 rounded-full bg-red-500 mr-1.5" />
+                  Expenses
+                </Button>
+              </div>
+
+              <div className="flex flex-col space-y-3 w-full md:space-y-0 md:flex-row md:items-center mt-3 sm:mt-0">
+                <div className="relative flex-grow mb-3 md:mb-0 md:mr-3">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search transactions..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 h-9"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <Select value={dateRange} onValueChange={setDateRange}>
+                    <SelectTrigger className="h-9 w-full sm:w-[140px]">
+                      <Calendar className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                      <SelectValue placeholder="Period" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="7">Last 7 days</SelectItem>
+                      <SelectItem value="30">Last 30 days</SelectItem>
+                      <SelectItem value="90">Last 90 days</SelectItem>
+                      <SelectItem value="365">Past year</SelectItem>
+                      <SelectItem value="custom">Custom range</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select 
+                    value={selectedCategory} 
+                    onValueChange={setSelectedCategory}
+                  >
+                    <SelectTrigger className="h-9 w-full sm:w-[140px]">
+                      <div className="h-3 w-3 rounded-full bg-primary mr-1.5 opacity-70" />
+                      <SelectValue placeholder="Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      <SelectItem value="marketing">Marketing</SelectItem>
+                      <SelectItem value="software">Software</SelectItem>
+                      <SelectItem value="design">Design</SelectItem>
+                      <SelectItem value="consulting">Consulting</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select 
+                    value={selectedAccount} 
+                    onValueChange={setSelectedAccount}
+                  >
+                    <SelectTrigger className="h-9 w-full sm:w-[140px]">
+                      <Wallet className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                      <SelectValue placeholder="Account" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Accounts</SelectItem>
+                      <SelectItem value="bank">Bank Account</SelectItem>
+                      <SelectItem value="stripe">Stripe</SelectItem>
+                      <SelectItem value="paypal">PayPal</SelectItem>
+                      <SelectItem value="cash">Cash</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <Tabs defaultValue="all" onValueChange={setTransactionType} className="w-full mt-4">
+            <TabsContent value="all" className="mt-0">
+              {renderTransactionsTable(filteredTransactions, isLoading, currency, optimisticUpdates, updateTransactionStatus)}
+            </TabsContent>
+            <TabsContent value="revenue" className="mt-0">
+              {renderTransactionsTable(filteredTransactions.filter(t => t.type === 'revenue'), isLoading, currency, optimisticUpdates, updateTransactionStatus)}
+            </TabsContent>
+            <TabsContent value="expense" className="mt-0">
+              {renderTransactionsTable(filteredTransactions.filter(t => t.type === 'expense'), isLoading, currency, optimisticUpdates, updateTransactionStatus)}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* Modals */}
+      <AddExpenseModal isOpen={expenseModalOpen} onClose={closeAllModals} />
+      <AddRevenueModal isOpen={revenueModalOpen} onClose={closeAllModals} />
+      <FinanceSettingsModal isOpen={settingsModalOpen} onClose={() => setSettingsModalOpen(false)} />
+    </main>
+  );
+};
+
+const filterTransactions = (transactions: any[]) => {
+  //Filtering logic is already updated above
+  return transactions;
+}
+
+const renderTransactionsTable = (
+  transactions: any[], 
+  isLoading: boolean, 
+  currency: string, 
+  optimisticUpdates: {[key: string]: boolean} = {}, 
+  updateTransactionStatus: (transaction: any) => void
+) => {
+  if (isLoading) {
+    return Array(5).fill(0).map((_, index) => (
+      <div key={index} className="border-b border-gray-200 dark:border-gray-800 py-4">
+        <Skeleton className="h-8 w-full" />
+      </div>
+    ));
+  }
+
+  if (transactions.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+        No transactions found.
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead>
+          <tr className="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <th className="px-4 py-3">Creation Date</th>
+            <th className="px-4 py-3">Due Date</th>
+            <th className="px-4 py-3">Description</th>
+            <th className="px-4 py-3">Category</th>
+            <th className="px-4 py-3">Account</th>
+            <th className="px-4 py-3">Amount</th>
+            <th className="px-4 py-3">Type</th>
+            <th className="px-4 py-3">Status</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+          {transactions.map((transaction) => (
+            <tr
+              key={`${transaction.type}-${transaction.id}`}
+              className={`hover:bg-gray-50 dark:hover:bg-[rgb(30,30,30)] ${
+                transaction.dueDate && new Date(transaction.dueDate) < new Date() && !transaction.isPaid
+                  ? 'bg-red-50 dark:bg-red-900/20'
+                  : ''
+              }`}
+            >
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                {formatDate(transaction.date)}
+              </td>
+              <td className={`px-4 py-3 whitespace-nowrap text-sm ${
+                transaction.dueDate && new Date(transaction.dueDate) < new Date() && !transaction.isPaid
+                  ? 'text-red-600 dark:text-red-400 font-medium'
+                  : 'text-gray-500 dark:text-gray-400'
+              }`}>
+                {transaction.dueDate ? formatDate(transaction.dueDate) : '-'}
+                {transaction.dueDate && new Date(transaction.dueDate) < new Date() && !transaction.isPaid &&
+                  ' (Overdue)'}
+              </td>
+              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                <span>{transaction.description}</span>
+              </td>
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                {transaction.category}
+              </td>
+              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                <div className="flex items-center">
+                  {transaction.account === "default" && <Wallet className="mr-2 h-4 w-4" />}
+                  {transaction.account === "chase" && <SiChase className="mr-2 h-4 w-4" />}
+                  {transaction.account === "bankofamerica" && <SiBankofamerica className="mr-2 h-4 w-4" />}
+                  {transaction.account === "wells_fargo" && <SiWellsfargo className="mr-2 h-4 w-4" />}
+                  {transaction.account === "paypal" && <SiPaypal className="mr-2 h-4 w-4" />}
+                  {transaction.account === "stripe" && <SiStripe className="mr-2 h-4 w-4" />}
+                  {transaction.account === "square" && <SiSquare className="mr-2 h-4 w-4" />}
+                  {transaction.account === "venmo" && <SiVenmo className="mr-2 h-4 w-4" />}
+                  {transaction.account === "cash" && <BanknoteIcon className="mr-2 h-4 w-4" />}
+                  {transaction.account === "other" && <Landmark className="mr-2 h-4 w-4" />}
+                  {bankAccounts.find(a => a.value === transaction.account)?.label || "Default"}
+                </div>
+              </td>
+              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                {formatCurrency(transaction.amount, currency)}
+              </td>
+              <td className="px-4 py-3 whitespace-nowrap">
+                <span className={`px-2 py-1 rounded-full text-xs ${
+                  transaction.type === 'expense' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                }`}>
+                  {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
+                </span>
+              </td>
+              <td className="px-4 py-3 whitespace-nowrap">
+                <div className="flex items-center justify-center">
+                  {/* Get the transaction key for optimistic updates */}
+                  {(() => {
+                    const transactionKey = `${transaction.type}-${transaction.id}`;
+                    // Get the current display status (from optimistic updates if available)
+                    const isPaid = optimisticUpdates[transactionKey] !== undefined 
+                      ? optimisticUpdates[transactionKey] 
+                      : transaction.isPaid;
+
+                    return (
+                      <div 
+                        className={`w-10 h-5 rounded-full flex items-center p-0.5 cursor-pointer transition-colors ${
+                          isPaid 
+                            ? 'bg-green-500' 
+                            : 'bg-gray-300'
+                        }`}
+                        onClick={() => updateTransactionStatus(transaction)}
+                      >
+                        <div 
+                          className={`w-4 h-4 rounded-full bg-white transform transition-transform duration-200 shadow-md ${
+                            isPaid ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </div>
+                    );
+                  })()}
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+
+
+export default Finance;

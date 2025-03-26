@@ -1,0 +1,49 @@
+The recent UI/UX improvements have introduced new issues that need to be fixed. Please resolve the following problems while ensuring the app remains fully responsive, functional, and visually consistent across all pages and modes.
+
+Critical Issues to Fix:
+1. Scrolling Issues (High Priority)
+Scrolling is broken—some content is unreachable. Ensure that all pages allow scrolling properly without overflow issues.
+
+Fix any overflow: hidden or improper height: 100vh settings that prevent users from accessing content.
+
+2. Inconsistent Dark Mode Background (Subscriptions Page)
+The Subscriptions page background is different from other pages in dark mode—ensure it matches the rest of the app for consistency.
+
+3. Incorrect Button Colors in Clients Page (Animated Filter)
+When clicking on the filter buttons, both turn red—this is incorrect.
+
+Adjust the behavior:
+
+Green should indicate a successful/active state.
+
+Red should only be used for warnings, errors, or deactivations.
+
+The Inactive button should NOT turn red—use a more appropriate color.
+
+4. Subscription Page Filters (Active & Inactive) Colors Are Off
+The colors for the Active and Inactive filters in the Subscriptions page need to be adjusted for clarity.
+
+Ensure they follow standard UX conventions and are visually intuitive.
+
+5. Finance Page Filters Overlapping on Small Screens
+Filters in the Finance page are stacking incorrectly on smaller screens.
+
+Fix their layout so they adjust properly without overlapping or breaking the UI.
+
+6. Search Box in Quotes Page Not Using Available Space Efficiently
+The search box in the Quotes page is not optimized to utilize the available space.
+
+Ensure it expands dynamically to fit its container properly on all screen sizes.
+
+Final Deliverables:
+Fix scrolling issues so all content is accessible.
+
+Ensure visual consistency in dark mode.
+
+Correct button colors and feedback states for filters.
+
+Improve layout & responsiveness of filters in the Finance page.
+
+Optimize the search box in the Quotes page for better usability.
+
+Ensure the final version is fully responsive, user-friendly, and visually cohesive.

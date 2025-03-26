@@ -20,6 +20,8 @@ const TabsList = React.forwardRef<
 ))
 TabsList.displayName = TabsPrimitive.List.displayName
 
+import { motion } from 'framer-motion';
+
 const TabsTrigger = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>

@@ -1,135 +1,202 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+import { insertTransactionSchema } from "@shared/schema";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel 
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { z } from "zod";
 
-const formSchema = z.object({
-  description: z.string().min(1, "Description is required"),
-  amount: z.coerce.number().refine(val => val !== 0, "Amount cannot be zero"),
-  category: z.string().min(1, "Category is required"),
+const schema = insertTransactionSchema.extend({
+  amount: z.coerce.number().positive("Amount must be a positive number")
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof schema>;
 
-interface TransactionFormProps {
-  onSubmit: (values: FormValues) => void;
-  isSubmitting: boolean;
-}
-
-export default function TransactionForm({ onSubmit, isSubmitting }: TransactionFormProps) {
+export default function TransactionForm() {
+  const { toast } = useToast();
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       description: "",
-      amount: undefined,
-      category: "",
-    },
+      amount: 0,
+      type: "expense",
+      category: "advertising",
+      date: new Date().toISOString().split('T')[0],
+    }
   });
 
-  const handleSubmit = (values: FormValues) => {
-    onSubmit(values);
-    form.reset();
+  const addTransaction = useMutation({
+    mutationFn: async (transaction: FormValues) => {
+      const response = await apiRequest('POST', '/api/transactions', transaction);
+      return response.json();
+    },
+    onSuccess: () => {
+      // Reset the form
+      form.reset({
+        description: "",
+        amount: 0,
+        type: "expense",
+        category: "advertising",
+        date: new Date().toISOString().split('T')[0],
+      });
+      
+      // Show success toast
+      toast({
+        variant: "default",
+        title: "Success",
+        description: "Transaction added successfully!",
+        className: "bg-green-600 text-white border-green-700",
+      });
+      
+      // Invalidate queries to refresh the data
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions/summary"] });
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to add transaction. Please try again.",
+      });
+    }
+  });
+
+  const onSubmit = (data: FormValues) => {
+    addTransaction.mutate(data);
   };
 
   return (
-    <Card className="mb-6">
-      <CardContent className="p-4">
-        <h3 className="text-lg font-semibold mb-4">Add New Transaction</h3>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
+    <div className="bg-[#1E1E1E] p-6 rounded-lg border border-[#333333]">
+      <h2 className="text-xl font-semibold mb-4">Add Transaction</h2>
+      
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium text-gray-400">Description</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="Enter description" 
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    {...field} 
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="amount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium text-gray-400">Amount ($)</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    placeholder="0.00" 
+                    step="0.01"
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    {...field} 
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="type"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium text-gray-400">Type</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  defaultValue={field.value}
+                >
                   <FormControl>
-                    <Input placeholder="Enter description" {...field} />
+                    <SelectTrigger className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Amount</FormLabel>
+                  <SelectContent className="bg-gray-800 border border-gray-700 text-white">
+                    <SelectItem value="income">Income</SelectItem>
+                    <SelectItem value="expense">Expense</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="category"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium text-gray-400">Category</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  defaultValue={field.value}
+                >
                   <FormControl>
-                    <Input 
-                      type="number" 
-                      step="0.01"
-                      placeholder="Enter amount (use negative for expenses)" 
-                      {...field} 
-                    />
+                    <SelectTrigger className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
                   </FormControl>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Use negative values for expenses (e.g., -50)
-                  </p>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="salary">Salary</SelectItem>
-                      <SelectItem value="freelance">Freelance</SelectItem>
-                      <SelectItem value="food">Food & Dining</SelectItem>
-                      <SelectItem value="transport">Transportation</SelectItem>
-                      <SelectItem value="entertainment">Entertainment</SelectItem>
-                      <SelectItem value="utilities">Utilities</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Adding..." : "Add Transaction"}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+                  <SelectContent className="bg-gray-800 border border-gray-700 text-white">
+                    <SelectItem value="advertising">Advertising</SelectItem>
+                    <SelectItem value="content">Content Creation</SelectItem>
+                    <SelectItem value="software">Software</SelectItem>
+                    <SelectItem value="consulting">Consulting</SelectItem>
+                    <SelectItem value="salary">Salary</SelectItem>
+                    <SelectItem value="sales">Sales</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="date"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium text-gray-400">Date</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="date" 
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    {...field} 
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
+          <Button 
+            type="submit"
+            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+            disabled={addTransaction.isPending}
+          >
+            {addTransaction.isPending ? "Adding..." : "Add Transaction"}
+          </Button>
+        </form>
+      </Form>
+    </div>
   );
 }

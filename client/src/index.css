@@ -1,3 +1,281 @@
+@layer base {
+  :root {
+    /* Enhanced light mode colors with better contrast */
+    --background: 210 40% 98%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    /* Modern teal/blue as primary - #3DAFC4 */
+    --primary: 190 52% 51%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Light blue as secondary - #3DAFC4 */
+    --secondary: 190 52% 51%;
+    --secondary-foreground: 0 0% 98%;
+
+    /* Regular muted with slightly more saturation */
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 25% 46.9%;
+
+    /* Light teal as accent - #9FE7F5 */
+    --accent: 190 83% 79%;
+    --accent-foreground: 222.2 84% 4.9%;
+
+    /* Clear red with better visibility */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    
+    /* Improved borders with slight color */
+    --border: 214.3 31.8% 91.4%;
+    --input: 190 10% 90%;
+
+    /* Teal ring for better focus states */
+    --ring: 190 52% 51%;
+    --radius: 0.6rem;
+  }
+
+  .dark {
+    /* Enhanced dark background - deep charcoal with slight blue tint */
+    --background: 220 10% 12%;
+    --foreground: 210 20% 98%;
+    --hover: 220 10% 25%;
+
+    /* Card with better visibility against background */
+    --card: 220 10% 18%;
+    --card-foreground: 210 20% 98%;
+
+    /* Popover with subtle distinction from cards */
+    --popover: 220 10% 16%;
+    --popover-foreground: 210 20% 98%;
+
+    /* Muted teal as primary - more vibrant than gray */
+    --primary: 190 50% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Light blue as secondary in dark mode */
+    --secondary: 190 52% 51%;
+    --secondary-foreground: 0 0% 98%;
+
+    /* Muted backgrounds with slight color */
+    --muted: 220 10% 22%;
+    --muted-foreground: 210 10% 70%;
+
+    /* Accent with subtle color for hover states */
+    --accent: 190 15% 30%;
+    --accent-foreground: 0 0% 98%;
+
+    /* Error/destructive: Clear red with better visibility */
+    --destructive: 0 80% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Borders with subtle color */
+    --border: 220 10% 25%;
+    --input: 220 10% 25%;
+
+    /* Focus ring - matching primary */
+    --ring: 190 50% 45%;
+  }
+}
+
+
+/* Shine effect for text elements */
+@keyframes shine {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+.animate-shine {
+  animation: shine 8s linear infinite;
+  background-size: 200% 100%;
+}
+
+/* Pulse glow effect for level progress bar */
+@keyframes pulse-glow {
+  0%, 100% {
+    filter: brightness(100%);
+    box-shadow: 0 0 2px rgba(236, 72, 153, 0.4);
+  }
+  50% {
+    filter: brightness(120%);
+    box-shadow: 0 0 8px rgba(236, 72, 153, 0.8);
+  }
+}
+
+.pulse-highlight {
+  animation: pulse-glow 1.2s ease-in-out 2;
+}
+
+/* Pixelated effect for arcade elements */
+@keyframes pixel-shift {
+  0%, 100% { 
+    clip-path: inset(0 0 0 0);
+  }
+  20% {
+    clip-path: inset(0 0 5px 0); 
+  }
+  40% {
+    clip-path: inset(10px 0 0 0);
+  }
+  60% {
+    clip-path: inset(0 0 0 5px);
+  }
+  80% {
+    clip-path: inset(0 10px 0 0);
+  }
+}
+
+.glitch-effect:hover {
+  position: relative;
+  animation: pixel-shift 0.5s steps(2) infinite;
+}
+
+/* 8-bit style button press effect */
+@keyframes button-press {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(2px); }
+  100% { transform: translateY(0); }
+}
+
+.arcade-button:active {
+  animation: button-press 0.15s ease-in-out;
+}
+
+/* Power-up shimmer effect */
+@keyframes power-up-shimmer {
+  0% { 
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0);
+    border-color: rgba(236, 72, 153, 0.5);
+  }
+  50% { 
+    box-shadow: 0 0 10px 3px rgba(236, 72, 153, 0.4);
+    border-color: rgba(236, 72, 153, 1);
+  }
+  100% { 
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0);
+    border-color: rgba(236, 72, 153, 0.5);
+  }
+}
+
+.power-up {
+  animation: power-up-shimmer 2s infinite;
+}
+
+/* Coin collect effect */
+@keyframes coin-collect {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.7; }
+  100% { transform: scale(0); opacity: 0; }
+}
+
+.coin-collect {
+  animation: coin-collect 0.5s forwards;
+}
+
+/* Character jump effect */
+@keyframes jump {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0); }
+}
+
+.jump-effect:hover {
+  animation: jump 0.5s ease;
+}
+
+/* Score counter animation */
+@keyframes score-count {
+  from { transform: scale(1.2); }
+  to { transform: scale(1); }
+}
+
+.score-update {
+  animation: score-count 0.3s ease-out;
+}
+
+/* Level-up flash effect */
+@keyframes level-up-flash {
+  0%, 100% { filter: brightness(100%); }
+  50% { filter: brightness(180%); }
+}
+
+.level-up-flash {
+  animation: level-up-flash 0.2s ease-in-out 3;
+}
+
+/* Filter animations */
+@keyframes filter-activate {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.filter-btn {
+  @apply px-3 py-1.5 rounded-md border border-border transition-all duration-200 ease-in-out;
+  @apply flex items-center justify-center gap-1.5;
+  @apply hover:bg-accent/20;
+}
+
+.filter-btn-active {
+  @apply border-green-600 bg-green-600/10 text-green-500;
+  animation: filter-activate 0.3s ease-out;
+}
+
+.filter-btn-green {
+  @apply border-green-600 bg-green-600/10 text-green-500;
+}
+
+.filter-btn-red {
+  @apply border-red-600 bg-red-600/10 text-red-500;
+}
+
+.filter-btn-yellow {
+  @apply border-yellow-600 bg-yellow-600/10 text-yellow-500;
+}
+
+.filter-btn-inactive {
+  @apply border-gray-500 bg-gray-500/10 text-gray-400;
+}
+
+.filter-select {
+  @apply h-9 border border-border rounded-md px-3 bg-transparent;
+  @apply hover:bg-accent/10 focus:ring-1 focus:ring-primary/20;
+  @apply transition-all duration-200;
+}
+
+.filter-container {
+  @apply flex flex-wrap gap-2 p-4 rounded-lg mb-4;
+  @apply bg-card/50 border border-border;
+  @apply shadow-sm;
+}
+
+.status-indicator {
+  @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
+  @apply transition-all duration-300;
+}
+
+.status-active {
+  @apply bg-green-500/20 text-green-500 dark:bg-green-500/10;
+}
+
+.status-inactive {
+  @apply bg-gray-500/20 text-gray-500 dark:bg-gray-500/10;
+}
+
+.status-pending {
+  @apply bg-yellow-500/20 text-yellow-500 dark:bg-yellow-500/10;
+}
+
+.status-draft {
+  @apply bg-blue-500/20 text-blue-500 dark:bg-gray-400/10 dark:text-gray-400;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,6 +286,166 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply font-sans antialiased text-foreground;
+  }
+
+  img[src*="eluvie"] {
+    width: 510.66px !important;
+    height: 128px !important;
+  }
+  
+  /* Improved scrollbar styling for better visibility */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100 dark:bg-gray-800 rounded-full;
+    margin: 4px 0;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-400 dark:bg-gray-600 rounded-full border-2 border-transparent;
+    background-clip: padding-box;
+    transition: all 0.3s ease;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-500 dark:bg-gray-500;
+  }
+  
+  /* For content areas that need clean UI with scrolling - we'll use this sparingly */
+  .hide-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+    opacity: 0.3;
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 dark:bg-gray-700 rounded-full;
+    opacity: 0.3;
+  }
+  
+  .hide-scrollbar:hover::-webkit-scrollbar-thumb {
+    opacity: 1;
+  }
+  
+  /* Firefox scrollbar support */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #9ca3af #f3f4f6;
+  }
+  
+  .dark * {
+    scrollbar-color: #4b5563 #1f2937;
+  }
+
+  .dark {
+    background-color: hsl(220, 10%, 12%) !important;
+  }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  #root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dark [class*='dark:bg-gray-900'] {
+    background-color: hsl(220, 10%, 12%) !important;
+  }
+
+  /* Chart colors using teal color palette for dark mode */
+  .dark {
+    --chart-1: 190 50% 45%;    /* teal #2A9EB0 */
+    --chart-2: 190 40% 35%;    /* darker teal #1F7A8C */
+    --chart-3: 190 30% 55%;    /* lighter teal #5CBFD0 */
+    --chart-4: 200 45% 40%;    /* blue-teal #2B7F9F */
+    --chart-5: 180 40% 50%;    /* green-teal #4AAFA3 */
+  }
+  
+  .dark .bg-white {
+    background-color: hsl(220, 10%, 18%) !important;
+  }
+
+  .dark .bg-gray-50 {
+    background-color: hsl(220, 10%, 15%) !important;
+  }
+
+  .dark .bg-gray-100 {
+    background-color: hsl(220, 10%, 18%) !important;
+  }
+
+  .dark .shadow-lg {
+    box-shadow: 0 8px 20px -5px rgba(0, 0, 0, 0.3);
+  }
+
+  .dark .shadow-md {
+    box-shadow: 0 4px 12px -3px rgba(0, 0, 0, 0.25);
+  }
+
+  .dark .border-slate-200, 
+  .dark .border,
+  .dark .border-gray-200 {
+    border-color: hsl(220, 10%, 25%) !important;
+  }
+
+  /* Override blue hover effects with teal */
+  .dark .hover\:bg-blue-50:hover,
+  .dark .hover\:bg-blue-100:hover,
+  .dark .hover\:bg-blue-200:hover,
+  .dark .hover\:bg-blue-300:hover,
+  .dark .hover\:bg-blue-400:hover,
+  .dark .hover\:bg-blue-500:hover,
+  .dark .hover\:bg-blue-600:hover,
+  .dark .hover\:bg-blue-700:hover,
+  .dark .hover\:bg-blue-800:hover,
+  .dark .hover\:bg-blue-900:hover {
+    background-color: hsla(190, 50%, 20%, 0.5) !important; 
+  }
+
+  /* Override blue elements with teal */
+  .dark .bg-blue-50,
+  .dark .bg-blue-100,
+  .dark .bg-blue-200,
+  .dark .bg-blue-300,
+  .dark .bg-blue-400,
+  .dark .bg-blue-500,
+  .dark .bg-blue-600,
+  .dark .bg-blue-700,
+  .dark .bg-blue-800,
+  .dark .bg-blue-900 {
+    background-color: hsla(190, 50%, 25%, 0.3) !important;
+  }
+
+  /* Override blue text with teal */
+  .dark .text-blue-500,
+  .dark .text-blue-600,
+  .dark .text-blue-700,
+  .dark .text-blue-800,
+  .dark .text-blue-900 {
+    color: hsl(190, 60%, 60%) !important;
+  }
+  
+  /* Enhanced card styles */
+  .dark .card {
+    backdrop-filter: blur(8px);
+    border: 1px solid hsla(220, 10%, 22%, 0.8) !important;
+  }
+  
+  /* Button enhancements */
+  .dark button.bg-primary {
+    background-color: hsl(190, 50%, 45%) !important;
+  }
+  
+  .dark button.bg-primary:hover {
+    background-color: hsl(190, 50%, 50%) !important;
+    box-shadow: 0 0 15px hsla(190, 70%, 40%, 0.4) !important;
   }
 }
