@@ -104,11 +104,11 @@ const Contracts = () => {
 
   return (
     <main className="w-full h-full overflow-y-auto bg-background p-4 md:p-6 pb-20">
-      <div className="mb-6">
-        <h1 className="page-title">Contracts</h1>
-        <p className="page-description">Store and manage your client contracts</p>
-      </div>
       <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="page-title">Contracts</h1>
+          <p className="page-description">Store and manage your client contracts</p>
+        </div>
         <Button 
           onClick={() => setAddContractOpen(true)} 
           className="flex items-center shadow-sm bg-primary hover:bg-primary/90 transition-all duration-200 hover:shadow-md"
