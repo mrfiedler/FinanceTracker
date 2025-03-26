@@ -133,17 +133,17 @@ const Subscriptions = () => {
     : [];
 
   return (
-    <main className="w-full h-full overflow-y-auto bg-background p-4 md:p-6 pb-20">
+    <main className="page-container">
       {/* Page header with motion animation */}
-      <div className="mb-6 md:mb-8">
+      <div className="page-header">
         <motion.div 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          className="page-title-container">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">Subscriptions</h1>
-            <p className="text-sm text-muted-foreground mt-1 md:mt-2 max-w-lg">
+            <h1 className="page-title">Subscriptions</h1>
+            <p className="page-description">
               Manage your recurring revenue streams and subscription plans
             </p>
           </div>
@@ -159,64 +159,62 @@ const Subscriptions = () => {
       </div>
 
       {/* Filter controls */}
-      <div className="mb-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full">
+      <div className="filter-section">
+        <div className="filter-group">
           {/* Status filter buttons */}
-          <div className="flex flex-col space-y-3 w-full md:space-y-0 md:flex-row md:items-center md:space-x-3">
-            <div className="flex items-center space-x-2">
-              <Button
-                size="sm"
-                variant="ghost"
-                className={cn(
-                  "h-9 shadow-sm hover:shadow transition-all duration-200",
-                  statusFilter === 'all' && "bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200 hover:text-gray-800 dark:bg-gray-800/40 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-800/60"
-                )}
-                onClick={() => setStatusFilter('all')}
-              >
-                <Filter className="h-4 w-4 mr-1.5" />
-                All
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setStatusFilter('active')}
-                className={cn(
-                  "h-9 shadow-sm hover:shadow transition-all duration-200",
-                  statusFilter === 'active' && "bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200 hover:text-gray-800 dark:bg-gray-800/40 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-800/60"
-                )}
-              >
-                <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 mr-1.5" />
-                Active
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setStatusFilter('inactive')}
-                className={cn(
-                  "h-9 shadow-sm hover:shadow transition-all duration-200",
-                  statusFilter === 'inactive' && "bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200 hover:text-gray-800 dark:bg-gray-800/40 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-800/60"
-                )}
-              >
-                <div className="h-2.5 w-2.5 rounded-full bg-gray-400 mr-1.5" />
-                Inactive
-              </Button>
-            </div>
+          <div className="filter-buttons">
+            <Button
+              size="sm"
+              variant="ghost"
+              className={cn(
+                "filter-btn",
+                statusFilter === 'all' ? "filter-btn-all" : ""
+              )}
+              onClick={() => setStatusFilter('all')}
+            >
+              <Filter className="h-4 w-4 mr-1.5" />
+              All
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setStatusFilter('active')}
+              className={cn(
+                "filter-btn",
+                statusFilter === 'active' ? "filter-btn-active" : ""
+              )}
+            >
+              <div className="status-dot status-dot-active mr-1.5" />
+              Active
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setStatusFilter('inactive')}
+              className={cn(
+                "filter-btn",
+                statusFilter === 'inactive' ? "filter-btn-inactive" : ""
+              )}
+            >
+              <div className="status-dot status-dot-inactive mr-1.5" />
+              Inactive
+            </Button>
           </div>
 
           {/* Search and date filter */}
-          <div className="flex flex-col space-y-3 w-full md:space-y-0 md:flex-row md:items-center md:space-x-3 mt-3 sm:mt-0">
-            <div className="relative flex-grow">
+          <div className="filter-controls">
+            <div className="filter-search">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Search subscriptions..."
-                className="pl-9 h-9 w-full border-border/60 shadow-sm focus-visible:ring-primary/30"
+                className="filter-input"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
             <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="h-9 sm:h-8 w-full sm:w-[140px] shadow-sm border-border/60">
+              <SelectTrigger className="h-9 sm:h-9 w-full sm:w-[140px] shadow-sm border-border/60">
                 <Calendar className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
                 <SelectValue placeholder="Select period" />
               </SelectTrigger>
@@ -231,14 +229,14 @@ const Subscriptions = () => {
       </div>
 
       {/* Subscriptions data card */}
-      <Card className="shadow-sm border-border/60">
-        <CardHeader className="px-5 py-4">
-          <CardTitle className="text-lg flex items-center">
+      <Card className="content-card">
+        <CardHeader className="card-header">
+          <CardTitle className="card-title">
             <Repeat className="h-5 w-5 mr-2 text-primary" />
             Subscription Database
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="card-content">
           {renderSubscriptions(
             filteredSubscriptions, 
             isLoading,
@@ -258,12 +256,12 @@ const Subscriptions = () => {
 
 // Helper component for rendering empty state
 const EmptyState = () => (
-  <div className="flex flex-col items-center justify-center py-12 text-center px-4">
-    <div className="bg-primary/10 p-3 rounded-full mb-4">
+  <div className="data-table-empty">
+    <div className="data-table-icon">
       <Repeat className="h-6 w-6 text-primary" />
     </div>
-    <h3 className="text-lg font-medium text-foreground mb-1">No subscriptions found</h3>
-    <p className="text-sm text-muted-foreground max-w-md mb-6">
+    <h3 className="data-table-empty-title">No subscriptions found</h3>
+    <p className="data-table-empty-description">
       Start adding recurring revenue streams by creating new subscription plans for your clients.
     </p>
     <Button 
@@ -311,17 +309,17 @@ const renderSubscriptions = (
   }
 
   return (
-    <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-350px)] md:max-h-[calc(100vh-320px)] rounded-md">
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="bg-muted/40 border-b border-border text-xs uppercase tracking-wider sticky top-0 z-10">
-            <th className="px-4 py-3 text-left font-medium text-muted-foreground">Name</th>
-            <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">Client</th>
-            <th className="px-4 py-3 text-left font-medium text-muted-foreground">Amount</th>
-            <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">Frequency</th>
-            <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden lg:table-cell">Dates</th>
-            <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
-            <th className="px-4 py-3 text-right font-medium text-muted-foreground">Actions</th>
+    <div className="data-table-wrapper">
+      <table className="data-table">
+        <thead className="data-table-header">
+          <tr>
+            <th className="data-table-th">Name</th>
+            <th className="data-table-th hidden sm:table-cell">Client</th>
+            <th className="data-table-th">Amount</th>
+            <th className="data-table-th hidden md:table-cell">Frequency</th>
+            <th className="data-table-th hidden lg:table-cell">Dates</th>
+            <th className="data-table-th">Status</th>
+            <th className="data-table-th text-right">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -329,11 +327,11 @@ const renderSubscriptions = (
               <tr 
                 key={`subscription-${subscription.id}`} 
                 className={cn(
-                  "border-b border-border last:border-0 hover:bg-accent/50 transition-colors duration-200",
+                  "data-table-row",
                   subscription.isActive ? 'bg-transparent' : 'bg-muted/20'
                 )}
               >
-                <td className="px-4 py-3">
+                <td className="data-table-cell">
                   <motion.div 
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -344,52 +342,52 @@ const renderSubscriptions = (
                       <Repeat className="h-4 w-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-foreground">{subscription.name}</p>
+                      <p className="text-body-sm font-medium">{subscription.name}</p>
                       {subscription.description && (
-                        <p className="text-xs text-muted-foreground truncate max-w-[180px]">
+                        <p className="text-muted-xs truncate max-w-[180px]">
                           {subscription.description}
                         </p>
                       )}
                     </div>
                   </motion.div>
                 </td>
-                <td className="px-4 py-3 hidden sm:table-cell">
+                <td className="data-table-cell hidden sm:table-cell">
                   <div className="flex items-center">
                     <div className="h-8 w-8 rounded-full bg-accent/50 flex items-center justify-center text-foreground text-xs font-medium flex-shrink-0">
                       {getInitials(subscription.client.name)}
                     </div>
-                    <p className="text-sm ml-3 text-foreground hidden md:block">
+                    <p className="text-body-sm ml-3 hidden md:block">
                       {subscription.client.name}
                     </p>
                   </div>
                 </td>
-                <td className="px-4 py-3">
+                <td className="data-table-cell">
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium text-foreground">
+                    <span className="text-body-sm font-medium">
                       {formatCurrency(subscription.amount, currency)}
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-muted-xs">
                       {getFrequencyLabel(subscription.frequency)}
                     </span>
                   </div>
                 </td>
-                <td className="px-4 py-3 hidden md:table-cell">
+                <td className="data-table-cell hidden md:table-cell">
                   <div className="flex items-center">
                     <Clock className="h-4 w-4 text-muted-foreground mr-2" />
-                    <p className="text-sm text-foreground">{getFrequencyLabel(subscription.frequency)}</p>
+                    <p className="text-body-sm">{getFrequencyLabel(subscription.frequency)}</p>
                   </div>
                 </td>
-                <td className="px-4 py-3 hidden lg:table-cell">
+                <td className="data-table-cell hidden lg:table-cell">
                   <div className="flex flex-col">
-                    <p className="text-xs text-foreground">
+                    <p className="text-muted-xs">
                       <span className="text-muted-foreground">Start:</span> {formatDate(subscription.startDate)}
                     </p>
-                    <p className="text-xs text-foreground">
+                    <p className="text-muted-xs">
                       <span className="text-muted-foreground">End:</span> {subscription.endDate ? formatDate(subscription.endDate) : 'Ongoing'}
                     </p>
                   </div>
                 </td>
-                <td className="px-4 py-3">
+                <td className="data-table-cell">
                   <div className="flex items-center space-x-2">
                     <Switch
                       checked={subscription.isActive}
@@ -397,12 +395,10 @@ const renderSubscriptions = (
                       disabled={isToggling}
                       className="data-[state=checked]:bg-green-500"
                     />
-                    <Badge variant={subscription.isActive ? "outline" : "secondary"} className={cn(
-                      "text-xs font-normal",
-                      subscription.isActive 
-                        ? "border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/40 dark:text-green-400"
-                        : "border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-400"
-                    )}>
+                    <Badge 
+                      variant={subscription.isActive ? "outline" : "secondary"} 
+                      className={subscription.isActive ? "status-active" : "status-inactive"}
+                    >
                       {subscription.isActive 
                         ? <CheckCircle2 className="h-3 w-3 mr-1 inline" /> 
                         : <XCircle className="h-3 w-3 mr-1 inline" />
@@ -411,7 +407,7 @@ const renderSubscriptions = (
                     </Badge>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td className="data-table-cell text-right">
                   <div className="flex items-center justify-end space-x-1">
                     <Button
                       variant="ghost"
