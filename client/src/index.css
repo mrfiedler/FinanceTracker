@@ -404,11 +404,11 @@
   }
 
   .page-title {
-    @apply text-3xl font-bold tracking-tight text-foreground mb-2;
+    @apply text-2xl font-semibold tracking-tight text-foreground mb-1;
   }
 
   .page-description {
-    @apply text-lg text-muted-foreground max-w-2xl mb-8;
+    @apply text-sm text-muted-foreground max-w-2xl;
   }
 
   .content-card {
