@@ -176,21 +176,21 @@ const Finance = () => {
 
   return (
     <main className="w-full h-full overflow-y-auto bg-background p-4 md:p-6 pb-20">
-      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
+      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Finance</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">Finance</h1>
+          <p className="text-sm text-muted-foreground mt-1 md:mt-2 max-w-lg">
             Manage your revenues and expenses
           </p>
         </div>
         <Button 
           variant="outline" 
           size="sm" 
-          className="mt-4 md:mt-0"
+          className="flex items-center shadow-sm"
           onClick={() => setSettingsModalOpen(true)}
         >
-          <Settings className="h-4 w-4 mr-2" />
-          Settings
+          <Settings className="h-3.5 w-3.5 mr-1.5" />
+          <span>Settings</span>
         </Button>
       </div>
 
@@ -357,34 +357,38 @@ const Finance = () => {
         )}
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-            <CardTitle>Transactions</CardTitle>
-            <div className="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0">
-              <Button variant="outline" onClick={openAddExpenseModal}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Expense
+      <Card className="shadow-sm border-border/40 rounded-lg overflow-hidden">
+        <CardHeader className="bg-card/70 py-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+            <CardTitle className="text-xl tracking-tight">Transactions</CardTitle>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button 
+                variant="outline" 
+                onClick={openAddExpenseModal}
+                className="flex items-center shadow-sm"
+              >
+                <Plus className="mr-1.5 h-3.5 w-3.5" />
+                <span>Add Expense</span>
               </Button>
               <Button 
                 onClick={openAddRevenueModal} 
-                className="bg-green-400 text-black hover:bg-green-500 dark:bg-green-600 dark:text-white dark:hover:bg-green-700 transition-colors"
+                className="flex items-center shadow-sm bg-primary hover:bg-primary/90 transition-all duration-200 hover:shadow-md"
               >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Revenue
+                <Plus className="mr-1.5 h-3.5 w-3.5" />
+                <span>Add Revenue</span>
               </Button>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="filter-container">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full">
-              <div className="flex gap-2">
+          <div className="mb-6">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex gap-2 overflow-x-auto pb-1 flex-nowrap">
                 <Button 
                   variant={transactionType === "all" ? "secondary" : "outline"} 
                   size="sm" 
                   onClick={() => setTransactionType("all")}
-                  className="h-8"
+                  className="h-9 px-4 min-w-[70px]"
                 >
                   <Filter className="h-3.5 w-3.5 mr-1.5" />
                   All
@@ -394,7 +398,7 @@ const Finance = () => {
                   size="sm" 
                   onClick={() => setTransactionType("revenue")}
                   className={cn(
-                    "h-8",
+                    "h-9 px-4 min-w-[90px]",
                     transactionType === "revenue" && "bg-green-100 text-green-700 border-green-200 hover:bg-green-200 hover:text-green-800 dark:bg-green-800/40 dark:text-green-300 dark:border-green-700 dark:hover:bg-green-800/60"
                   )}
                 >
@@ -406,7 +410,7 @@ const Finance = () => {
                   size="sm" 
                   onClick={() => setTransactionType("expense")}
                   className={cn(
-                    "h-8",
+                    "h-9 px-4 min-w-[90px]",
                     transactionType === "expense" && "bg-red-100 text-red-700 border-red-200 hover:bg-red-200 hover:text-red-800 dark:bg-red-800/40 dark:text-red-300 dark:border-red-700 dark:hover:bg-red-800/60"
                   )}
                 >
@@ -415,20 +419,20 @@ const Finance = () => {
                 </Button>
               </div>
 
-              <div className="flex flex-col space-y-3 w-full md:space-y-0 md:flex-row md:items-center mt-3 sm:mt-0">
-                <div className="relative flex-grow mb-3 md:mb-0 md:mr-3">
+              <div className="flex flex-wrap w-full md:space-y-0 md:flex-row md:items-center gap-3">
+                <div className="relative flex-grow mb-3 md:mb-0 md:max-w-md">
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search transactions..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 h-9"
+                    className="pl-9 h-9"
                   />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Select value={dateRange} onValueChange={setDateRange}>
-                    <SelectTrigger className="h-9 w-full sm:w-[140px]">
+                    <SelectTrigger className="h-9 w-[140px]">
                       <Calendar className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
                       <SelectValue placeholder="Period" />
                     </SelectTrigger>
@@ -445,7 +449,7 @@ const Finance = () => {
                     value={selectedCategory} 
                     onValueChange={setSelectedCategory}
                   >
-                    <SelectTrigger className="h-9 w-full sm:w-[140px]">
+                    <SelectTrigger className="h-9 w-[140px]">
                       <div className="h-3 w-3 rounded-full bg-primary mr-1.5 opacity-70" />
                       <SelectValue placeholder="Category" />
                     </SelectTrigger>
@@ -462,7 +466,7 @@ const Finance = () => {
                     value={selectedAccount} 
                     onValueChange={setSelectedAccount}
                   >
-                    <SelectTrigger className="h-9 w-full sm:w-[140px]">
+                    <SelectTrigger className="h-9 w-[140px]">
                       <Wallet className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
                       <SelectValue placeholder="Account" />
                     </SelectTrigger>
@@ -516,7 +520,7 @@ const renderTransactionsTable = (
 ) => {
   if (isLoading) {
     return Array(5).fill(0).map((_, index) => (
-      <div key={index} className="border-b border-gray-200 dark:border-gray-800 py-4">
+      <div key={index} className="border-b border-border/40 py-4 px-6">
         <Skeleton className="h-8 w-full" />
       </div>
     ));
@@ -524,8 +528,10 @@ const renderTransactionsTable = (
 
   if (transactions.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-        No transactions found.
+      <div className="text-center py-12 text-muted-foreground flex flex-col items-center">
+        <Wallet className="h-12 w-12 mb-3 text-muted-foreground/70" />
+        <p className="font-medium">No transactions found</p>
+        <p className="text-sm mt-1">Adjust your filters or add new transactions</p>
       </div>
     );
   }
@@ -533,47 +539,47 @@ const renderTransactionsTable = (
   return (
     <div className="overflow-x-auto">
       <table className="w-full">
-        <thead>
-          <tr className="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-            <th className="px-4 py-3">Creation Date</th>
-            <th className="px-4 py-3">Due Date</th>
-            <th className="px-4 py-3">Description</th>
-            <th className="px-4 py-3">Category</th>
-            <th className="px-4 py-3">Account</th>
-            <th className="px-4 py-3">Amount</th>
-            <th className="px-4 py-3">Type</th>
-            <th className="px-4 py-3">Status</th>
+        <thead className="bg-muted/50">
+          <tr className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            <th className="px-6 py-3 font-medium">Creation Date</th>
+            <th className="px-6 py-3 font-medium">Due Date</th>
+            <th className="px-6 py-3 font-medium">Description</th>
+            <th className="px-6 py-3 font-medium">Category</th>
+            <th className="px-6 py-3 font-medium">Account</th>
+            <th className="px-6 py-3 font-medium">Amount</th>
+            <th className="px-6 py-3 font-medium">Type</th>
+            <th className="px-6 py-3 font-medium">Status</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+        <tbody className="divide-y divide-border/40">
           {transactions.map((transaction) => (
             <tr
               key={`${transaction.type}-${transaction.id}`}
-              className={`hover:bg-gray-50 dark:hover:bg-[rgb(30,30,30)] ${
+              className={`hover:bg-muted/50 transition-colors ${
                 transaction.dueDate && new Date(transaction.dueDate) < new Date() && !transaction.isPaid
-                  ? 'bg-red-50 dark:bg-red-900/20'
+                  ? 'bg-red-50/30 dark:bg-red-900/10'
                   : ''
               }`}
             >
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                 {formatDate(transaction.date)}
               </td>
-              <td className={`px-4 py-3 whitespace-nowrap text-sm ${
+              <td className={`px-6 py-4 whitespace-nowrap text-sm ${
                 transaction.dueDate && new Date(transaction.dueDate) < new Date() && !transaction.isPaid
                   ? 'text-red-600 dark:text-red-400 font-medium'
-                  : 'text-gray-500 dark:text-gray-400'
+                  : 'text-muted-foreground'
               }`}>
                 {transaction.dueDate ? formatDate(transaction.dueDate) : '-'}
                 {transaction.dueDate && new Date(transaction.dueDate) < new Date() && !transaction.isPaid &&
                   ' (Overdue)'}
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                 <span>{transaction.description}</span>
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                 {transaction.category}
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                 <div className="flex items-center">
                   {transaction.account === "default" && <Wallet className="mr-2 h-4 w-4" />}
                   {transaction.account === "chase" && <SiChase className="mr-2 h-4 w-4" />}
@@ -588,17 +594,19 @@ const renderTransactionsTable = (
                   {bankAccounts.find(a => a.value === transaction.account)?.label || "Default"}
                 </div>
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                 {formatCurrency(transaction.amount, currency)}
               </td>
-              <td className="px-4 py-3 whitespace-nowrap">
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                  transaction.type === 'expense' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+              <td className="px-6 py-4 whitespace-nowrap">
+                <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                  transaction.type === 'expense' 
+                    ? 'bg-red-100/70 text-red-800 dark:bg-red-900/30 dark:text-red-300' 
+                    : 'bg-green-100/70 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                 }`}>
                   {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
                 </span>
               </td>
-              <td className="px-4 py-3 whitespace-nowrap">
+              <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center justify-center">
                   {/* Get the transaction key for optimistic updates */}
                   {(() => {
@@ -613,12 +621,12 @@ const renderTransactionsTable = (
                         className={`w-10 h-5 rounded-full flex items-center p-0.5 cursor-pointer transition-colors ${
                           isPaid 
                             ? 'bg-green-500' 
-                            : 'bg-gray-300'
+                            : 'bg-muted-foreground/30'
                         }`}
                         onClick={() => updateTransactionStatus(transaction)}
                       >
                         <div 
-                          className={`w-4 h-4 rounded-full bg-white transform transition-transform duration-200 shadow-md ${
+                          className={`w-4 h-4 rounded-full bg-white transform transition-transform duration-200 shadow-sm ${
                             isPaid ? 'translate-x-5' : 'translate-x-0'
                           }`}
                         />

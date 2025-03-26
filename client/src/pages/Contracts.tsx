@@ -104,40 +104,40 @@ const Contracts = () => {
 
   return (
     <main className="w-full h-full overflow-y-auto bg-background p-4 md:p-6 pb-20">
-      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
+      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Contracts</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">Contracts</h1>
+          <p className="text-sm text-muted-foreground mt-1 md:mt-2 max-w-lg">
             Store and manage your client contracts
           </p>
         </div>
-        <div className="mt-4 md:mt-0">
-          <Button onClick={() => setAddContractOpen(true)} className="flex items-center">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Contract
+        <div>
+          <Button 
+            onClick={() => setAddContractOpen(true)} 
+            className="flex items-center shadow-sm bg-primary hover:bg-primary/90 transition-all duration-200 hover:shadow-md"
+          >
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            <span>Add Contract</span>
           </Button>
         </div>
       </div>
 
-      <div className="filter-container mb-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full">
-          <div className="relative w-full sm:max-w-md">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+      <div className="mb-6">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-grow mb-3 md:mb-0 md:max-w-md">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              type="search"
               placeholder="Search contracts..."
-              className="pl-9"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-9"
             />
           </div>
-          <div className="ml-auto">
+          <div>
             <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="w-[140px]">
-                <span className="flex items-center">
-                  <Calendar className="mr-2 h-4 w-4" />
-                  <SelectValue />
-                </span>
+              <SelectTrigger className="h-9 w-[140px]">
+                <Calendar className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                <SelectValue placeholder="Period" />
               </SelectTrigger>
               <SelectContent>
                 {dateRanges.map((range) => (
@@ -151,86 +151,83 @@ const Contracts = () => {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col space-y-4">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-              <CardTitle>Contract Database</CardTitle>
-            </div>
+      <Card className="shadow-sm border-border/40 rounded-lg overflow-hidden">
+        <CardHeader className="bg-card/70 py-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+            <CardTitle className="text-xl tracking-tight">Contract Database</CardTitle>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {isLoading ? (
             Array(5).fill(0).map((_, index) => (
-              <div key={index} className="border-b border-gray-200 dark:border-gray-800 py-4">
+              <div key={index} className="border-b border-border/40 py-4 px-6">
                 <Skeleton className="h-24 w-full" />
               </div>
             ))
           ) : filteredContracts.length === 0 ? (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400 flex flex-col items-center">
-              <FileText className="h-12 w-12 mb-2 text-gray-400" />
-              <p>No contracts found.</p>
-              <p className="text-sm">Upload a new contract to get started.</p>
+            <div className="text-center py-12 text-muted-foreground flex flex-col items-center">
+              <FileText className="h-12 w-12 mb-3 text-muted-foreground/70" />
+              <p className="font-medium">No contracts found</p>
+              <p className="text-sm mt-1">Upload a new contract to get started</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead>
-                  <tr className="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    <th className="px-4 py-3">Title</th>
-                    <th className="px-4 py-3">Client</th>
-                    <th className="px-4 py-3">Related Quote</th>
-                    <th className="px-4 py-3">Quote Amount</th>
-                    <th className="px-4 py-3">Upload Date</th>
-                    <th className="px-4 py-3">File</th>
-                    <th className="px-4 py-3 text-right">Actions</th>
+                <thead className="bg-muted/50">
+                  <tr className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    <th className="px-6 py-3 font-medium">Title</th>
+                    <th className="px-6 py-3 font-medium">Client</th>
+                    <th className="px-6 py-3 font-medium">Related Quote</th>
+                    <th className="px-6 py-3 font-medium">Quote Amount</th>
+                    <th className="px-6 py-3 font-medium">Upload Date</th>
+                    <th className="px-6 py-3 font-medium">File</th>
+                    <th className="px-6 py-3 text-right font-medium">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+                <tbody className="divide-y divide-border/40">
                   {filteredContracts.map((contract) => {
                     return (
-                      <tr key={contract.id} className="hover:bg-gray-100 dark:hover:bg-gray-700/50">
-                        <td className="px-4 py-4 whitespace-nowrap">
+                      <tr key={contract.id} className="hover:bg-muted/50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <FileText className="h-5 w-5 text-primary mr-2" />
-                            <p className="text-sm font-medium text-gray-900 dark:text-white">{contract.title}</p>
+                            <FileText className="h-5 w-5 text-primary mr-2 flex-shrink-0" />
+                            <p className="text-sm font-medium text-foreground">{contract.title}</p>
                           </div>
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-800 dark:text-gray-300 text-xs font-medium border border-transparent dark:border-gray-600">
+                            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium border border-primary/20">
                               {getInitials(contract.quote.client.name)}
                             </div>
                             <div className="ml-3">
-                              <p className="text-sm font-medium text-gray-900 dark:text-white">{contract.quote.client.name}</p>
+                              <p className="text-sm font-medium text-foreground">{contract.quote.client.name}</p>
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <Link className="h-4 w-4 text-gray-500 mr-1" />
-                            <p className="text-sm text-gray-900 dark:text-white">{contract.quote.jobTitle}</p>
+                            <p className="text-sm text-foreground">{contract.quote.jobTitle}</p>
                           </div>
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <p className="text-sm font-medium text-foreground">
                             {formatCurrency(contract.quote.amount, currency)}
                           </p>
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <p className="text-sm text-gray-500 dark:text-gray-400">{formatDate(contract.createdAt)}</p>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <p className="text-sm text-muted-foreground">{formatDate(contract.createdAt)}</p>
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <p className="text-sm text-gray-500 dark:text-gray-400">{contract.fileName}</p>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <p className="text-sm text-muted-foreground">{contract.fileName}</p>
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex justify-end space-x-2">
-                            <Button variant="ghost" size="sm" className="flex items-center">
-                              <Eye className="h-4 w-4 mr-1" />
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex justify-end space-x-1">
+                            <Button variant="ghost" size="sm" className="h-8 flex items-center text-muted-foreground hover:text-foreground">
+                              <Eye className="h-4 w-4 mr-1.5" />
                               View
                             </Button>
-                            <Button variant="ghost" size="sm" className="flex items-center">
-                              <Download className="h-4 w-4 mr-1" />
+                            <Button variant="ghost" size="sm" className="h-8 flex items-center text-muted-foreground hover:text-foreground">
+                              <Download className="h-4 w-4 mr-1.5" />
                               Download
                             </Button>
                           </div>

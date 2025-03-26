@@ -225,7 +225,7 @@ const FinanceSummary = () => {
               }}
               className="overflow-hidden rounded-lg"
             >
-              <Card className="h-full border-0 overflow-hidden">
+              <Card className="h-full border-0 overflow-hidden shadow-sm border-border/40 rounded-lg">
                 {/* Add subtle glowing border on hover - arcade style */}
                 <motion.div
                   className="absolute inset-0 pointer-events-none z-0 opacity-0"
@@ -234,12 +234,12 @@ const FinanceSummary = () => {
                   <div className={`absolute inset-0 blur-sm opacity-20 ${card.bgColor}`}></div>
                 </motion.div>
                 
-                <CardContent className="p-5 relative z-10 h-full">
+                <CardContent className="p-5 relative z-10 h-full flex flex-col justify-between">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{card.title}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{card.title}</p>
                       <motion.h3 
-                        className="text-2xl font-bold mt-1 text-gray-900 dark:text-white"
+                        className="text-2xl font-bold mt-1 text-foreground"
                         initial={{ opacity: 0, scale: 0.5 }}
                         animate={{ 
                           opacity: 1, 
