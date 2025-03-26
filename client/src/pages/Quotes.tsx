@@ -100,12 +100,12 @@ const Quotes = () => {
 
   return (
     <main className="w-full h-full overflow-y-auto p-4 md:p-6 pb-20">
-      {/* Page header with improved motion animation */}
-      <div className="mb-6">
+      {/* Page header with standardized styling */}
+      <div className="page-header">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">Quotes</h1>
-            <p className="text-sm text-muted-foreground mt-1 md:mt-2 max-w-lg">
+            <h1 className="page-title">Quotes</h1>
+            <p className="page-description">
               Create and manage quotes for your clients and track their status
             </p>
           </div>

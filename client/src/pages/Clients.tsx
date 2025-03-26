@@ -118,10 +118,10 @@ const Clients = () => {
 
   return (
     <main className="w-full h-full overflow-y-auto bg-background p-4 md:p-6 pb-20">
-      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
+      <div className="page-header flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Clients</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="page-title">Clients</h1>
+          <p className="page-description">
             Manage your client database
           </p>
         </div>
