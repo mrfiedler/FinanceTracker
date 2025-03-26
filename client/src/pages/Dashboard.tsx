@@ -159,10 +159,10 @@ const Dashboard = () => {
     <div className="w-full h-full p-4 md:p-6 overflow-y-auto pb-20">
       <div className="max-w-7xl mx-auto">
         {/* Dashboard header */}
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="page-title">Dashboard</h1>
+            <p className="page-description">
               Welcome back! Here's what's happening with your business today.
             </p>
           </div>
