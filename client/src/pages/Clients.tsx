@@ -253,10 +253,10 @@ const Clients = () => {
                             </h3>
                             <Badge 
                               className={cn(
-                                "cursor-pointer select-none shadow-sm hover:shadow",
+                                "cursor-pointer select-none shadow-sm hover:shadow transition-all duration-200",
                                 client.isActive 
-                                  ? "bg-green-100 text-green-700 dark:bg-green-800/40 dark:text-green-300"
-                                  : "bg-gray-100 text-gray-700 dark:bg-gray-800/40 dark:text-gray-300"
+                                  ? "bg-green-100 text-green-700 hover:bg-[#7D6BA7] hover:text-white dark:bg-green-800/40 dark:text-green-300 dark:hover:bg-[#7D6BA7] dark:hover:text-white"
+                                  : "bg-gray-100 text-gray-700 hover:bg-[#7D6BA7] hover:text-white dark:bg-gray-800/40 dark:text-gray-300 dark:hover:bg-[#7D6BA7] dark:hover:text-white"
                               )}
                               onClick={async () => {
                                 try {
