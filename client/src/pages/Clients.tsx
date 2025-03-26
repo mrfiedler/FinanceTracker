@@ -252,8 +252,12 @@ const Clients = () => {
                               {client.name}
                             </h3>
                             <Badge 
-                              variant={client.isActive ? "default" : "secondary"}
-                              className={`cursor-pointer hover:opacity-80 transition-all ${client.isActive ? 'bg-primary/20 hover:bg-primary/30 text-primary' : ''}`}
+                              className={cn(
+                                "cursor-pointer select-none shadow-sm hover:shadow",
+                                client.isActive 
+                                  ? "bg-green-100 text-green-700 dark:bg-green-800/40 dark:text-green-300"
+                                  : "bg-gray-100 text-gray-700 dark:bg-gray-800/40 dark:text-gray-300"
+                              )}
                               onClick={async () => {
                                 try {
                                   await fetch(`/api/clients/${client.id}`, {
