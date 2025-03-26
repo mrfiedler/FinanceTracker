@@ -1,0 +1,60 @@
+I need you to fix several UI/UX issues and functionality gaps in my SaaS web app. The focus should be on correcting layout inconsistencies, ensuring smooth transitions, and fixing broken buttons and modals. Pay close attention to responsiveness and do not change any colors unless specified.
+
+Fixes & Improvements Required:
+1. Search Contract Box Optimization
+Ensure the Search Contract input field uses the available space efficiently and adjusts properly across different screen sizes.
+
+2. "+ Add Revenue" Button in Dark Mode
+The "+ Add Revenue" button should have the same color in dark mode as in light mode (the green one).
+
+However, in dark mode, the text should be white for readability.
+
+3. Background & Module Contrast Consistency
+The contrast between the background and modules varies across pages.
+
+Match the contrast levels used in the Quotes page, as that is the preferred contrast setting.
+
+4. Notifications Button Functionality
+The notifications button is currently non-functional—make it work.
+
+Provide a working preview of how notifications would look when opened.
+
+5. Smooth Transition Between Light & Dark Mode
+Ensure seamless, visually smooth transitions when switching between light and dark mode.
+
+Avoid any flickering, sudden shifts, or broken elements during mode transitions.
+
+6. Quick Buttons in Dashboard Are Non-Functional
+Fix the quick buttons in the dashboard so they trigger the correct modals when clicked.
+
+7. "+" Quick Button on Mobile
+On mobile resolutions, clicking the "+" button should allow the user to select one of the four actions available on the dashboard page.
+
+Ensure a clean and intuitive interaction for mobile users.
+
+8. "Export" & "View Achievements" Button Width Consistency
+These two buttons should have the same width in all responsive views to maintain visual balance.
+
+9. Favicon Update
+Update the favicon to match the logo symbol for brand consistency.
+
+Final Deliverables:
+Optimized search contract box layout.
+
+"+ Add Revenue" button corrected in dark mode (same color as light mode, white text).
+
+Consistent contrast (match Quotes page).
+
+Functional notifications button with a working preview.
+
+Smooth dark/light mode transition.
+
+Working quick buttons in the dashboard.
+
+Mobile-friendly "+" button with correct action selection.
+
+Consistent button widths for "Export" and "View Achievements".
+
+Updated favicon to match the logo symbol.
+
+The final result should be polished, responsive, and fully functional while maintaining a seamless UX/UI. 🚀
