@@ -870,7 +870,7 @@ export class MemStorage implements IStorage {
         fileName: `contract_${i + 1}.pdf`,
         fileUrl: `/contracts/${i + 1}`,
         description: `Contract for approved quote #${quoteIds[i]}`,
-        createdAt: createdDate.toISOString()
+        createdAt: createdDate
       };
       
       this.contracts.set(contract.id, contract);
