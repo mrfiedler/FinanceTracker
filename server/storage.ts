@@ -10,7 +10,8 @@ import {
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import createMemoryStore from "memorystore";
-import { pool } from "./db";
+import { db, pool } from "./db";
+import { eq, desc, and, gte, count, sum, sql } from 'drizzle-orm';
 
 // Define the storage interface with all CRUD operations
 export interface IStorage {
@@ -81,6 +82,9 @@ export class MemStorage implements IStorage {
   private subscriptions: Map<number, Subscription>;
   private contracts: Map<number, Contract>;
   
+  // Session store for authentication
+  sessionStore: session.Store;
+  
   // ID generators
   private userId: number = 1;
   private clientId: number = 1;
@@ -98,6 +102,12 @@ export class MemStorage implements IStorage {
     this.quotes = new Map();
     this.subscriptions = new Map();
     this.contracts = new Map();
+    
+    // Initialize session store
+    const MemoryStore = createMemoryStore(session);
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000, // prune expired entries every 24h
+    });
     
     // Initialize with sample data
     this.initializeSampleData();
@@ -863,15 +873,10 @@ export class MemStorage implements IStorage {
 }
 
 // Database storage implementation using drizzle
-import { db, pool } from './db';
-import connectPg from "connect-pg-simple";
-import session from "express-session";
-import { eq, desc, and, gte, count, sum, sql } from 'drizzle-orm';
-
 const PostgresSessionStore = connectPg(session);
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({ 
