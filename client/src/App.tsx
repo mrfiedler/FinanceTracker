@@ -17,8 +17,11 @@ import Settings from "./pages/Settings";
 import Sidebar from "./components/layout/Sidebar";
 import Header from "./components/layout/Header";
 import { useEffect, useState } from "react";
+import { AuthProvider } from "./hooks/use-auth";
+import { ProtectedRoute } from "./lib/protected-route";
+import AuthPage from "./pages/auth-page";
 
-function Router() {
+function AppLayout({ children }: { children: React.ReactNode }) {
   // Track viewport size for responsive adjustments
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   
@@ -45,20 +48,59 @@ function Router() {
       >
         <Header />
         <div className="flex-1 overflow-hidden">
-          <Switch>
-            <Route path="/" component={Dashboard} />
-            <Route path="/finance" component={Finance} />
-            <Route path="/clients" component={Clients} />
-            <Route path="/quotes" component={Quotes} />
-            <Route path="/subscriptions" component={Subscriptions} />
-            <Route path="/contracts" component={Contracts} />
-            <Route path="/achievements" component={Achievements} />
-            <Route path="/settings" component={Settings} />
-            <Route component={NotFound} />
-          </Switch>
+          {children}
         </div>
       </div>
     </div>
+  );
+}
+
+function Router() {
+  return (
+    <Switch>
+      <Route path="/auth" component={AuthPage} />
+      <ProtectedRoute path="/" component={() => (
+        <AppLayout>
+          <Dashboard />
+        </AppLayout>
+      )} />
+      <ProtectedRoute path="/finance" component={() => (
+        <AppLayout>
+          <Finance />
+        </AppLayout>
+      )} />
+      <ProtectedRoute path="/clients" component={() => (
+        <AppLayout>
+          <Clients />
+        </AppLayout>
+      )} />
+      <ProtectedRoute path="/quotes" component={() => (
+        <AppLayout>
+          <Quotes />
+        </AppLayout>
+      )} />
+      <ProtectedRoute path="/subscriptions" component={() => (
+        <AppLayout>
+          <Subscriptions />
+        </AppLayout>
+      )} />
+      <ProtectedRoute path="/contracts" component={() => (
+        <AppLayout>
+          <Contracts />
+        </AppLayout>
+      )} />
+      <ProtectedRoute path="/achievements" component={() => (
+        <AppLayout>
+          <Achievements />
+        </AppLayout>
+      )} />
+      <ProtectedRoute path="/settings" component={() => (
+        <AppLayout>
+          <Settings />
+        </AppLayout>
+      )} />
+      <Route component={NotFound} />
+    </Switch>
   );
 }
 
@@ -67,10 +109,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <CurrencyProvider>
-          <GamificationProvider>
-            <Router />
-            <Toaster />
-          </GamificationProvider>
+          <AuthProvider>
+            <GamificationProvider>
+              <Router />
+              <Toaster />
+            </GamificationProvider>
+          </AuthProvider>
         </CurrencyProvider>
       </ThemeProvider>
     </QueryClientProvider>

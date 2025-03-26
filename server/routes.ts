@@ -212,8 +212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/quotes/conversion", async (req, res) => {
     try {
-      const dateRange = req.query.dateRange as string;
-      const conversionData = await storage.getQuoteConversionRate({ dateRange });
+      const conversionData = await storage.getQuoteConversionRate();
       res.json(conversionData);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch quote conversion data" });
