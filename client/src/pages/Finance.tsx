@@ -366,7 +366,10 @@ const Finance = () => {
                 <Plus className="mr-2 h-4 w-4" />
                 Add Expense
               </Button>
-              <Button onClick={openAddRevenueModal} style={{backgroundColor: '#A3E635', color: '#000'}}>
+              <Button 
+                onClick={openAddRevenueModal} 
+                className="bg-green-400 text-black hover:bg-green-500 dark:bg-green-600 dark:text-white dark:hover:bg-green-700 transition-colors"
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Add Revenue
               </Button>

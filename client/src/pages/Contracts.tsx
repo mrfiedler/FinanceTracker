@@ -119,25 +119,24 @@ const Contracts = () => {
         </div>
       </div>
 
-      <div className="filter-container">
+      <div className="filter-container mb-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full">
-          
-          
-          <div className="flex gap-2 ml-auto w-full sm:w-auto">
-            <div className="relative grow">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-              <Input
-                type="search"
-                placeholder="Search contracts..."
-                className="pl-9 w-full"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+          <div className="relative w-full sm:max-w-md">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+            <Input
+              type="search"
+              placeholder="Search contracts..."
+              className="pl-9"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <div className="ml-auto">
             <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="filter-select">
+              <SelectTrigger className="w-[140px]">
                 <span className="flex items-center">
-                  Period: <SelectValue className="ml-1" />
+                  <Calendar className="mr-2 h-4 w-4" />
+                  <SelectValue />
                 </span>
               </SelectTrigger>
               <SelectContent>
