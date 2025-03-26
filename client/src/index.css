@@ -245,9 +245,11 @@
   @apply border-gray-500 bg-gray-500/10 text-gray-400;
 }
 
+/* Standard All filter button - consistent across all pages */
 .filter-btn-all {
   @apply bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 hover:text-primary 
   dark:bg-primary/20 dark:text-primary-foreground dark:border-primary/30 dark:hover:bg-primary/30;
+  @apply h-9 px-4 min-w-[70px] shadow-sm;
 }
 
 .filter-btn-active {
