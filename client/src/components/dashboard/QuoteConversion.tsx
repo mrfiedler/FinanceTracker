@@ -84,7 +84,7 @@ const QuoteConversion = () => {
               </Popover>
             ) : null}
             <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-[160px] h-9 border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground">
                 <SelectValue placeholder="Select range" />
               </SelectTrigger>
               <SelectContent>
