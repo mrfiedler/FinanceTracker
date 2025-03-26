@@ -3,8 +3,12 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertClientSchema, insertContractSchema, insertExpenseSchema, insertQuoteSchema, insertRevenueSchema, insertSubscriptionSchema } from "@shared/schema";
 import { z } from "zod";
+import { setupAuth } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication
+  setupAuth(app);
+  
   // All API routes
 
   // API - Clients

@@ -7,9 +7,16 @@ import {
   subscriptions, type Subscription, type InsertSubscription,
   contracts, type Contract, type InsertContract
 } from "@shared/schema";
+import session from "express-session";
+import connectPg from "connect-pg-simple";
+import createMemoryStore from "memorystore";
+import { pool } from "./db";
 
 // Define the storage interface with all CRUD operations
 export interface IStorage {
+  // Session storage for authentication
+  sessionStore: session.Store;
+
   // Users
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -855,4 +862,586 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Database storage implementation using drizzle
+import { db, pool } from './db';
+import connectPg from "connect-pg-simple";
+import session from "express-session";
+import { eq, desc, and, gte, count, sum, sql } from 'drizzle-orm';
+
+const PostgresSessionStore = connectPg(session);
+
+export class DatabaseStorage implements IStorage {
+  sessionStore: session.SessionStore;
+
+  constructor() {
+    this.sessionStore = new PostgresSessionStore({ 
+      pool, 
+      createTableIfMissing: true 
+    });
+  }
+
+  // Users
+  async getUser(id: number): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.id, id));
+    return result[0];
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.username, username));
+    return result[0];
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const result = await db.insert(users).values(insertUser).returning();
+    return result[0];
+  }
+  
+  // Clients
+  async getClient(id: number): Promise<Client | undefined> {
+    const result = await db.select().from(clients).where(eq(clients.id, id));
+    return result[0];
+  }
+  
+  async getClientByEmail(email: string): Promise<Client | undefined> {
+    const result = await db.select().from(clients).where(eq(clients.email, email));
+    return result[0];
+  }
+  
+  async getClients(): Promise<Client[]> {
+    const clientsResult = await db.select().from(clients);
+    
+    // For each client, calculate total revenue
+    const clientsWithRevenue = await Promise.all(clientsResult.map(async (client) => {
+      const clientRevenues = await db
+        .select({ total: sum(revenues.amount) })
+        .from(revenues)
+        .where(eq(revenues.clientId, client.id));
+      
+      const totalRevenue = clientRevenues[0]?.total || 0;
+      
+      return {
+        ...client,
+        totalRevenue
+      };
+    }));
+    
+    return clientsWithRevenue;
+  }
+  
+  async getTopClients(limit: number = 5): Promise<any[]> {
+    const clients = await this.getClients();
+    
+    return clients
+      .sort((a, b) => Number(b.totalRevenue) - Number(a.totalRevenue))
+      .slice(0, limit)
+      .map(client => ({
+        id: client.id,
+        name: client.name,
+        type: client.businessType,
+        revenue: client.totalRevenue
+      }));
+  }
+  
+  async createClient(insertClient: InsertClient): Promise<Client> {
+    const result = await db.insert(clients).values(insertClient).returning();
+    return result[0];
+  }
+  
+  async updateClient(id: number, clientUpdate: Partial<Client>): Promise<Client> {
+    const result = await db
+      .update(clients)
+      .set(clientUpdate)
+      .where(eq(clients.id, id))
+      .returning();
+    
+    if (result.length === 0) {
+      throw new Error(`Client with id ${id} not found`);
+    }
+    
+    return result[0];
+  }
+  
+  // Expenses
+  async getExpense(id: number): Promise<Expense | undefined> {
+    const result = await db.select().from(expenses).where(eq(expenses.id, id));
+    return result[0];
+  }
+  
+  async getExpenses(filters?: { dateRange?: string }): Promise<Expense[]> {
+    let query = db.select().from(expenses);
+    
+    if (filters?.dateRange) {
+      const days = parseInt(filters.dateRange);
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - days);
+      
+      query = query.where(gte(expenses.date, cutoffDate));
+    }
+    
+    const result = await query.orderBy(desc(expenses.date));
+    return result;
+  }
+  
+  async createExpense(insertExpense: InsertExpense): Promise<Expense> {
+    const result = await db.insert(expenses).values(insertExpense).returning();
+    return result[0];
+  }
+  
+  async updateExpense(id: number, expenseUpdate: Partial<Expense>): Promise<Expense> {
+    const result = await db
+      .update(expenses)
+      .set(expenseUpdate)
+      .where(eq(expenses.id, id))
+      .returning();
+    
+    if (result.length === 0) {
+      throw new Error(`Expense with id ${id} not found`);
+    }
+    
+    return result[0];
+  }
+  
+  async deleteExpense(id: number): Promise<boolean> {
+    const result = await db
+      .delete(expenses)
+      .where(eq(expenses.id, id))
+      .returning({ id: expenses.id });
+    
+    return result.length > 0;
+  }
+  
+  // Revenues
+  async getRevenue(id: number): Promise<Revenue | undefined> {
+    const result = await db.select().from(revenues).where(eq(revenues.id, id));
+    return result[0];
+  }
+  
+  async getRevenues(filters?: { dateRange?: string }): Promise<Revenue[]> {
+    let query = db.select().from(revenues);
+    
+    if (filters?.dateRange) {
+      const days = parseInt(filters.dateRange);
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - days);
+      
+      query = query.where(gte(revenues.date, cutoffDate));
+    }
+    
+    const result = await query.orderBy(desc(revenues.date));
+    return result;
+  }
+  
+  async createRevenue(insertRevenue: InsertRevenue): Promise<Revenue> {
+    const result = await db.insert(revenues).values(insertRevenue).returning();
+    
+    // Update client's last purchase date
+    if (result[0]) {
+      await db
+        .update(clients)
+        .set({ lastPurchaseDate: result[0].date })
+        .where(eq(clients.id, result[0].clientId));
+    }
+    
+    return result[0];
+  }
+  
+  async updateRevenue(id: number, revenueUpdate: Partial<Revenue>): Promise<Revenue> {
+    const result = await db
+      .update(revenues)
+      .set(revenueUpdate)
+      .where(eq(revenues.id, id))
+      .returning();
+    
+    if (result.length === 0) {
+      throw new Error(`Revenue with id ${id} not found`);
+    }
+    
+    return result[0];
+  }
+  
+  async deleteRevenue(id: number): Promise<boolean> {
+    const result = await db
+      .delete(revenues)
+      .where(eq(revenues.id, id))
+      .returning({ id: revenues.id });
+    
+    return result.length > 0;
+  }
+  
+  // Quotes
+  async getQuote(id: number): Promise<Quote | undefined> {
+    const result = await db.select().from(quotes).where(eq(quotes.id, id));
+    return result[0];
+  }
+  
+  async getQuotes(filters?: { dateRange?: string, status?: string }): Promise<any[]> {
+    let query = db.select().from(quotes);
+    
+    if (filters?.dateRange) {
+      const days = parseInt(filters.dateRange);
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - days);
+      
+      query = query.where(gte(quotes.createdAt, cutoffDate));
+    }
+    
+    if (filters?.status && filters.status !== "all") {
+      query = query.where(eq(quotes.status, filters.status));
+    }
+    
+    const result = await query;
+    
+    // Get full data with client details
+    return Promise.all(result.map(async quote => {
+      const client = await this.getClient(quote.clientId);
+      return {
+        ...quote,
+        client: client || { name: "Unknown Client" }
+      };
+    }));
+  }
+  
+  async getRecentQuotes(limit: number = 4): Promise<any[]> {
+    const result = await db
+      .select()
+      .from(quotes)
+      .orderBy(desc(quotes.createdAt))
+      .limit(limit);
+    
+    // Get full data with client details
+    return Promise.all(result.map(async quote => {
+      const client = await this.getClient(quote.clientId);
+      return {
+        ...quote,
+        client: client || { name: "Unknown Client" }
+      };
+    }));
+  }
+  
+  async getQuoteConversionRate(): Promise<any> {
+    const allQuotes = await db.select().from(quotes);
+    
+    const accepted = allQuotes.filter(q => q.status === "Accepted");
+    const declined = allQuotes.filter(q => q.status === "Declined");
+    const pending = allQuotes.filter(q => q.status === "Pending");
+    
+    const totalQuotes = allQuotes.length;
+    const acceptedCount = accepted.length;
+    const declinedCount = declined.length;
+    const pendingCount = pending.length;
+    
+    const acceptedValue = accepted.reduce((sum, q) => sum + Number(q.amount), 0);
+    const declinedValue = declined.reduce((sum, q) => sum + Number(q.amount), 0);
+    const pendingValue = pending.reduce((sum, q) => sum + Number(q.amount), 0);
+    
+    const conversionRate = totalQuotes ? Math.round((acceptedCount / totalQuotes) * 100) : 0;
+    
+    return {
+      conversionRate,
+      accepted: {
+        count: acceptedCount,
+        value: acceptedValue
+      },
+      declined: {
+        count: declinedCount,
+        value: declinedValue
+      },
+      pending: {
+        count: pendingCount,
+        value: pendingValue
+      },
+      total: {
+        count: totalQuotes,
+        value: acceptedValue + declinedValue + pendingValue
+      }
+    };
+  }
+  
+  async createQuote(insertQuote: InsertQuote): Promise<Quote> {
+    const result = await db
+      .insert(quotes)
+      .values({
+        ...insertQuote,
+        status: "Pending"
+      })
+      .returning();
+    
+    return result[0];
+  }
+  
+  async updateQuote(id: number, quoteUpdate: Partial<Quote>): Promise<Quote> {
+    const result = await db
+      .update(quotes)
+      .set(quoteUpdate)
+      .where(eq(quotes.id, id))
+      .returning();
+    
+    if (result.length === 0) {
+      throw new Error(`Quote with id ${id} not found`);
+    }
+    
+    return result[0];
+  }
+  
+  async deleteQuote(id: number): Promise<boolean> {
+    const result = await db
+      .delete(quotes)
+      .where(eq(quotes.id, id))
+      .returning({ id: quotes.id });
+    
+    return result.length > 0;
+  }
+  
+  // Subscriptions
+  async getSubscription(id: number): Promise<Subscription | undefined> {
+    const result = await db.select().from(subscriptions).where(eq(subscriptions.id, id));
+    return result[0];
+  }
+  
+  async getSubscriptions(filters?: { status?: string }): Promise<any[]> {
+    let query = db.select().from(subscriptions);
+    
+    if (filters?.status === "active") {
+      query = query.where(eq(subscriptions.isActive, true));
+    } else if (filters?.status === "inactive") {
+      query = query.where(eq(subscriptions.isActive, false));
+    }
+    
+    const result = await query;
+    
+    // Get full data with client details
+    return Promise.all(result.map(async sub => {
+      const client = await this.getClient(sub.clientId);
+      return {
+        ...sub,
+        client: client || { name: "Unknown Client" }
+      };
+    }));
+  }
+  
+  async createSubscription(insertSubscription: InsertSubscription): Promise<Subscription> {
+    const result = await db.insert(subscriptions).values(insertSubscription).returning();
+    return result[0];
+  }
+  
+  async updateSubscription(id: number, subscriptionUpdate: Partial<Subscription>): Promise<Subscription> {
+    const result = await db
+      .update(subscriptions)
+      .set(subscriptionUpdate)
+      .where(eq(subscriptions.id, id))
+      .returning();
+    
+    if (result.length === 0) {
+      throw new Error(`Subscription with id ${id} not found`);
+    }
+    
+    return result[0];
+  }
+  
+  async deleteSubscription(id: number): Promise<boolean> {
+    const result = await db
+      .delete(subscriptions)
+      .where(eq(subscriptions.id, id))
+      .returning({ id: subscriptions.id });
+    
+    return result.length > 0;
+  }
+  
+  // Contracts
+  async getContract(id: number): Promise<Contract | undefined> {
+    const result = await db.select().from(contracts).where(eq(contracts.id, id));
+    return result[0];
+  }
+  
+  async getContracts(filters?: { dateRange?: string }): Promise<any[]> {
+    let query = db.select().from(contracts);
+    
+    if (filters?.dateRange) {
+      const days = parseInt(filters.dateRange);
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - days);
+      
+      query = query.where(gte(contracts.createdAt, cutoffDate));
+    }
+    
+    const result = await query;
+    
+    // Get full data with quote and client details
+    return Promise.all(result.map(async contract => {
+      const quote = await this.getQuote(contract.quoteId);
+      let client = null;
+      
+      if (quote) {
+        client = await this.getClient(quote.clientId);
+      }
+      
+      return {
+        ...contract,
+        quote: quote ? {
+          ...quote,
+          client: client || { name: "Unknown Client" }
+        } : { jobTitle: "Unknown Quote" }
+      };
+    }));
+  }
+  
+  async createContract(insertContract: InsertContract): Promise<Contract> {
+    const contractData = {
+      title: insertContract.title,
+      quoteId: Number(insertContract.quoteId),
+      fileName: "contract.pdf", // This would be handled by a file upload service
+      fileUrl: `/contracts/${Date.now()}`, // This would be a real file URL
+      description: insertContract.description || null
+    };
+    
+    const result = await db.insert(contracts).values(contractData).returning();
+    return result[0];
+  }
+  
+  async deleteContract(id: number): Promise<boolean> {
+    const result = await db
+      .delete(contracts)
+      .where(eq(contracts.id, id))
+      .returning({ id: contracts.id });
+    
+    return result.length > 0;
+  }
+  
+  // Dashboard summary data
+  async getFinanceSummary(dateRange: string = "30"): Promise<any> {
+    const days = parseInt(dateRange);
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+    
+    // Previous period for comparison
+    const prevCutoffDate = new Date(cutoffDate);
+    prevCutoffDate.setDate(prevCutoffDate.getDate() - days);
+    
+    // Current period data
+    const currentExpenses = await db
+      .select({ total: sum(expenses.amount) })
+      .from(expenses)
+      .where(gte(expenses.date, cutoffDate));
+      
+    const currentRevenues = await db
+      .select({ total: sum(revenues.amount) })
+      .from(revenues)
+      .where(gte(revenues.date, cutoffDate));
+    
+    // Previous period data for comparison
+    const previousExpenses = await db
+      .select({ total: sum(expenses.amount) })
+      .from(expenses)
+      .where(
+        and(
+          gte(expenses.date, prevCutoffDate),
+          sql`${expenses.date} < ${cutoffDate}`
+        )
+      );
+      
+    const previousRevenues = await db
+      .select({ total: sum(revenues.amount) })
+      .from(revenues)
+      .where(
+        and(
+          gte(revenues.date, prevCutoffDate),
+          sql`${revenues.date} < ${cutoffDate}`
+        )
+      );
+    
+    // Get pending payments
+    const pendingRevenues = await db
+      .select({ total: sum(revenues.amount) })
+      .from(revenues)
+      .where(
+        and(
+          eq(revenues.isPaid, false),
+          gte(revenues.date, cutoffDate)
+        )
+      );
+    
+    // Get pending clients count (clients with unpaid revenues)
+    const pendingClients = await db
+      .select({
+        clientId: revenues.clientId,
+        count: count()
+      })
+      .from(revenues)
+      .where(
+        and(
+          eq(revenues.isPaid, false),
+          gte(revenues.date, cutoffDate)
+        )
+      )
+      .groupBy(revenues.clientId);
+    
+    const totalExpenses = currentExpenses[0]?.total || 0;
+    const totalRevenues = currentRevenues[0]?.total || 0;
+    const prevExpenses = previousExpenses[0]?.total || 0;
+    const prevRevenues = previousRevenues[0]?.total || 0;
+    
+    const netProfit = Number(totalRevenues) - Number(totalExpenses);
+    const prevNetProfit = Number(prevRevenues) - Number(prevExpenses);
+    
+    // Calculate percentage changes
+    const expensesChange = prevExpenses ? ((Number(totalExpenses) - Number(prevExpenses)) / Number(prevExpenses)) * 100 : 0;
+    const revenueChange = prevRevenues ? ((Number(totalRevenues) - Number(prevRevenues)) / Number(prevRevenues)) * 100 : 0;
+    const profitChange = prevNetProfit ? ((netProfit - prevNetProfit) / prevNetProfit) * 100 : 0;
+    
+    return {
+      totalRevenue: Number(totalRevenues),
+      totalExpenses: Number(totalExpenses),
+      netProfit,
+      revenueChange,
+      expensesChange,
+      profitChange,
+      outstandingPayments: Number(pendingRevenues[0]?.total || 0),
+      pendingClients: pendingClients.length
+    };
+  }
+  
+  async getFinanceTrends(periodicity: string = "monthly"): Promise<any[]> {
+    // Implementation would depend on the required data format
+    // This is a simplified version
+    const currentYear = new Date().getFullYear();
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    
+    const result = [];
+    
+    for (let i = 0; i < months.length; i++) {
+      const startDate = new Date(currentYear, i, 1);
+      const endDate = new Date(currentYear, i + 1, 0);
+      
+      const monthExpenses = await db
+        .select({ total: sum(expenses.amount) })
+        .from(expenses)
+        .where(
+          and(
+            gte(expenses.date, startDate),
+            sql`${expenses.date} <= ${endDate}`
+          )
+        );
+        
+      const monthRevenues = await db
+        .select({ total: sum(revenues.amount) })
+        .from(revenues)
+        .where(
+          and(
+            gte(revenues.date, startDate),
+            sql`${revenues.date} <= ${endDate}`
+          )
+        );
+      
+      result.push({
+        name: months[i],
+        expenses: Number(monthExpenses[0]?.total || 0),
+        revenue: Number(monthRevenues[0]?.total || 0)
+      });
+    }
+    
+    return result;
+  }
+}
+
+// Use database storage
+export const storage = new DatabaseStorage();
