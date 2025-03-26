@@ -190,8 +190,7 @@ const Clients = () => {
         <CardHeader className="pb-3">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center justify-between">
-              <CardTitle>Clients</CardTitle>
-          <p className="text-sm text-muted-foreground mt-1">Manage your client database</p>
+              <CardTitle>Client Database</CardTitle>
             </div>
           </div>
         </CardHeader>
