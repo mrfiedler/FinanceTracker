@@ -159,72 +159,70 @@ const Subscriptions = () => {
       </div>
 
       {/* Filter controls */}
-      <div className="filter-section">
-        <div className="filter-group">
-          {/* Status filter buttons */}
-          <div className="filter-buttons">
-            <Button
-              size="sm"
-              variant="ghost"
-              className={cn(
-                "filter-btn",
-                statusFilter === 'all' ? "filter-btn-all" : ""
-              )}
-              onClick={() => setStatusFilter('all')}
-            >
-              <Filter className="h-4 w-4 mr-1.5" />
-              All
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setStatusFilter('active')}
-              className={cn(
-                "filter-btn",
-                statusFilter === 'active' ? "filter-btn-active" : ""
-              )}
-            >
-              <div className="status-dot status-dot-active mr-1.5" />
-              Active
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setStatusFilter('inactive')}
-              className={cn(
-                "filter-btn",
-                statusFilter === 'inactive' ? "filter-btn-inactive" : ""
-              )}
-            >
-              <div className="status-dot status-dot-inactive mr-1.5" />
-              Inactive
-            </Button>
-          </div>
+      <div className="filter-container flex flex-col md:flex-row items-start md:items-center gap-4">
+        {/* Status filter buttons - left side */}
+        <div className="flex items-center space-x-2 flex-wrap gap-y-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            className={cn(
+              "filter-btn",
+              statusFilter === 'all' ? "filter-btn-all" : ""
+            )}
+            onClick={() => setStatusFilter('all')}
+          >
+            <Filter className="h-4 w-4 mr-1.5" />
+            All
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setStatusFilter('active')}
+            className={cn(
+              "filter-btn",
+              statusFilter === 'active' ? "filter-btn-active" : ""
+            )}
+          >
+            <div className="status-dot status-dot-active mr-1.5" />
+            Active
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setStatusFilter('inactive')}
+            className={cn(
+              "filter-btn",
+              statusFilter === 'inactive' ? "filter-btn-inactive" : ""
+            )}
+          >
+            <div className="status-dot status-dot-inactive mr-1.5" />
+            Inactive
+          </Button>
+        </div>
 
-          {/* Search and date filter */}
-          <div className="filter-controls">
-            <div className="filter-search">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search subscriptions..."
-                className="filter-input"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="h-9 sm:h-9 w-full sm:w-[140px] shadow-sm border-border/60">
-                <Calendar className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-                <SelectValue placeholder="Select period" />
-              </SelectTrigger>
-              <SelectContent>
-                {dateRanges.map((range) => (
-                  <SelectItem key={range.value} value={range.value}>{range.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        {/* Search and date filter - right side */}
+        <div className="flex items-center gap-3 ml-auto">
+          <div className="relative">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search subscriptions..."
+              className="filter-input w-[240px] md:w-[280px]"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
+          <Select value={dateRange} onValueChange={setDateRange}>
+            <SelectTrigger className="h-9 w-[140px] shadow-sm border-border/60">
+              <Calendar className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+              <SelectValue placeholder="Select period" />
+            </SelectTrigger>
+            <SelectContent>
+              {dateRanges.map((range) => (
+                <SelectItem key={range.value} value={range.value}>{range.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
