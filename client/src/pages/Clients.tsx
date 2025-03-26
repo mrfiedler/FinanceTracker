@@ -137,10 +137,13 @@ const Clients = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full">
           <div className="flex gap-2">
             <Button 
-              variant={activeStatus === 'all' ? "secondary" : "outline"} 
+              variant="outline"
               size="sm" 
               onClick={() => setActiveStatus('all')}
-              className="h-8 shadow-sm hover:shadow transition-all duration-200"
+              className={cn(
+                "h-9 px-4 shadow-sm hover:shadow transition-all duration-200",
+                activeStatus === 'all' && "filter-btn-all"
+              )}
             >
               <Filter className="h-3.5 w-3.5 mr-1.5" />
               All

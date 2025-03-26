@@ -164,14 +164,14 @@ const Subscriptions = () => {
         <div className="flex items-center space-x-2 flex-wrap gap-y-2">
           <Button
             size="sm"
-            variant="ghost"
+            variant="outline"
             className={cn(
-              "filter-btn",
+              "h-9 px-4 shadow-sm hover:shadow transition-all duration-200",
               statusFilter === 'all' ? "filter-btn-all" : ""
             )}
             onClick={() => setStatusFilter('all')}
           >
-            <Filter className="h-4 w-4 mr-1.5" />
+            <Filter className="h-3.5 w-3.5 mr-1.5" />
             All
           </Button>
           <Button

@@ -124,12 +124,12 @@ const Quotes = () => {
         <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
               <Button 
-                variant={statusFilter === 'all' ? "secondary" : "outline"} 
+                variant="outline"
                 size="sm"
                 onClick={() => setStatusFilter('all')}
                 className={cn(
-                  "h-8 shadow-sm hover:shadow transition-all duration-200",
-                  statusFilter === 'all' && "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 hover:text-primary dark:bg-primary/20 dark:text-primary-foreground dark:border-primary/30 dark:hover:bg-primary/30"
+                  "h-9 px-4 shadow-sm hover:shadow transition-all duration-200",
+                  statusFilter === 'all' && "filter-btn-all"
                 )}
               >
                 <Filter className="h-3.5 w-3.5 mr-1.5" />
