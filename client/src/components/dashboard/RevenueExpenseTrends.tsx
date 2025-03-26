@@ -46,7 +46,7 @@ const RevenueExpenseTrends = () => {
         <div className="flex justify-between items-center mb-5">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Revenue & Expense Trends</h3>
           <Select value={periodicity} onValueChange={setPeriodicity}>
-            <SelectTrigger className="w-[120px] border-[#3DAFC4]/30 hover:bg-[#3DAFC4]/10 text-[#3DAFC4]">
+            <SelectTrigger className="w-[120px] h-9 border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground">
               <SelectValue placeholder="View by" />
             </SelectTrigger>
             <SelectContent>
