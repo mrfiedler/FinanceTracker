@@ -32,9 +32,12 @@ async function comparePasswords(supplied: string, stored: string) {
 
 // Set up authentication middleware
 export function setupAuth(app: Express) {
+  // Generate a random session secret if not provided
+  const SESSION_SECRET = process.env.SESSION_SECRET || randomBytes(32).toString('hex');
+  
   // Set up session
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "your-secret-key", // In production, use env variable
+    secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
