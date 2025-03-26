@@ -13,9 +13,14 @@ import CreateQuoteModal from "@/components/modals/CreateQuoteModal";
 import { Button } from "@/components/ui/button";
 import { useModals } from "@/hooks/useModals";
 import { useGamification } from "@/context/GamificationContext";
-import { Download, Plus, Award } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { Download, Plus, Award, FileText } from "lucide-react";
+import { format } from "date-fns";
+import { formatCurrency } from "@/lib/utils";
 
 const Dashboard = () => {
+  const { toast } = useToast();
   const { 
     expenseModalOpen,
     revenueModalOpen,
@@ -29,6 +34,22 @@ const Dashboard = () => {
   } = useModals();
   
   const { addPoints, level, points } = useGamification();
+  
+  // Query to fetch financial data for export
+  const { data: financeSummary } = useQuery({ 
+    queryKey: ['/api/finance/summary'],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+  
+  const { data: financeTransactions } = useQuery({
+    queryKey: ['/api/finance/transactions'],
+    staleTime: 5 * 60 * 1000,
+  });
+  
+  const { data: clients } = useQuery({
+    queryKey: ['/api/clients'],
+    staleTime: 5 * 60 * 1000,
+  });
   
   // Add logging to track modal state changes
   useEffect(() => {
@@ -64,6 +85,75 @@ const Dashboard = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [openAddExpenseModal, openAddRevenueModal, openAddSubscriptionModal, openCreateQuoteModal]);
+  
+  // Function to export financial report as CSV
+  const exportFinancialReport = () => {
+    try {
+      if (!financeSummary || !financeTransactions) {
+        toast({
+          title: "Export failed",
+          description: "Financial data is not available yet. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Current date for the filename
+      const dateStr = format(new Date(), 'yyyy-MM-dd');
+      
+      // Generate CSV content
+      let csvContent = "Financial Report - Generated on " + dateStr + "\n\n";
+      
+      // Summary section
+      csvContent += "FINANCIAL SUMMARY\n";
+      csvContent += "Total Revenue," + formatCurrency(financeSummary.totalRevenue, 'USD', false) + "\n";
+      csvContent += "Total Expenses," + formatCurrency(financeSummary.totalExpenses, 'USD', false) + "\n";
+      csvContent += "Net Profit," + formatCurrency(financeSummary.totalRevenue - financeSummary.totalExpenses, 'USD', false) + "\n";
+      csvContent += "Revenue Change," + financeSummary.revenueChange + "%\n";
+      csvContent += "Expense Change," + financeSummary.expensesChange + "%\n";
+      csvContent += "Profit Change," + financeSummary.profitChange + "%\n\n";
+      
+      // Transactions section if available
+      if (financeTransactions?.transactions && financeTransactions.transactions.length > 0) {
+        csvContent += "RECENT TRANSACTIONS\n";
+        csvContent += "Date,Description,Category,Amount,Type,Status\n";
+        
+        financeTransactions.transactions.forEach((transaction: any) => {
+          const status = transaction.isPaid ? "Paid" : "Pending";
+          csvContent += `${transaction.date},${transaction.description},${transaction.category},${formatCurrency(transaction.amount, 'USD', false)},${transaction.type},${status}\n`;
+        });
+      }
+      
+      // Create download element
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `financial-report-${dateStr}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Show success notification
+      toast({
+        title: "Report exported successfully",
+        description: "Your financial report has been downloaded as a CSV file.",
+        variant: "default",
+      });
+      
+      // Add gamification points
+      addPoints(5);
+      
+    } catch (error) {
+      console.error("Error exporting report:", error);
+      toast({
+        title: "Export failed",
+        description: "There was an error exporting your financial report.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="w-full h-full p-4 md:p-6 overflow-y-auto pb-20">
@@ -89,8 +179,13 @@ const Dashboard = () => {
                 <span className="relative z-10">View Achievements</span>
               </Button>
             </Link>
-            <Button variant="outline" size="sm" className="flex items-center">
-              <Download className="mr-2 h-4 w-4" />
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center transition-all hover:bg-blue-50 dark:hover:bg-blue-950"
+              onClick={exportFinancialReport}
+            >
+              <Download className="mr-2 h-4 w-4 text-blue-500" />
               <span className="md:inline hidden">Export Report</span>
               <span className="md:hidden inline">Export</span>
             </Button>
