@@ -385,10 +385,13 @@ const Finance = () => {
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex gap-2 overflow-x-auto pb-1 flex-nowrap">
                 <Button 
-                  variant={transactionType === "all" ? "secondary" : "outline"} 
+                  variant="outline"
                   size="sm" 
                   onClick={() => setTransactionType("all")}
-                  className="h-9 px-4 min-w-[70px]"
+                  className={cn(
+                    "h-9 px-4 shadow-sm hover:shadow transition-all duration-200 min-w-[70px]",
+                    transactionType === "all" && "filter-btn-all"
+                  )}
                 >
                   <Filter className="h-3.5 w-3.5 mr-1.5" />
                   All

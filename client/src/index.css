@@ -348,6 +348,17 @@
   @apply bg-green-500;
 }
 
+/* Standardized filter buttons */
+.filter-btn {
+  @apply h-9 px-4 shadow-sm transition-all duration-200;
+}
+
+.filter-btn-all {
+  @apply bg-primary/10 text-primary border-primary/20;
+  @apply hover:bg-primary/20 hover:text-primary;
+  @apply dark:bg-primary/20 dark:text-primary dark:border-primary/30 dark:hover:bg-primary/30;
+}
+
 .status-dot-inactive {
   @apply bg-gray-400;
 }
