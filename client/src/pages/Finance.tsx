@@ -372,7 +372,7 @@ const Finance = () => {
               </Button>
               <Button 
                 onClick={openAddRevenueModal} 
-                className="flex items-center shadow-sm bg-primary hover:bg-primary/90 transition-all duration-200 hover:shadow-md"
+                className="flex items-center shadow-sm bg-[#A3E635] hover:bg-[#A3E635]/90 text-black transition-all duration-200 hover:shadow-md"
               >
                 <Plus className="mr-1.5 h-3.5 w-3.5" />
                 <span>Add Revenue</span>
