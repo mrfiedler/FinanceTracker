@@ -182,7 +182,7 @@ export class MemStorage implements IStorage {
       ...insertClient,
       id,
       isActive: true,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
       lastPurchaseDate: null
     };
     this.clients.set(id, client);
@@ -228,7 +228,7 @@ export class MemStorage implements IStorage {
     const expense: Expense = {
       ...insertExpense,
       id,
-      createdAt: new Date().toISOString()
+      createdAt: new Date()
     };
     this.expenses.set(id, expense);
     return expense;
@@ -277,15 +277,15 @@ export class MemStorage implements IStorage {
     const revenue: Revenue = {
       ...insertRevenue,
       id,
-      createdAt: new Date().toISOString()
+      createdAt: new Date()
     };
     this.revenues.set(id, revenue);
     
-    // Update client's last purchase date
+    // Update client's last purchase date if needed
     const client = await this.getClient(revenue.clientId);
     if (client) {
       this.updateClient(client.id, {
-        lastPurchaseDate: revenue.date
+        lastPurchaseDate: new Date(revenue.date)
       });
     }
     
@@ -394,7 +394,7 @@ export class MemStorage implements IStorage {
       ...insertQuote,
       id,
       status: "Pending",
-      createdAt: new Date().toISOString()
+      createdAt: new Date()
     };
     this.quotes.set(id, quote);
     return quote;
@@ -444,7 +444,7 @@ export class MemStorage implements IStorage {
     const subscription: Subscription = {
       ...insertSubscription,
       id,
-      createdAt: new Date().toISOString()
+      createdAt: new Date()
     };
     this.subscriptions.set(id, subscription);
     return subscription;
@@ -512,7 +512,7 @@ export class MemStorage implements IStorage {
       fileName: "contract.pdf", // This would be the real filename
       fileUrl: `/contracts/${id}`, // This would be the real file URL
       description: insertContract.description || null,
-      createdAt: new Date().toISOString()
+      createdAt: new Date()
     };
     this.contracts.set(id, contract);
     return contract;
@@ -806,7 +806,7 @@ export class MemStorage implements IStorage {
       const newQuote = {
         ...quote,
         id: this.quoteId++,
-        createdAt: createdDate.toISOString()
+        createdAt: createdDate
       };
       
       this.quotes.set(newQuote.id, newQuote);
