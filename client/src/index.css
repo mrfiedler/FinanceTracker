@@ -42,6 +42,8 @@
     --background: 220 10% 12%;
     --foreground: 210 20% 98%;
     --hover: 220 10% 25%;
+    --primary: 142 72% 29%;
+    --primary-foreground: 210 20% 98%;
 
     /* Card with better visibility against background */
     --card: 220 10% 18%;
