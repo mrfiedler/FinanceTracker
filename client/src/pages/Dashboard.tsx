@@ -192,6 +192,11 @@ const Dashboard = () => {
           </div>
         </div>
 
+        <div className="mb-6">
+          <h1 className="text-2xl font-semibold">Dashboard</h1>
+          <p className="text-sm text-muted-foreground mt-1">Welcome back! Here's what's happening with your business today.</p>
+        </div>
+
         {/* Quick actions */}
         <div className="mb-6">
           <QuickActions />
