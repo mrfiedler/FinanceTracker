@@ -20,8 +20,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useModals } from "@/hooks/useModals";
 import AddSubscriptionModal from "@/components/modals/AddSubscriptionModal";
+import EditSubscriptionModal from "@/components/modals/EditSubscriptionModal";
+import DeleteSubscriptionModal from "@/components/modals/DeleteSubscriptionModal";
 import { 
   Plus, 
   Search, 
@@ -34,7 +42,9 @@ import {
   XCircle, 
   Eye, 
   Edit2, 
-  Clock 
+  Clock,
+  Trash2,
+  MoreVertical
 } from "lucide-react";
 import { frequencyOptions, dateRanges } from "@/lib/constants";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -67,6 +77,12 @@ const Subscriptions = () => {
   const { subscriptionModalOpen, closeAllModals, openAddSubscriptionModal } = useModals();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // State for edit and delete modals
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedSubscription, setSelectedSubscription] = useState<number | null>(null);
+  const [selectedSubscriptionName, setSelectedSubscriptionName] = useState<string>("");
 
   // Fetch subscriptions
   const { data: subscriptions, isLoading } = useQuery({
@@ -108,6 +124,30 @@ const Subscriptions = () => {
   const getFrequencyLabel = (frequency: string) => {
     const option = frequencyOptions.find(opt => opt.value === frequency);
     return option ? option.label : frequency;
+  };
+  
+  // Handlers for edit and delete actions
+  const handleEditSubscription = (subscription: Subscription) => {
+    setSelectedSubscription(subscription.id);
+    setIsEditModalOpen(true);
+  };
+  
+  const handleDeleteSubscription = (subscription: Subscription) => {
+    setSelectedSubscription(subscription.id);
+    setSelectedSubscriptionName(subscription.name);
+    setIsDeleteModalOpen(true);
+  };
+  
+  // Close modal handlers
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setSelectedSubscription(null);
+  };
+  
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setSelectedSubscription(null);
+    setSelectedSubscriptionName("");
   };
 
   // Filter subscriptions based on search query and status
@@ -241,13 +281,26 @@ const Subscriptions = () => {
             currency,
             getFrequencyLabel,
             handleStatusToggle,
-            updateStatusMutation.isPending
+            updateStatusMutation.isPending,
+            handleEditSubscription,
+            handleDeleteSubscription
           )}
         </CardContent>
       </Card>
 
-      {/* Subscription modal */}
+      {/* Subscription modals */}
       <AddSubscriptionModal isOpen={subscriptionModalOpen} onClose={closeAllModals} />
+      <EditSubscriptionModal 
+        isOpen={isEditModalOpen} 
+        onClose={handleCloseEditModal} 
+        subscriptionId={selectedSubscription} 
+      />
+      <DeleteSubscriptionModal 
+        isOpen={isDeleteModalOpen} 
+        onClose={handleCloseDeleteModal} 
+        subscriptionId={selectedSubscription}
+        subscriptionName={selectedSubscriptionName}
+      />
     </main>
   );
 };
@@ -284,7 +337,9 @@ const renderSubscriptions = (
   currency: string, 
   getFrequencyLabel: (frequency: string) => string,
   handleStatusToggle: (id: number, currentStatus: boolean) => void,
-  isToggling: boolean
+  isToggling: boolean,
+  handleEdit: (subscription: Subscription) => void,
+  handleDelete: (subscription: Subscription) => void
 ) => {
   if (isLoading) {
     return (
@@ -419,10 +474,32 @@ const renderSubscriptions = (
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary transition-all duration-200"
+                      onClick={() => handleEdit(subscription)}
                     >
                       <Edit2 className="h-4 w-4" />
                       <span className="sr-only">Edit</span>
                     </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary transition-all duration-200"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                          <span className="sr-only">More options</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-40">
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => handleDelete(subscription)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </td>
               </tr>

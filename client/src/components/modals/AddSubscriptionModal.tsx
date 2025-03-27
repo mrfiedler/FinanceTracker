@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertSubscriptionSchema } from "@shared/schema";
+import { insertSubscriptionSchema, insertClientSchema } from "@shared/schema";
+import { z } from "zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -33,12 +34,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import { useCurrency } from "@/context/CurrencyContext";
 import { frequencyOptions } from "@/lib/constants";
+import { UserPlus, PlusCircle } from "lucide-react";
 
 interface AddSubscriptionModalProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+// Type for the form with potential new client
+type FormData = z.infer<typeof insertSubscriptionSchema> & {
+  newClient?: {
+    name: string;
+    email: string;
+    phone?: string | null;
+    businessType: string;
+  };
 }
 
 const AddSubscriptionModal = ({ isOpen, onClose }: AddSubscriptionModalProps) => {
@@ -46,14 +59,25 @@ const AddSubscriptionModal = ({ isOpen, onClose }: AddSubscriptionModalProps) =>
   const queryClient = useQueryClient();
   const { currency } = useCurrency();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showNewClientForm, setShowNewClientForm] = useState(false);
 
   // Get clients for the dropdown
   const { data: clients } = useQuery({
     queryKey: ['/api/clients'],
   });
 
-  const form = useForm({
-    resolver: zodResolver(insertSubscriptionSchema),
+  const form = useForm<FormData>({
+    resolver: zodResolver(
+      insertSubscriptionSchema.extend({
+        // Add optional schema for new client
+        newClient: z.object({
+          name: z.string().min(2, "Name must be at least 2 characters"),
+          email: z.string().email("Please enter a valid email"),
+          phone: z.string().nullable().optional(),
+          businessType: z.string().min(1, "Business type is required"),
+        }).optional(),
+      })
+    ),
     defaultValues: {
       name: "",
       amount: "",
@@ -64,12 +88,69 @@ const AddSubscriptionModal = ({ isOpen, onClose }: AddSubscriptionModalProps) =>
       isActive: true,
       currency: currency,
       description: "",
+      newClient: {
+        name: "",
+        email: "",
+        phone: "",
+        businessType: ""
+      }
     },
   });
+  
+  // Client selection handler
+  const handleClientChange = (value: string) => {
+    if (value === "new") {
+      setShowNewClientForm(true);
+      form.setValue("clientId", "");
+    } else {
+      setShowNewClientForm(false);
+      form.setValue("clientId", value);
+    }
+  };
 
+  // Create client mutation
+  const createClientMutation = useMutation({
+    mutationFn: async (clientData: z.infer<typeof insertClientSchema>) => {
+      const response = await apiRequest("POST", "/api/clients", clientData);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/clients'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to create client",
+        description: error.message || "Please try again later",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+    }
+  });
+
+  // Subscription mutation
   const mutation = useMutation({
-    mutationFn: async (data) => {
-      return apiRequest("POST", "/api/subscriptions", data);
+    mutationFn: async (data: FormData) => {
+      // If there's a new client, create it first
+      if (showNewClientForm && data.newClient) {
+        try {
+          const newClient = await createClientMutation.mutateAsync({
+            name: data.newClient.name,
+            email: data.newClient.email,
+            phone: data.newClient.phone || null,
+            businessType: data.newClient.businessType,
+            isActive: true
+          });
+          
+          // Use the new client's ID for the subscription
+          data.clientId = newClient.id.toString();
+        } catch (error) {
+          throw error; // Let the error bubble up
+        }
+      }
+      
+      // Remove the newClient data before sending to API
+      const { newClient, ...subscriptionData } = data;
+      return apiRequest("POST", "/api/subscriptions", subscriptionData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/summary'] });
@@ -80,9 +161,10 @@ const AddSubscriptionModal = ({ isOpen, onClose }: AddSubscriptionModalProps) =>
         variant: "default",
       });
       form.reset();
+      setShowNewClientForm(false);
       onClose();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Failed to add subscription",
         description: error.message || "Please try again later",
@@ -94,7 +176,7 @@ const AddSubscriptionModal = ({ isOpen, onClose }: AddSubscriptionModalProps) =>
     },
   });
 
-  const onSubmit = (data) => {
+  const onSubmit = (data: FormData) => {
     setIsSubmitting(true);
     mutation.mutate(data);
   };
@@ -179,7 +261,7 @@ const AddSubscriptionModal = ({ isOpen, onClose }: AddSubscriptionModalProps) =>
                   <FormItem>
                     <FormLabel>Client</FormLabel>
                     <Select
-                      onValueChange={field.onChange}
+                      onValueChange={(value) => handleClientChange(value)}
                       defaultValue={field.value}
                     >
                       <FormControl>
@@ -188,6 +270,13 @@ const AddSubscriptionModal = ({ isOpen, onClose }: AddSubscriptionModalProps) =>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value="new">
+                          <div className="flex items-center">
+                            <PlusCircle className="mr-2 h-4 w-4 text-primary" />
+                            <span>Create New Client</span>
+                          </div>
+                        </SelectItem>
+                        <Separator className="my-1" />
                         {clients?.map((client) => (
                           <SelectItem key={client.id} value={client.id.toString()}>
                             {client.name}
@@ -279,6 +368,97 @@ const AddSubscriptionModal = ({ isOpen, onClose }: AddSubscriptionModalProps) =>
                 </FormItem>
               )}
             />
+
+            {/* New Client Form (conditionally rendered) */}
+            {showNewClientForm && (
+              <>
+                <Separator className="my-4" />
+                <div className="bg-muted/30 rounded-lg p-4 mb-2">
+                  <div className="flex items-center mb-4">
+                    <UserPlus className="h-5 w-5 mr-2 text-primary" />
+                    <h3 className="font-medium">New Client Information</h3>
+                  </div>
+
+                  <div className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="newClient.name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Client Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Business or client name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="newClient.email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="client@example.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="newClient.phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone (Optional)</FormLabel>
+                            <FormControl>
+                              <Input placeholder="+1 555 123 4567" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="newClient.businessType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Business Type</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select type" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="retail">Retail</SelectItem>
+                                <SelectItem value="technology">Technology</SelectItem>
+                                <SelectItem value="service">Service</SelectItem>
+                                <SelectItem value="manufacturing">Manufacturing</SelectItem>
+                                <SelectItem value="healthcare">Healthcare</SelectItem>
+                                <SelectItem value="education">Education</SelectItem>
+                                <SelectItem value="finance">Finance</SelectItem>
+                                <SelectItem value="other">Other</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <Separator className="my-4" />
+              </>
+            )}
 
             <FormField
               control={form.control}
