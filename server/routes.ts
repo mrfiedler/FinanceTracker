@@ -489,6 +489,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Change user password (admin only)
+  app.patch("/api/admin/users/:id/password", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { newPassword } = req.body;
+      
+      // Validate password
+      if (!newPassword || newPassword.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters" });
+      }
+      
+      // Check if user exists
+      const user = await storage.getUser(id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Hash the new password
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Update user with new password
+      const updatedUser = await storage.updateUser(id, { password: hashedPassword });
+      
+      // Remove password from response
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json({ message: "Password updated successfully", user: userWithoutPassword });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update password" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

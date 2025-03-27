@@ -1,0 +1,142 @@
+The web app needs the following improvements in CMS functionality, UI/UX fixes, database interactions, and modal functionalities to enhance usability and performance.
+
+1. CMS Enhancements
+Admins should be able to change user passwords from the CMS dashboard.
+
+The CMS should remain visually consistent with the platform's aesthetic.
+
+2. Notifications System
+When a user logs in, their notifications should be empty by default.
+
+Notifications should trigger when:
+
+The user levels up.
+
+A transaction is due.
+
+A team member accepts an invitation to join their team.
+
+3. Quests & Achievements
+Users should not be able to manually complete quests; the system must handle completion automatically.
+
+Replace completion buttons with “Coming Soon” until rewards are finalized.
+
+4. Dashboard Quick Actions
+Remove points from quick actions (users should not level up by clicking them).
+
+Ensure clicking each button opens the corresponding modal for data entry:
+
+Add Revenue → Finance page modal.
+
+Add Expense → Finance page modal.
+
+Create Quote → Quotes page modal.
+
+Add Subscription → Subscription page modal.
+
+Change button order to:
+
+Add Revenue, Add Expense, Create Quote, Add Subscription.
+
+5. Finance Page & Settings Modal
+Finance Settings modal:
+
+Should not be pre-filled for new users.
+
+Users should be able to add, edit, and delete categories/accounts.
+
+All fields should be required for creation.
+
+Add Revenue modal must be functional:
+
+Users should be able to add inputs.
+
+If the client does not exist, allow the user to create a client from the modal, and add it to the Clients database as a draft.
+
+Revenue & Expense table:
+
+Users should be able to edit existing records.
+
+By default, the view should show the current month.
+
+Implement a quick month switcher (e.g., swipe or dropdown).
+
+6. Clients Page
+Users should be able to edit client information after adding them.
+
+7. Quotes Page
+Create Quote modal:
+
+Must allow users to create a client on the spot if the client does not exist.
+
+The new client should be added to the Clients database as a draft.
+
+Status selection should be available in the modal.
+
+Fix functionality: Currently, quotes cannot be created from the modal.
+
+8. Subscriptions Page
+Add Subscription modal:
+
+Must allow users to create a client if the client does not exist.
+
+The new client should be added to the Clients database as a draft.
+
+Users should be able to edit or delete subscriptions.
+
+Fix functionality: Currently, subscriptions cannot be created from the modal.
+
+9. Contracts Page
+Linking contracts to quotes should be optional.
+
+Users should be able to delete or edit contracts.
+
+10. New User Experience
+When a user registers, their profile should start empty, except for:
+
+Name (from sign-up).
+
+E-mail.
+
+Username.
+
+The profile picture should be consistent between the profile and sidebar.
+
+The name and e-mail should also match across the platform.
+
+11. Profile Settings
+All buttons in the Profile Settings should be functional, except:
+
+Invite Team Member and all buttons in the Payment tab.
+
+Add “(Coming Soon)” text to these buttons (e.g., Invite Team Member (Coming Soon)).
+
+12. General UI/UX Fixes
+Fix the main search bar in the header (currently non-functional).
+
+Instructions for AI:
+Implement the CMS functionality for password management.
+
+Ensure all modals work correctly and allow dynamic data input.
+
+Fix the quick action behavior in the dashboard.
+
+Improve finance settings so users can fully manage their categories and accounts.
+
+Enable user edits for subscriptions, clients, revenues, and expenses.
+
+Ensure profile settings and notifications work as intended.
+
+Fix the search bar and month switching functionality.
+
+Final Deliverables:
+✅ CMS with password reset functionality.
+✅ Notifications system with relevant triggers.
+✅ Automatic quest completion with “Coming Soon” buttons.
+✅ Functional quick action buttons in the dashboard.
+✅ Editable Finance settings & user-controlled data input.
+✅ Fixes for modals in Quotes, Subscriptions, and Contracts pages.
+✅ Consistent profile experience for new users.
+✅ UI/UX fixes in the profile, search bar, and finance view.
+
+This will ensure a fully functional, responsive, and user-friendly SaaS platform. 🚀
