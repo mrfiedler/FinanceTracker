@@ -240,10 +240,21 @@ export class MemStorage implements IStorage {
     return this.expenses.get(id);
   }
   
-  async getExpenses(filters?: { dateRange?: string }): Promise<Expense[]> {
+  async getExpenses(filters?: { dateRange?: string; startDate?: string; endDate?: string }): Promise<Expense[]> {
     let expenses = Array.from(this.expenses.values());
     
-    if (filters?.dateRange) {
+    // Handle month view with specific date range
+    if (filters?.startDate && filters?.endDate) {
+      const startDate = new Date(filters.startDate);
+      const endDate = new Date(filters.endDate);
+      
+      expenses = expenses.filter(expense => {
+        const expenseDate = new Date(expense.date);
+        return expenseDate >= startDate && expenseDate <= endDate;
+      });
+    } 
+    // Handle regular date range (X days)
+    else if (filters?.dateRange) {
       const days = parseInt(filters.dateRange);
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - days);
@@ -289,10 +300,21 @@ export class MemStorage implements IStorage {
     return this.revenues.get(id);
   }
   
-  async getRevenues(filters?: { dateRange?: string }): Promise<Revenue[]> {
+  async getRevenues(filters?: { dateRange?: string; startDate?: string; endDate?: string }): Promise<Revenue[]> {
     let revenues = Array.from(this.revenues.values());
     
-    if (filters?.dateRange) {
+    // Handle month view with specific date range
+    if (filters?.startDate && filters?.endDate) {
+      const startDate = new Date(filters.startDate);
+      const endDate = new Date(filters.endDate);
+      
+      revenues = revenues.filter(revenue => {
+        const revenueDate = new Date(revenue.date);
+        return revenueDate >= startDate && revenueDate <= endDate;
+      });
+    } 
+    // Handle regular date range (X days)
+    else if (filters?.dateRange) {
       const days = parseInt(filters.dateRange);
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - days);
@@ -1271,10 +1293,23 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
   
-  async getExpenses(filters?: { dateRange?: string }): Promise<Expense[]> {
+  async getExpenses(filters?: { dateRange?: string; startDate?: string; endDate?: string }): Promise<Expense[]> {
     let query = db.select().from(expenses);
     
-    if (filters?.dateRange) {
+    // Handle month view with specific date range
+    if (filters?.startDate && filters?.endDate) {
+      const startDate = new Date(filters.startDate);
+      const endDate = new Date(filters.endDate);
+      
+      query = query.where(
+        and(
+          gte(expenses.date, startDate.toISOString().split('T')[0]),
+          sql`date(${expenses.date}) <= ${endDate.toISOString().split('T')[0]}`
+        )
+      );
+    } 
+    // Handle regular date range (X days)
+    else if (filters?.dateRange) {
       const days = parseInt(filters.dateRange);
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - days);
@@ -1320,10 +1355,23 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
   
-  async getRevenues(filters?: { dateRange?: string }): Promise<Revenue[]> {
+  async getRevenues(filters?: { dateRange?: string; startDate?: string; endDate?: string }): Promise<Revenue[]> {
     let query = db.select().from(revenues);
     
-    if (filters?.dateRange) {
+    // Handle month view with specific date range
+    if (filters?.startDate && filters?.endDate) {
+      const startDate = new Date(filters.startDate);
+      const endDate = new Date(filters.endDate);
+      
+      query = query.where(
+        and(
+          gte(revenues.date, startDate.toISOString().split('T')[0]),
+          sql`date(${revenues.date}) <= ${endDate.toISOString().split('T')[0]}`
+        )
+      );
+    } 
+    // Handle regular date range (X days)
+    else if (filters?.dateRange) {
       const days = parseInt(filters.dateRange);
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - days);

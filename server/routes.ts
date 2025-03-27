@@ -81,7 +81,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/expenses", async (req, res) => {
     try {
       const dateRange = req.query.dateRange as string;
-      const expenses = await storage.getExpenses({ dateRange });
+      const startDate = req.query.startDate as string;
+      const endDate = req.query.endDate as string;
+      
+      // Pass all date filtering options
+      const expenses = await storage.getExpenses({ 
+        dateRange, 
+        startDate, 
+        endDate 
+      });
+      
       res.json(expenses);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch expenses" });
@@ -137,7 +146,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/revenues", async (req, res) => {
     try {
       const dateRange = req.query.dateRange as string;
-      const revenues = await storage.getRevenues({ dateRange });
+      const startDate = req.query.startDate as string;
+      const endDate = req.query.endDate as string;
+      
+      // Pass all date filtering options
+      const revenues = await storage.getRevenues({ 
+        dateRange, 
+        startDate, 
+        endDate 
+      });
+      
       res.json(revenues);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch revenues" });
@@ -495,13 +513,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const dateRange = req.query.dateRange as string || "30";
       const transactionType = req.query.transactionType as string || "all";
+      const startDate = req.query.startDate as string;
+      const endDate = req.query.endDate as string;
+      
+      // Create filter object based on the query parameters
+      const filter: { dateRange?: string; startDate?: string; endDate?: string } = {};
+      
+      // Handle custom date ranges for monthly view
+      if (dateRange === "month" && startDate && endDate) {
+        filter.startDate = startDate;
+        filter.endDate = endDate;
+      } else {
+        filter.dateRange = dateRange;
+      }
       
       const expenses = (transactionType === "all" || transactionType === "expense") 
-        ? await storage.getExpenses({ dateRange }) 
+        ? await storage.getExpenses(filter) 
         : [];
         
       const revenues = (transactionType === "all" || transactionType === "revenue") 
-        ? await storage.getRevenues({ dateRange }) 
+        ? await storage.getRevenues(filter) 
         : [];
       
       // Combine and format transactions
@@ -527,6 +558,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         netProfit: totalRevenue - totalExpenses
       });
     } catch (error) {
+      console.error("Error fetching transactions:", error);
       res.status(500).json({ message: "Failed to fetch transactions" });
     }
   });

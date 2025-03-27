@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCurrency } from "@/hooks/useCurrency";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -37,7 +37,11 @@ import {
   BanknoteIcon,
   Landmark,
   Settings,
-  Calendar
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Edit,
+  Pencil
 } from "lucide-react";
 import { 
   SiChase, 
@@ -55,6 +59,7 @@ import FinanceSettingsModal from "@/components/modals/FinanceSettingsModal";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { format, subMonths, addMonths, startOfMonth, endOfMonth, differenceInDays } from 'date-fns';
 
 const Finance = () => {
   const { currency } = useCurrency();
@@ -64,6 +69,10 @@ const Finance = () => {
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("all"); // Added state for category filter
   const [selectedAccount, setSelectedAccount] = useState("all"); // Added state for account filter
+  const [currentMonth, setCurrentMonth] = useState(new Date()); // Current month for filtering
+  const [customDateStart, setCustomDateStart] = useState('');
+  const [customDateEnd, setCustomDateEnd] = useState('');
+  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [optimisticUpdates, setOptimisticUpdates] = useState<{[key: string]: boolean}>({});
@@ -74,6 +83,49 @@ const Finance = () => {
     openAddExpenseModal,
     openAddRevenueModal
   } = useModals();
+
+  // Initialize the current month on component mount
+  useEffect(() => {
+    // Set the current month for default view
+    setCurrentMonth(new Date());
+    
+    // Calculate start and end dates of the current month
+    const startDate = startOfMonth(new Date());
+    const endDate = endOfMonth(new Date());
+    
+    // Set the custom date range to current month
+    setCustomDateStart(format(startDate, 'yyyy-MM-dd'));
+    setCustomDateEnd(format(endDate, 'yyyy-MM-dd'));
+    
+    // Set the date range to "custom"
+    setDateRange("month");
+  }, []);
+
+  // Navigate to previous month
+  const goToPreviousMonth = () => {
+    const previousMonth = subMonths(currentMonth, 1);
+    setCurrentMonth(previousMonth);
+    
+    const startDate = startOfMonth(previousMonth);
+    const endDate = endOfMonth(previousMonth);
+    
+    setCustomDateStart(format(startDate, 'yyyy-MM-dd'));
+    setCustomDateEnd(format(endDate, 'yyyy-MM-dd'));
+    setDateRange("month");
+  };
+
+  // Navigate to next month
+  const goToNextMonth = () => {
+    const nextMonth = addMonths(currentMonth, 1);
+    setCurrentMonth(nextMonth);
+    
+    const startDate = startOfMonth(nextMonth);
+    const endDate = endOfMonth(nextMonth);
+    
+    setCustomDateStart(format(startDate, 'yyyy-MM-dd'));
+    setCustomDateEnd(format(endDate, 'yyyy-MM-dd'));
+    setDateRange("month");
+  };
 
   // Function to update transaction status instantly
   const updateTransactionStatus = useCallback(async (transaction: any) => {
@@ -105,7 +157,7 @@ const Finance = () => {
 
       // Invalidate query to refresh data in the background
       queryClient.invalidateQueries({
-        queryKey: ['/api/finance/transactions', transactionType, dateRange, searchQuery, selectedCategory, selectedAccount]
+        queryKey: ['/api/finance/transactions', transactionType, dateRange, searchQuery, selectedCategory, selectedAccount, customDateStart, customDateEnd]
       });
 
     } catch (error) {
@@ -124,12 +176,19 @@ const Finance = () => {
         variant: "destructive"
       });
     }
-  }, [transactionType, dateRange, searchQuery, selectedCategory, selectedAccount, queryClient, toast]);
+  }, [transactionType, dateRange, searchQuery, selectedCategory, selectedAccount, customDateStart, customDateEnd, queryClient, toast]);
 
   const { data: financeData, isLoading } = useQuery({
-    queryKey: ['/api/finance/transactions', transactionType, dateRange, searchQuery, selectedCategory, selectedAccount],
+    queryKey: ['/api/finance/transactions', transactionType, dateRange, searchQuery, selectedCategory, selectedAccount, customDateStart, customDateEnd],
     queryFn: async () => {
-      const response = await fetch(`/api/finance/transactions?dateRange=${dateRange}&transactionType=${transactionType}&category=${selectedCategory}&account=${selectedAccount}`);
+      let url = `/api/finance/transactions?dateRange=${dateRange}&transactionType=${transactionType}&category=${selectedCategory}&account=${selectedAccount}`;
+      
+      // If using month filtering, add custom date parameters
+      if (dateRange === "month" && customDateStart && customDateEnd) {
+        url += `&startDate=${customDateStart}&endDate=${customDateEnd}`;
+      }
+      
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Failed to fetch transactions');
       }
@@ -434,12 +493,38 @@ const Finance = () => {
                 </div>
 
                 <div className="flex flex-wrap gap-2">
+                  {/* Month Selector */}
+                  {dateRange === "month" && (
+                    <div className="bg-background border rounded-md flex items-center h-9 px-2 shadow-sm">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={goToPreviousMonth}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <span className="text-sm font-medium px-2 min-w-[120px] text-center">
+                        {format(currentMonth, 'MMMM yyyy')}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={goToNextMonth}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                  
                   <Select value={dateRange} onValueChange={setDateRange}>
                     <SelectTrigger className="h-9 w-[140px]">
                       <Calendar className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
                       <SelectValue placeholder="Period" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="month">This Month</SelectItem>
                       <SelectItem value="7">Last 7 days</SelectItem>
                       <SelectItem value="30">Last 30 days</SelectItem>
                       <SelectItem value="90">Last 90 days</SelectItem>
