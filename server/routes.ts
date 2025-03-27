@@ -335,6 +335,161 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch finance trends" });
     }
   });
+  
+  // API - Finance Categories
+  app.get("/api/finance/categories", async (req, res) => {
+    try {
+      // For now, return predefined categories (in a real app, this would fetch from DB)
+      const categories = [
+        { id: 1, value: "groceries", label: "Groceries", type: "expense" },
+        { id: 2, value: "transportation", label: "Transportation", type: "expense" },
+        { id: 3, value: "utilities", label: "Utilities", type: "expense" },
+        { id: 4, value: "entertainment", label: "Entertainment", type: "expense" },
+        { id: 5, value: "dining", label: "Dining", type: "expense" },
+        { id: 6, value: "healthcare", label: "Healthcare", type: "expense" },
+        { id: 7, value: "salary", label: "Salary", type: "revenue" },
+        { id: 8, value: "freelance", label: "Freelance", type: "revenue" },
+        { id: 9, value: "investments", label: "Investments", type: "revenue" }
+      ];
+      res.json(categories);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+  
+  app.post("/api/finance/categories", async (req, res) => {
+    try {
+      // In a real app, this would add to database
+      // For now, simulate success response with made-up ID
+      const { name, type } = req.body;
+      
+      // Validate inputs
+      if (!name || !type || (type !== 'expense' && type !== 'revenue')) {
+        return res.status(400).json({ message: "Invalid category data" });
+      }
+      
+      const newCategory = {
+        id: Math.floor(Math.random() * 1000) + 10, // Random ID (would be DB-generated)
+        value: name.toLowerCase().replace(/\s+/g, ''), // Convert spaces to empty string
+        label: name,
+        type
+      };
+      
+      res.status(200).json(newCategory);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create category" });
+    }
+  });
+  
+  app.put("/api/finance/categories/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { name, type } = req.body;
+      
+      // Validate inputs
+      if (!name || !type || (type !== 'expense' && type !== 'revenue')) {
+        return res.status(400).json({ message: "Invalid category data" });
+      }
+      
+      // In a real app, this would update the database
+      const updatedCategory = {
+        id,
+        value: name.toLowerCase().replace(/\s+/g, ''),
+        label: name,
+        type
+      };
+      
+      res.json(updatedCategory);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update category" });
+    }
+  });
+  
+  app.delete("/api/finance/categories/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // In a real app, this would delete from the database
+      // For now, simulate success
+      res.status(200).json({ message: "Category deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete category" });
+    }
+  });
+  
+  // API - Finance Accounts
+  app.get("/api/finance/accounts", async (req, res) => {
+    try {
+      // For now, return predefined accounts (in a real app, this would fetch from DB)
+      const accounts = [
+        { id: 1, value: "checking", label: "Checking Account", icon: "default" },
+        { id: 2, value: "savings", label: "Savings Account", icon: "default" },
+        { id: 3, value: "credit", label: "Credit Card", icon: "creditcard" }
+      ];
+      res.json(accounts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch accounts" });
+    }
+  });
+  
+  app.post("/api/finance/accounts", async (req, res) => {
+    try {
+      // In a real app, this would add to database
+      const { name, type } = req.body;
+      
+      // Validate inputs
+      if (!name || !type) {
+        return res.status(400).json({ message: "Invalid account data" });
+      }
+      
+      const newAccount = {
+        id: Math.floor(Math.random() * 1000) + 10, // Random ID (would be DB-generated)
+        value: name.toLowerCase().replace(/\s+/g, ''), // Convert spaces to empty string
+        label: name,
+        icon: type
+      };
+      
+      res.status(200).json(newAccount);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create account" });
+    }
+  });
+  
+  app.put("/api/finance/accounts/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { name, type } = req.body;
+      
+      // Validate inputs
+      if (!name || !type) {
+        return res.status(400).json({ message: "Invalid account data" });
+      }
+      
+      // In a real app, this would update the database
+      const updatedAccount = {
+        id,
+        value: name.toLowerCase().replace(/\s+/g, ''),
+        label: name,
+        icon: type
+      };
+      
+      res.json(updatedAccount);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update account" });
+    }
+  });
+  
+  app.delete("/api/finance/accounts/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // In a real app, this would delete from the database
+      // For now, simulate success
+      res.status(200).json({ message: "Account deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete account" });
+    }
+  });
 
   app.get("/api/finance/transactions", async (req, res) => {
     try {

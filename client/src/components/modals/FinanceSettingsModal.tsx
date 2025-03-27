@@ -294,7 +294,7 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
   const handleEditAccount = (account: Account) => {
     setEditingAccount(account);
     setNewAccountName(account.label);
-    setNewAccountType(account.value);
+    setNewAccountType(account.icon);
   };
 
   const handleSaveAccountEdit = () => {
