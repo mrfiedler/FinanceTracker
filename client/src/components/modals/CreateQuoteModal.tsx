@@ -199,9 +199,9 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
                           Create New Client
                         </div>
                       </SelectItem>
-                      <SelectItem value="" disabled>
+                      <div className="px-2 py-1.5">
                         <Separator className="my-1" />
-                      </SelectItem>
+                      </div>
                       {clients?.map((client) => (
                         <SelectItem key={client.id} value={client.id.toString()}>
                           {client.name}
