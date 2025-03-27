@@ -3,6 +3,7 @@ import { useModals } from "@/hooks/useModals";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+// Keep the import but don't use the points functionality
 import { useGamification } from "@/context/GamificationContext";
 
 const QuickActions = () => {
@@ -13,21 +14,11 @@ const QuickActions = () => {
     openCreateQuoteModal
   } = useModals();
   
+  // Import but don't use this
   const { addPoints } = useGamification();
 
-  // Define the action buttons with their properties
+  // Define the action buttons with their properties (updated order as requested)
   const actions = [
-    { 
-      label: "Add Expense", 
-      color: "border-[#C6909A]", 
-      bgColor: "hover:bg-[#FEF2F2]",
-      darkBgColor: "dark:hover:bg-[#3A1C1C]",
-      textColor: "text-[#C6909A]", 
-      onClick: openAddExpenseModal,
-      id: "expense-action",
-      icon: <PlusCircle className="h-5 w-5 mr-2" />,
-      points: 2
-    },
     { 
       label: "Add Revenue", 
       color: "border-[#A3E635]", 
@@ -36,19 +27,17 @@ const QuickActions = () => {
       textColor: "text-[#A3E635]", 
       onClick: openAddRevenueModal,
       id: "revenue-action",
-      icon: <PlusCircle className="h-5 w-5 mr-2" />,
-      points: 5
+      icon: <PlusCircle className="h-5 w-5 mr-2" />
     },
     { 
-      label: "Add Subscription", 
-      color: "border-[#7D6BA7]", 
-      bgColor: "hover:bg-[#F5F3FB]",
-      darkBgColor: "dark:hover:bg-[#2D2542]",
-      textColor: "text-[#7D6BA7]", 
-      onClick: openAddSubscriptionModal,
-      id: "subscription-action",
-      icon: <Sparkles className="h-5 w-5 mr-2" />,
-      points: 10
+      label: "Add Expense", 
+      color: "border-[#C6909A]", 
+      bgColor: "hover:bg-[#FEF2F2]",
+      darkBgColor: "dark:hover:bg-[#3A1C1C]",
+      textColor: "text-[#C6909A]", 
+      onClick: openAddExpenseModal,
+      id: "expense-action",
+      icon: <PlusCircle className="h-5 w-5 mr-2" />
     },
     { 
       label: "Create Quote", 
@@ -58,9 +47,18 @@ const QuickActions = () => {
       textColor: "text-[#3DAFC4]", 
       onClick: openCreateQuoteModal,
       id: "quote-action",
-      icon: <Zap className="h-5 w-5 mr-2" />,
-      points: 15
+      icon: <Zap className="h-5 w-5 mr-2" />
     },
+    { 
+      label: "Add Subscription", 
+      color: "border-[#7D6BA7]", 
+      bgColor: "hover:bg-[#F5F3FB]",
+      darkBgColor: "dark:hover:bg-[#2D2542]",
+      textColor: "text-[#7D6BA7]", 
+      onClick: openAddSubscriptionModal,
+      id: "subscription-action",
+      icon: <Sparkles className="h-5 w-5 mr-2" />
+    }
   ];
 
   useEffect(() => {
@@ -128,8 +126,7 @@ const QuickActions = () => {
             id={action.id}
             onClick={(e) => {
               e.preventDefault();
-              // Add points when an action is performed
-              addPoints(action.points);
+              // Just trigger the modal without adding points
               action.onClick();
             }}
             type="button"
@@ -163,20 +160,6 @@ const QuickActions = () => {
             >
               <span className="absolute inset-0 bg-current opacity-10"></span>
             </motion.span>
-            
-            {/* Point display - show by default on mobile for better discoverability */}
-            <motion.div 
-              className="absolute -top-2 -right-2 bg-yellow-400 dark:bg-yellow-500 text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center text-gray-900 sm:opacity-0 opacity-100 sm:scale-0 scale-100"
-              initial={window.innerWidth >= 640 ? { opacity: 0, scale: 0 } : { opacity: 1, scale: 1 }}
-              whileHover={{ 
-                opacity: 1, 
-                scale: 1,
-                rotate: [0, 10, -10, 10, 0],
-                transition: { duration: 0.3 } 
-              }}
-            >
-              +{action.points}
-            </motion.div>
           </motion.button>
         </motion.div>
       ))}

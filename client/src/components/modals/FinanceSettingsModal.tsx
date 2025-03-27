@@ -206,39 +206,35 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     }
   };
 
-  // Added to handle light/dark mode background
-  const cardStyle = "max-w-4xl h-auto sm:h-auto";
-
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={cardStyle}>
+      <DialogContent className="max-w-4xl h-auto">
         <AnimatePresence>
           {showSuccess && (
             <motion.div 
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
-              className="absolute inset-0 z-50 flex items-center justify-center bg-black/50"
+              className="absolute inset-0 z-50 flex items-center justify-center bg-black/40"
             >
               <motion.div 
-                className="bg-emerald-100 dark:bg-gray-700 text-emerald-800 dark:text-gray-200 rounded-full p-8"
+                className="bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 rounded-full p-6"
                 initial={{ rotate: 0 }}
                 animate={{ rotate: 360 }}
                 transition={{ duration: 0.5 }}
               >
-                <CheckCircle size={60} />
+                <CheckCircle size={50} />
               </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        <DialogHeader>
-          <DialogTitle className="text-xl flex items-center">
-            <Settings className="h-5 w-5 mr-2" />
+        <DialogHeader className="pb-3">
+          <DialogTitle className="text-lg flex items-center font-semibold">
+            <Settings className="h-4.5 w-4.5 mr-2 text-primary" />
             Finance Settings
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm text-muted-foreground mt-1">
             Manage your categories and accounts for better financial tracking
           </DialogDescription>
         </DialogHeader>
@@ -427,15 +423,18 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
               </CardContent>
               <CardFooter className="flex justify-end space-x-2 p-3 border-t border-gray-200 dark:border-gray-700">
                 {editingCategory ? (
-                  <div className="flex space-x-2">
+                  <div className="flex space-x-2 w-full">
                     <Button 
-                      className="w-24 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white border border-gray-300 dark:border-gray-600 font-medium" 
+                      variant="outline"
+                      className="flex-1 font-medium" 
                       onClick={handleCancelEdit}
                     >
+                      <X className="mr-1.5 h-3.5 w-3.5" />
                       Cancel
                     </Button>
                     <Button 
-                      className="w-24 bg-blue-500 hover:bg-blue-600 text-white font-medium" 
+                      variant="default"
+                      className="flex-1 font-medium" 
                       onClick={handleSaveEdit}
                     >
                       <Save className="mr-1.5 h-3.5 w-3.5" />
@@ -444,7 +443,8 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
                   </div>
                 ) : (
                   <Button 
-                    className="w-full h-10 text-sm bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-md shadow-sm transition-all" 
+                    variant="default"
+                    className="w-full h-9 text-sm font-medium" 
                     onClick={handleAddCategory}
                   >
                     <Plus className="mr-1.5 h-3.5 w-3.5" />
@@ -541,7 +541,8 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
               </CardContent>
               <CardFooter className="flex justify-end p-3 border-t border-gray-200 dark:border-gray-700">
                 <Button 
-                  className="w-full h-10 text-sm bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-md shadow-sm transition-all" 
+                  variant="default"
+                  className="w-full h-9 text-sm font-medium" 
                   onClick={handleAddAccount}
                 >
                   <Plus className="mr-1.5 h-3.5 w-3.5" />

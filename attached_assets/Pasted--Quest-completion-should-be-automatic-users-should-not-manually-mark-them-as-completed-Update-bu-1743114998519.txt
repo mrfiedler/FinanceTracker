@@ -1,0 +1,101 @@
+
+Quest completion should be automatic (users should not manually mark them as completed).
+
+Update buttons to "Coming Soon" while rewards are being determined.
+
+3. Quick Action Buttons in Dashboard
+Remove point rewards for using Quick Action buttons.
+
+Update Quick Action Button order to:
+
+Add Revenue → Opens the Add Revenue modal (same as Finance page).
+
+Add Expense → Opens the Add Expense modal (same as Finance page).
+
+Create Quote → Opens the Create Quote modal (same as Quotes page).
+
+Add Subscription → Opens the Add Subscription modal (same as Subscriptions page).
+
+4. Finance Settings Modal
+New users should not have pre-filled data.
+
+Users must be able to:
+
+Add new categories & accounts.
+
+Edit & delete categories & accounts.
+
+Ensure all fields are required for creation.
+
+5. Fix Issues in Finance Page
+Add Revenue modal is not functional → Fix it to allow users to add inputs.
+
+If the client does not exist, allow users to create a new client within the modal.
+
+This new client should be mirrored as a draft in the Clients database.
+
+Ensure users can edit a Revenue or Expense after adding it to the table.
+
+The default view should always show the current month.
+
+Add a quick switch between months (swipe or dropdown).
+
+6. Clients Page Enhancements
+Once a client is added, allow users to edit the client’s details.
+
+7. Fix Issues in Quotes Page
+In the Create Quote modal, if a client does not exist, allow users to create a new client within the modal.
+
+This client should be mirrored as a draft in the Clients database.
+
+Fix the issue preventing Quote creation via the modal.
+
+Add a Status dropdown in the modal (matching the options in the Quotes table).
+
+8. Fix Issues in Subscriptions Page
+In the Add Subscription modal, if a client does not exist, allow users to create a new client within the modal.
+
+This client should be mirrored as a draft in the Clients database.
+
+Fix the issue preventing Subscription creation via the modal.
+
+After creating a subscription, users should have quick access to edit or delete it.
+
+9. Fix Issues in Contracts Page
+Users should not be required to link contracts to a quote.
+
+Ensure users can edit or delete contracts.
+
+10. User Account & Profile Updates
+New users should start with an empty account, except for:
+
+Name (from sign-up)
+
+E-mail
+
+Username
+
+The profile picture, name, and email should match the sidebar.
+
+Ensure all buttons in Profile Settings are functional, except:
+
+"Invite Team Member"
+
+All buttons in the "Payment" tab
+
+These should display: "Coming Soon" (e.g., Invite Team Member (Coming Soon)).
+
+11. Global Search Bar Fix
+The main search bar in the header is non-functional → Make it work as expected.
+
+Final Deliverables:
+✅ Functional notifications system
+✅ Automated quest completion
+✅ Fixed Quick Action button behavior & order
+✅ Functional Finance Settings modal
+✅ Add Revenue modal fully operational
+✅ Editable Revenues, Expenses, and Clients
+✅ Improved navigation for current and past months in Finance
+✅ Subscription & Contract management fixes
+✅ Consistent user profile information & sidebar updates
+✅ Search bar fully operational
