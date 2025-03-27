@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import { useCurrency } from "@/context/CurrencyContext";
 import { formatCurrency, formatDate, getInitials } from "@/lib/utils";
 import {
@@ -52,9 +53,14 @@ const Quotes = () => {
     };
   }, [openCreateQuoteModal]);
 
-  const { data: quotes, isLoading, invalidateQuery } = useQuery({
+  const { data: quotes, isLoading } = useQuery({
     queryKey: ['/api/quotes', dateRange, statusFilter],
   });
+  
+  // Function to invalidate query cache
+  const invalidateQuoteQueries = () => {
+    queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
+  };
 
   const filteredQuotes = quotes
     ? quotes.filter(quote => {
@@ -208,7 +214,7 @@ const Quotes = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {renderQuotesTable(filteredQuotes, isLoading, currency, getStatusIcon, getStatusColor, invalidateQuery)}
+          {renderQuotesTable(filteredQuotes, isLoading, currency, getStatusIcon, getStatusColor, invalidateQuoteQueries)}
         </CardContent>
       </Card>
 
@@ -307,16 +313,18 @@ const renderQuotesTable = (quotes, isLoading, currency, getStatusIcon, getStatus
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ status: value })
                       });
-                      invalidateQuery(['/api/quotes']);
+                      queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
                     }}
                   >
                     <SelectTrigger className={`w-[130px] ${getStatusColor(quote.status)}`}>
                       <SelectValue>{quote.status}</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Pending">Pending</SelectItem>
-                      <SelectItem value="Accepted">Accepted</SelectItem>
-                      <SelectItem value="Declined">Declined</SelectItem>
+                      {quoteStatusOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </td>

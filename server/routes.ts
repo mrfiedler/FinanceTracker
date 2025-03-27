@@ -240,14 +240,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/quotes", async (req, res) => {
     try {
-      const data = insertQuoteSchema.parse(req.body);
+      // Check if we need to create a new client first
+      let clientId = req.body.clientId;
+      
+      if (req.body.newClient && typeof clientId === 'string' && clientId === 'new') {
+        // Create a new client as a draft
+        const clientData = {
+          name: req.body.newClient.name,
+          email: req.body.newClient.email,
+          phone: req.body.newClient.phone || null,
+          businessType: req.body.newClient.businessType,
+          notes: "Created as draft from Quote form",
+          isActive: true
+        };
+        
+        const newClient = await storage.createClient(clientData);
+        clientId = newClient.id;
+      }
+      
+      // Now create the quote with the client ID (either existing or newly created)
+      const quoteData = {
+        ...req.body,
+        clientId,
+        status: req.body.status || "Pending", // Use provided status or default to Pending
+      };
+      
+      // Remove the newClient field before validation
+      if (quoteData.newClient) {
+        delete quoteData.newClient;
+      }
+      
+      const data = insertQuoteSchema.parse(quoteData);
       const quote = await storage.createQuote(data);
       res.status(201).json(quote);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid quote data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to create quote" });
+      res.status(500).json({ message: "Failed to create quote", error: error.message });
     }
   });
 

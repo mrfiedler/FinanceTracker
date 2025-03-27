@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertQuoteSchema } from "@shared/schema";
+import { insertQuoteSchema, insertClientSchema } from "@shared/schema";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -32,6 +32,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCurrency } from "@/context/CurrencyContext";
+import { Separator } from "@/components/ui/separator";
+import { PlusCircle, UserPlus } from "lucide-react";
+import { quoteStatusOptions } from "@/lib/constants";
+import { z } from "zod";
 
 interface CreateQuoteModalProps {
   isOpen: boolean;
@@ -43,22 +47,53 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
   const queryClient = useQueryClient();
   const { currency } = useCurrency();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showNewClientForm, setShowNewClientForm] = useState(false);
 
   // Get clients for the dropdown
   const { data: clients } = useQuery({
     queryKey: ['/api/clients'],
   });
 
-  const form = useForm({
-    resolver: zodResolver(insertQuoteSchema),
+  // Create a merged zod schema for both quote and new client
+  const newClientSchema = z.object({
+    name: z.string().min(1, "Business name is required"),
+    email: z.string().email("Invalid email address"),
+    phone: z.string().nullable().optional(),
+    businessType: z.string().min(1, "Business type is required"),
+  });
+
+  // Define the type for the form data explicitly
+  type FormData = z.infer<typeof insertQuoteSchema> & {
+    status?: string;
+    newClient?: {
+      name: string;
+      email: string;
+      phone?: string | null;
+      businessType: string;
+    };
+  };
+  
+  // Form schema with nested fields for new client
+  const formSchema = insertQuoteSchema.extend({
+    // Add optional status field
+    status: z.string().optional(),
+    // For when creating a new client
+    newClient: newClientSchema.optional(),
+  });
+  
+  // Create the form with proper type safety
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       jobTitle: "",
       jobDescription: "",
       amount: "",
       clientId: "",
+      status: "Pending",
       validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], // 30 days from now
       currency: currency,
       notes: "",
+      newClient: undefined,
     },
   });
 
@@ -70,12 +105,14 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
       queryClient.invalidateQueries({ queryKey: ['/api/quotes/recent'] });
       queryClient.invalidateQueries({ queryKey: ['/api/quotes/conversion'] });
       queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/clients'] });
       toast({
         title: "Quote created successfully",
-        description: "Your quote has been created and is pending approval",
+        description: "Your quote has been created successfully",
         variant: "default",
       });
       form.reset();
+      setShowNewClientForm(false);
       onClose();
     },
     onError: (error) => {
@@ -90,9 +127,29 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
     },
   });
 
-  const onSubmit = (data) => {
+  const onSubmit = (data: FormData) => {
     setIsSubmitting(true);
+    
+    // If creating a new client, send the form with the clientId set to 'new'
+    // and include the newClient data
+    if (showNewClientForm) {
+      data.clientId = "new";
+    }
+    
     mutation.mutate(data);
+  };
+
+  // Watch the clientId to toggle the new client form
+  const watchedClientId = form.watch("clientId");
+  
+  // When user selects "Create new client" in the dropdown
+  const handleClientChange = (value: string) => {
+    if (value === "new") {
+      setShowNewClientForm(true);
+    } else {
+      setShowNewClientForm(false);
+    }
+    form.setValue("clientId", value);
   };
 
   return (
@@ -101,7 +158,7 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
         <DialogHeader>
           <DialogTitle>Create Quote</DialogTitle>
           <DialogDescription>
-            Create a new quote for a client. All quotes are initially set to "Pending Approval".
+            Create a new quote for a client. You can also create a new client if needed.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -127,7 +184,7 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
                 <FormItem>
                   <FormLabel>Client</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
+                    onValueChange={handleClientChange}
                     defaultValue={field.value}
                   >
                     <FormControl>
@@ -136,6 +193,15 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
+                      <SelectItem value="new" className="font-medium text-primary">
+                        <div className="flex items-center">
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          Create New Client
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="" disabled>
+                        <Separator className="my-1" />
+                      </SelectItem>
                       {clients?.map((client) => (
                         <SelectItem key={client.id} value={client.id.toString()}>
                           {client.name}
@@ -147,6 +213,88 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
                 </FormItem>
               )}
             />
+
+            {/* New Client Form (conditionally rendered) */}
+            {showNewClientForm && (
+              <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/40">
+                <h3 className="text-sm font-medium mb-2 flex items-center">
+                  <PlusCircle className="h-4 w-4 mr-1.5 text-primary" />
+                  New Client Details
+                </h3>
+                
+                <FormField
+                  control={form.control}
+                  name="newClient.name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Business Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Acme Inc." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="newClient.email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="contact@acme.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="newClient.phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone (Optional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="+1 (555) 123-4567" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="newClient.businessType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Business Type</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Marketing Agency">Marketing Agency</SelectItem>
+                            <SelectItem value="Design Studio">Design Studio</SelectItem>
+                            <SelectItem value="Software House">Software House</SelectItem>
+                            <SelectItem value="Architecture Firm">Architecture Firm</SelectItem>
+                            <SelectItem value="Media Company">Media Company</SelectItem>
+                            <SelectItem value="Small Business">Small Business</SelectItem>
+                            <SelectItem value="Freelancer">Freelancer</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <FormField
@@ -195,19 +343,49 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="validUntil"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Valid Until</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="validUntil"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Valid Until</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {quoteStatusOptions.map((status) => (
+                          <SelectItem key={status.value} value={status.value}>
+                            {status.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
