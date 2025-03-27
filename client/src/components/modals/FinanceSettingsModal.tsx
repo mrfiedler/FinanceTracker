@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
@@ -28,7 +28,8 @@ import {
   SearchIcon,
   Save,
   X,
-  CheckCircle
+  CheckCircle,
+  AlertCircle
 } from "lucide-react";
 import { 
   SiChase, 
@@ -41,6 +42,33 @@ import {
 } from "react-icons/si";
 import { expenseCategories, revenueCategories, bankAccounts } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { apiRequest } from "@/lib/queryClient";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+// Define interfaces for categories and accounts
+interface Category {
+  id: number;
+  value: string;
+  label: string;
+  type: string;
+}
+
+interface Account {
+  id: number;
+  value: string;
+  label: string;
+  icon: string;
+}
 
 interface FinanceSettingsModalProps {
   isOpen: boolean;
@@ -53,11 +81,168 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
   const [searchQuery, setSearchQuery] = useState("");
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryType, setNewCategoryType] = useState("expense");
-  const [editingCategory, setEditingCategory] = useState<null | { value: string, label: string, type: string }>(null);
+  const [editingCategory, setEditingCategory] = useState<null | Category>(null);
+  const [editingAccount, setEditingAccount] = useState<null | Account>(null);
 
   const [newAccountName, setNewAccountName] = useState("");
   const [newAccountType, setNewAccountType] = useState("other");
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Alert dialog state for deletion confirmation
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{ id: number, type: string, name: string } | null>(null);
+
+  // Fetch user's categories and accounts from API
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery<Category[]>({
+    queryKey: ['/api/finance/categories'],
+    queryFn: async () => {
+      try {
+        const res = await apiRequest('GET', '/api/finance/categories');
+        return await res.json();
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+        return [];
+      }
+    }
+  });
+
+  const { data: accounts = [], isLoading: accountsLoading } = useQuery<Account[]>({
+    queryKey: ['/api/finance/accounts'],
+    queryFn: async () => {
+      try {
+        const res = await apiRequest('GET', '/api/finance/accounts');
+        return await res.json();
+      } catch (error) {
+        console.error('Failed to fetch accounts:', error);
+        return [];
+      }
+    }
+  });
+
+  // Create mutations for CRUD operations
+  const addCategoryMutation = useMutation({
+    mutationFn: async (categoryData: { name: string; type: string }) => {
+      const res = await apiRequest('POST', '/api/finance/categories', categoryData);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/finance/categories'] });
+      setNewCategoryName("");
+      showSuccessToast();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: `Failed to add category: ${error.message}`,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const updateCategoryMutation = useMutation({
+    mutationFn: async (categoryData: { id: number; name: string; type: string }) => {
+      const res = await apiRequest('PUT', `/api/finance/categories/${categoryData.id}`, {
+        name: categoryData.name,
+        type: categoryData.type
+      });
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/finance/categories'] });
+      setEditingCategory(null);
+      setNewCategoryName("");
+      setNewCategoryType("expense");
+      showSuccessToast();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update category: ${error.message}`,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const deleteCategoryMutation = useMutation({
+    mutationFn: async (categoryId: number) => {
+      const res = await apiRequest('DELETE', `/api/finance/categories/${categoryId}`);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/finance/categories'] });
+      showSuccessToast();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: `Failed to delete category: ${error.message}`,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const addAccountMutation = useMutation({
+    mutationFn: async (accountData: { name: string; type: string }) => {
+      const res = await apiRequest('POST', '/api/finance/accounts', accountData);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/finance/accounts'] });
+      setNewAccountName("");
+      setNewAccountType("other");
+      showSuccessToast();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: `Failed to add account: ${error.message}`,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const updateAccountMutation = useMutation({
+    mutationFn: async (accountData: { id: number; name: string; type: string }) => {
+      const res = await apiRequest('PUT', `/api/finance/accounts/${accountData.id}`, {
+        name: accountData.name,
+        type: accountData.type
+      });
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/finance/accounts'] });
+      setEditingAccount(null);
+      setNewAccountName("");
+      setNewAccountType("other");
+      showSuccessToast();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update account: ${error.message}`,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const deleteAccountMutation = useMutation({
+    mutationFn: async (accountId: number) => {
+      const res = await apiRequest('DELETE', `/api/finance/accounts/${accountId}`);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/finance/accounts'] });
+      showSuccessToast();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: `Failed to delete account: ${error.message}`,
+        variant: "destructive"
+      });
+    }
+  });
 
   const handleAddCategory = () => {
     if (!newCategoryName.trim()) {
@@ -69,21 +254,16 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
       return;
     }
 
-    // In a real app, this would be an API call
-    toast({
-      title: "Success",
-      description: `Category "${newCategoryName}" added successfully`,
+    addCategoryMutation.mutate({ 
+      name: newCategoryName.trim(), 
+      type: newCategoryType 
     });
-    setNewCategoryName("");
-
-    // Show success animation
-    showSuccessToast();
   };
 
-  const handleEditCategory = (category: any, type: string) => {
-    setEditingCategory({ ...category, type });
+  const handleEditCategory = (category: Category) => {
+    setEditingCategory(category);
     setNewCategoryName(category.label);
-    setNewCategoryType(type);
+    setNewCategoryType(category.type);
   };
 
   const handleSaveEdit = () => {
@@ -96,25 +276,50 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
       return;
     }
 
-    // In a real app, this would be an API call to update the category
-    toast({
-      title: "Success",
-      description: `Category "${editingCategory?.label}" updated to "${newCategoryName}"`,
-    });
-
-    // Reset form
-    setEditingCategory(null);
-    setNewCategoryName("");
-    setNewCategoryType("expense");
-
-    // Show success animation
-    showSuccessToast();
+    if (editingCategory) {
+      updateCategoryMutation.mutate({
+        id: editingCategory.id,
+        name: newCategoryName.trim(),
+        type: newCategoryType
+      });
+    }
   };
 
   const handleCancelEdit = () => {
     setEditingCategory(null);
     setNewCategoryName("");
     setNewCategoryType("expense");
+  };
+
+  const handleEditAccount = (account: Account) => {
+    setEditingAccount(account);
+    setNewAccountName(account.label);
+    setNewAccountType(account.value);
+  };
+
+  const handleSaveAccountEdit = () => {
+    if (!newAccountName.trim()) {
+      toast({
+        title: "Error",
+        description: "Account name cannot be empty",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (editingAccount) {
+      updateAccountMutation.mutate({
+        id: editingAccount.id,
+        name: newAccountName.trim(),
+        type: newAccountType
+      });
+    }
+  };
+
+  const handleCancelAccountEdit = () => {
+    setEditingAccount(null);
+    setNewAccountName("");
+    setNewAccountType("other");
   };
 
   const handleAddAccount = () => {
@@ -127,17 +332,29 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
       return;
     }
 
-    // In a real app, this would be an API call
-    toast({
-      title: "Success",
-      description: `Account "${newAccountName}" added successfully`,
+    addAccountMutation.mutate({
+      name: newAccountName.trim(),
+      type: newAccountType
     });
-    setNewAccountName("");
-
-    // Show success animation
-    showSuccessToast();
   };
 
+  const handleDeleteRequest = (id: number, type: string, name: string) => {
+    setItemToDelete({ id, type, name });
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!itemToDelete) return;
+    
+    if (itemToDelete.type === 'category') {
+      deleteCategoryMutation.mutate(itemToDelete.id);
+    } else if (itemToDelete.type === 'account') {
+      deleteAccountMutation.mutate(itemToDelete.id);
+    }
+    
+    setDeleteDialogOpen(false);
+    setItemToDelete(null);
+  };
 
   const renderAccountIcon = (accountType: string) => {
     switch (accountType) {
@@ -166,16 +383,16 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     }
   };
 
-  // Filtered categories based on search
-  const filteredExpenseCategories = expenseCategories.filter(cat => 
-    cat.label.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter categories and accounts based on search
+  const filteredExpenseCategories = categories
+    .filter(cat => cat.type === 'expense')
+    .filter(cat => cat.label.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  const filteredRevenueCategories = revenueCategories.filter(cat => 
-    cat.label.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredRevenueCategories = categories
+    .filter(cat => cat.type === 'revenue')
+    .filter(cat => cat.label.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  const filteredAccounts = bankAccounts.filter(acc => 
+  const filteredAccounts = accounts.filter(acc => 
     acc.label.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -303,7 +520,7 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
                             variant="ghost" 
                             size="icon" 
                             className="h-7 w-7 hover:bg-gray-100 dark:hover:bg-gray-700"
-                            onClick={() => handleEditCategory(category, 'expense')}
+                            onClick={() => handleEditCategory(category)}
                           >
                             <Edit className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
                           </Button>
@@ -349,7 +566,7 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
                             variant="ghost" 
                             size="icon" 
                             className="h-7 w-7 hover:bg-gray-100 dark:hover:bg-gray-700"
-                            onClick={() => handleEditCategory(category, 'revenue')}
+                            onClick={() => handleEditCategory(category)}
                           >
                             <Edit className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
                           </Button>
