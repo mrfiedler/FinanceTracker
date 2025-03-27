@@ -353,13 +353,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/contracts", async (req, res) => {
     try {
       const data = insertContractSchema.parse(req.body);
-      const contract = await storage.createContract(data);
+      // Convert quoteId to number or null
+      const parsedData = {
+        ...data,
+        quoteId: data.quoteId ? parseInt(data.quoteId) : null
+      };
+      
+      const contract = await storage.createContract(parsedData);
       res.status(201).json(contract);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid contract data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to create contract" });
+    }
+  });
+  
+  // Update contract
+  app.patch("/api/contracts/:id", async (req, res) => {
+    try {
+      const contractId = parseInt(req.params.id);
+      const data = insertContractSchema.parse(req.body);
+      
+      // Check if contract exists
+      const existingContract = await storage.getContract(contractId);
+      if (!existingContract) {
+        return res.status(404).json({ message: "Contract not found" });
+      }
+      
+      // Convert quoteId to number or null
+      const parsedData = {
+        ...data,
+        quoteId: data.quoteId ? parseInt(data.quoteId) : null
+      };
+      
+      const updatedContract = await storage.updateContract(contractId, parsedData);
+      res.status(200).json(updatedContract);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid contract data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update contract" });
+    }
+  });
+  
+  // Delete contract
+  app.delete("/api/contracts/:id", async (req, res) => {
+    try {
+      const contractId = parseInt(req.params.id);
+      
+      // Check if contract exists
+      const existingContract = await storage.getContract(contractId);
+      if (!existingContract) {
+        return res.status(404).json({ message: "Contract not found" });
+      }
+      
+      await storage.deleteContract(contractId);
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete contract" });
     }
   });
 

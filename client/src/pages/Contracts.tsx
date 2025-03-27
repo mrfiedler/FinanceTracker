@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { dateRanges } from "@/lib/constants";
-import { Plus, Search, FileText, Download, Eye, Link, Filter, FilterX, Calendar } from "lucide-react";
+import { Plus, Search, FileText, Download, Eye, Pencil, Trash2, Calendar } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
@@ -28,12 +28,21 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertContractSchema } from "@shared/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 const Contracts = () => {
   const { currency } = useCurrency();
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState("30");
   const [addContractOpen, setAddContractOpen] = useState(false);
+  const [editContractOpen, setEditContractOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedContract, setSelectedContract] = useState(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -45,6 +54,7 @@ const Contracts = () => {
     queryKey: ['/api/quotes', 'all'],
   });
 
+  // Form for adding new contracts
   const form = useForm({
     resolver: zodResolver(insertContractSchema),
     defaultValues: {
@@ -55,13 +65,43 @@ const Contracts = () => {
     },
   });
 
+  // Form for editing existing contracts
+  const editForm = useForm({
+    resolver: zodResolver(insertContractSchema),
+    defaultValues: {
+      title: "",
+      quoteId: "",
+      file: null,
+      description: "",
+    },
+  });
+
+  // Open edit dialog and populate form with contract data
+  const handleEdit = (contract) => {
+    setSelectedContract(contract);
+    editForm.reset({
+      title: contract.title,
+      quoteId: contract.quoteId ? contract.quoteId.toString() : "",
+      description: contract.description || "",
+      file: null,
+    });
+    setEditContractOpen(true);
+  };
+
+  // Open delete confirmation dialog
+  const handleDelete = (contract) => {
+    setSelectedContract(contract);
+    setDeleteDialogOpen(true);
+  };
+
+  // Mutation for adding contracts
   const mutation = useMutation({
     mutationFn: async (data) => {
       // In a real implementation, this would handle file upload
       // For now we'll just simulate it
       return apiRequest("POST", "/api/contracts", {
         title: data.title,
-        quoteId: data.quoteId,
+        quoteId: data.quoteId || null,
         description: data.description,
         fileName: data.file ? data.file.name : "contract.pdf"
       });
@@ -70,7 +110,7 @@ const Contracts = () => {
       queryClient.invalidateQueries({ queryKey: ['/api/contracts'] });
       toast({
         title: "Contract uploaded successfully",
-        description: "The contract has been linked to the quote",
+        description: "Your contract has been added successfully",
       });
       form.reset();
       setAddContractOpen(false);
@@ -84,18 +124,87 @@ const Contracts = () => {
     },
   });
 
+  // Mutation for editing contracts
+  const editMutation = useMutation({
+    mutationFn: async (data) => {
+      return apiRequest("PATCH", `/api/contracts/${selectedContract.id}`, {
+        title: data.title,
+        quoteId: data.quoteId || null,
+        description: data.description,
+        fileName: data.file ? data.file.name : selectedContract.fileName
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/contracts'] });
+      toast({
+        title: "Contract updated successfully",
+        description: "Your changes have been saved",
+      });
+      editForm.reset();
+      setEditContractOpen(false);
+      setSelectedContract(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Update failed",
+        description: error.message || "Failed to update contract",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation for deleting contracts
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("DELETE", `/api/contracts/${selectedContract.id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/contracts'] });
+      toast({
+        title: "Contract deleted",
+        description: "The contract has been removed",
+      });
+      setDeleteDialogOpen(false);
+      setSelectedContract(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Delete failed",
+        description: error.message || "Failed to delete contract",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data) => {
     mutation.mutate(data);
+  };
+
+  const onEditSubmit = (data) => {
+    editMutation.mutate(data);
+  };
+
+  const onDeleteConfirm = () => {
+    deleteMutation.mutate();
   };
 
   const filteredContracts = contracts
     ? contracts.filter(contract => {
         // Filter by search query
-        if (searchQuery && 
-            !contract.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-            !contract.quote.jobTitle.toLowerCase().includes(searchQuery.toLowerCase()) &&
-            !contract.quote.client.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-          return false;
+        if (searchQuery) {
+          const lowercaseQuery = searchQuery.toLowerCase();
+          const matchesTitle = contract.title.toLowerCase().includes(lowercaseQuery);
+          
+          // Quote might be null now, so we need to check if quote exists
+          const matchesQuoteTitle = contract.quote && 
+            contract.quote.jobTitle.toLowerCase().includes(lowercaseQuery);
+          
+          const matchesClientName = contract.quote && 
+            contract.quote.client.name.toLowerCase().includes(lowercaseQuery);
+          
+          if (!matchesTitle && !matchesQuoteTitle && !matchesClientName) {
+            return false;
+          }
         }
 
         return true;
@@ -226,6 +335,33 @@ const Contracts = () => {
                               <Download className="h-4 w-4 mr-1.5" />
                               Download
                             </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-8 px-2">
+                                  <span className="sr-only">Actions</span>
+                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-muted-foreground">
+                                    <circle cx="12" cy="12" r="1" />
+                                    <circle cx="12" cy="5" r="1" />
+                                    <circle cx="12" cy="19" r="1" />
+                                  </svg>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-40">
+                                <DropdownMenuItem
+                                  onClick={() => handleEdit(contract)}
+                                >
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => handleDelete(contract)}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
                         </td>
                       </tr>
@@ -243,7 +379,7 @@ const Contracts = () => {
           <DialogHeader>
             <DialogTitle>Add New Contract</DialogTitle>
             <DialogDescription>
-              Upload a contract and link it to an existing quote.
+              Upload a contract and optionally link it to an existing quote.
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
@@ -267,7 +403,7 @@ const Contracts = () => {
                 name="quoteId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Link to Quote</FormLabel>
+                    <FormLabel>Link to Quote (Optional)</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -336,6 +472,141 @@ const Contracts = () => {
               </DialogFooter>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Contract Dialog */}
+      <Dialog open={editContractOpen} onOpenChange={setEditContractOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Contract</DialogTitle>
+            <DialogDescription>
+              Update contract details or change the linked quote.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4 pt-4">
+              <FormField
+                control={editForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contract Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Service Agreement" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="quoteId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Link to Quote (Optional)</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a quote" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">No linked quote</SelectItem>
+                        {quotes?.map((quote) => (
+                          <SelectItem key={quote.id} value={quote.id.toString()}>
+                            {quote.jobTitle} - {quote.client.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="file"
+                render={({ field: { value, onChange, ...field } }) => (
+                  <FormItem>
+                    <FormLabel>Replace Contract File (Optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="file"
+                        accept=".pdf"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          onChange(file);
+                        }}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description (Optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Brief description of the contract"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <DialogFooter>
+                <Button variant="outline" type="button" onClick={() => setEditContractOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={editMutation.isPending}>
+                  {editMutation.isPending ? "Saving..." : "Save Changes"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Delete Contract</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this contract? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="pt-4">
+            {selectedContract && (
+              <div className="mb-4 p-3 bg-muted/50 rounded-md">
+                <p className="font-medium">{selectedContract.title}</p>
+                <p className="text-sm text-muted-foreground mt-1">Uploaded on {formatDate(selectedContract.createdAt)}</p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={onDeleteConfirm}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete Contract"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </main>

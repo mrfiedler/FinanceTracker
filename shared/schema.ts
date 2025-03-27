@@ -171,7 +171,7 @@ export type Subscription = typeof subscriptions.$inferSelect;
 export const contracts = pgTable("contracts", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
-  quoteId: integer("quote_id").notNull().references(() => quotes.id),
+  quoteId: integer("quote_id").references(() => quotes.id),
   fileName: text("file_name").notNull(),
   fileUrl: text("file_url"),
   description: text("description"),
@@ -180,9 +180,9 @@ export const contracts = pgTable("contracts", {
 
 export const insertContractSchema = createInsertSchema(contracts).pick({
   title: true,
-  quoteId: true,
   description: true,
 }).extend({
+  quoteId: z.string().optional(),
   file: z.any(),
 });
 

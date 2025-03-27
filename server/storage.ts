@@ -69,6 +69,7 @@ export interface IStorage {
   getContract(id: number): Promise<Contract | undefined>;
   getContracts(filters?: { dateRange?: string }): Promise<any[]>;
   createContract(contract: InsertContract): Promise<Contract>;
+  updateContract(id: number, contract: Partial<InsertContract>): Promise<Contract>;
   deleteContract(id: number): Promise<boolean>;
   
   // Dashboard summary data
@@ -565,7 +566,7 @@ export class MemStorage implements IStorage {
     const contract: Contract = {
       id,
       title: insertContract.title,
-      quoteId: Number(insertContract.quoteId),
+      quoteId: insertContract.quoteId ? Number(insertContract.quoteId) : null,
       fileName: "contract.pdf", // This would be the real filename
       fileUrl: `/contracts/${id}`, // This would be the real file URL
       description: insertContract.description || null,
@@ -573,6 +574,22 @@ export class MemStorage implements IStorage {
     };
     this.contracts.set(id, contract);
     return contract;
+  }
+  
+  async updateContract(id: number, contractUpdate: Partial<InsertContract>): Promise<Contract> {
+    const contract = await this.getContract(id);
+    if (!contract) {
+      throw new Error(`Contract with id ${id} not found`);
+    }
+    
+    const updatedContract = { 
+      ...contract,
+      ...contractUpdate,
+      quoteId: contractUpdate.quoteId ? Number(contractUpdate.quoteId) : null
+    };
+    
+    this.contracts.set(id, updatedContract);
+    return updatedContract;
   }
   
   async deleteContract(id: number): Promise<boolean> {
@@ -1640,13 +1657,36 @@ export class DatabaseStorage implements IStorage {
   async createContract(insertContract: InsertContract): Promise<Contract> {
     const contractData = {
       title: insertContract.title,
-      quoteId: Number(insertContract.quoteId),
+      quoteId: insertContract.quoteId ? Number(insertContract.quoteId) : null,
       fileName: "contract.pdf", // This would be handled by a file upload service
       fileUrl: `/contracts/${Date.now()}`, // This would be a real file URL
       description: insertContract.description || null
     };
     
     const result = await db.insert(contracts).values(contractData).returning();
+    return result[0];
+  }
+  
+  async updateContract(id: number, contractUpdate: Partial<InsertContract>): Promise<Contract> {
+    // First check if contract exists
+    const existingContract = await this.getContract(id);
+    if (!existingContract) {
+      throw new Error(`Contract with id ${id} not found`);
+    }
+    
+    // Prepare the update data
+    const updateData = {
+      ...contractUpdate,
+      quoteId: contractUpdate.quoteId ? Number(contractUpdate.quoteId) : null
+    };
+    
+    // Update the contract
+    const result = await db
+      .update(contracts)
+      .set(updateData)
+      .where(eq(contracts.id, id))
+      .returning();
+    
     return result[0];
   }
   
