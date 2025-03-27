@@ -315,19 +315,8 @@ const Achievements = () => {
                       </p>
                     </div>
                   </CardContent>
-                  <CardFooter className="pt-0">
-                    {!completedAllLevels && (
-                      <Button 
-                        size="sm" 
-                        className="w-full"
-                        variant="outline"
-                        disabled={true}
-                      >
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Coming Soon
-                      </Button>
-                    )}
-                  </CardFooter>
+                  {/* No footer needed since quest completion is automatic */}
+                  <CardFooter className="pt-0"></CardFooter>
                 </Card>
               </motion.div>
             );
@@ -369,10 +358,10 @@ const Achievements = () => {
                   <Button 
                     size="sm" 
                     className="w-full"
-                    disabled={points < reward.cost}
-                    onClick={() => redeemReward(reward)}
+                    disabled={true}
                   >
-                    Redeem Reward
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Coming Soon
                   </Button>
                 </CardFooter>
               </Card>
