@@ -44,14 +44,24 @@ import { insertClientSchema } from "@shared/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Phone, Mail, Calendar, DollarSign, UserPlus, Users, Filter, CircleCheck, CircleX } from "lucide-react";
+import { Plus, Search, Phone, Mail, Calendar, DollarSign, UserPlus, Users, Filter, CircleCheck, CircleX, Edit, MoreHorizontal } from "lucide-react";
 import cn from 'classnames';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Clients = () => {
   const { currency } = useCurrency();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeStatus, setActiveStatus] = useState("all"); // all, active, inactive
   const [addClientOpen, setAddClientOpen] = useState(false);
+  const [editClientOpen, setEditClientOpen] = useState(false);
+  const [currentClient, setCurrentClient] = useState(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -69,6 +79,33 @@ const Clients = () => {
       notes: "",
     },
   });
+
+  const editForm = useForm({
+    resolver: zodResolver(insertClientSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      businessType: "",
+      notes: "",
+    },
+  });
+
+  // Handler to open edit modal for a client
+  const handleEditClient = (client) => {
+    setCurrentClient(client);
+    
+    // Reset form and set form values
+    editForm.reset({
+      name: client.name,
+      email: client.email,
+      phone: client.phone || "",
+      businessType: client.businessType,
+      notes: client.notes || "",
+    });
+    
+    setEditClientOpen(true);
+  };
 
   const mutation = useMutation({
     mutationFn: async (data) => {
@@ -93,8 +130,37 @@ const Clients = () => {
     },
   });
 
+  const updateClientMutation = useMutation({
+    mutationFn: async ({ id, data }) => {
+      return apiRequest("PATCH", `/api/clients/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/clients'] });
+      toast({
+        title: "Client updated successfully",
+        description: "The client details have been updated",
+        variant: "default",
+      });
+      setEditClientOpen(false);
+      setCurrentClient(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to update client",
+        description: error.message || "Please try again later",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data) => {
     mutation.mutate(data);
+  };
+  
+  const onEditSubmit = (data) => {
+    if (currentClient) {
+      updateClientMutation.mutate({ id: currentClient.id, data });
+    }
   };
 
   const filteredClients = clients
@@ -251,37 +317,54 @@ const Clients = () => {
                             <h3 className="text-lg font-semibold text-foreground truncate group-hover:text-primary transition-colors duration-200">
                               {client.name}
                             </h3>
-                            <Badge 
-                              className={cn(
-                                "cursor-pointer select-none shadow-sm hover:shadow transition-all duration-200",
-                                client.isActive 
-                                  ? "bg-green-100 text-green-700 hover:bg-[#7D6BA7] hover:text-white dark:bg-green-800/40 dark:text-green-300 dark:hover:bg-[#7D6BA7] dark:hover:text-white"
-                                  : "bg-gray-100 text-gray-700 hover:bg-[#7D6BA7] hover:text-white dark:bg-gray-800/40 dark:text-gray-300 dark:hover:bg-[#7D6BA7] dark:hover:text-white"
-                              )}
-                              onClick={async () => {
-                                try {
-                                  await fetch(`/api/clients/${client.id}`, {
-                                    method: 'PATCH',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ isActive: !client.isActive })
-                                  });
-                                  refetch(); //Refetch data after successful update.
-                                  toast({
-                                    title: "Client status updated successfully",
-                                    description: `Client ${client.name} status changed to ${!client.isActive ? "Active" : "Inactive"}`,
-                                    variant: "default",
-                                  });
-                                } catch (error) {
-                                  toast({
-                                    title: "Failed to update client status",
-                                    description: error.message || "Please try again later",
-                                    variant: "destructive",
-                                  });
-                                }
-                              }}
-                            >
-                              {client.isActive ? "Active" : "Inactive"}
-                            </Badge>
+                            <div className="flex items-center space-x-2">
+                              <Badge 
+                                className={cn(
+                                  "cursor-pointer select-none shadow-sm hover:shadow transition-all duration-200",
+                                  client.isActive 
+                                    ? "bg-green-100 text-green-700 hover:bg-[#7D6BA7] hover:text-white dark:bg-green-800/40 dark:text-green-300 dark:hover:bg-[#7D6BA7] dark:hover:text-white"
+                                    : "bg-gray-100 text-gray-700 hover:bg-[#7D6BA7] hover:text-white dark:bg-gray-800/40 dark:text-gray-300 dark:hover:bg-[#7D6BA7] dark:hover:text-white"
+                                )}
+                                onClick={async () => {
+                                  try {
+                                    await fetch(`/api/clients/${client.id}`, {
+                                      method: 'PATCH',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ isActive: !client.isActive })
+                                    });
+                                    refetch(); //Refetch data after successful update.
+                                    toast({
+                                      title: "Client status updated successfully",
+                                      description: `Client ${client.name} status changed to ${!client.isActive ? "Active" : "Inactive"}`,
+                                      variant: "default",
+                                    });
+                                  } catch (error) {
+                                    toast({
+                                      title: "Failed to update client status",
+                                      description: error.message || "Please try again later",
+                                      variant: "destructive",
+                                    });
+                                  }
+                                }}
+                              >
+                                {client.isActive ? "Active" : "Inactive"}
+                              </Badge>
+                              
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 p-0 focus-visible:ring-0">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                    <span className="sr-only">Open menu</span>
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => handleEditClient(client)} className="cursor-pointer">
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
                           </div>
                           <p className="text-sm text-muted-foreground mb-2">{client.businessType}</p>
 
@@ -430,6 +513,118 @@ const Clients = () => {
                 </Button>
                 <Button type="submit" disabled={mutation.isPending}>
                   {mutation.isPending ? "Adding..." : "Add Client"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Client Dialog */}
+      <Dialog open={editClientOpen} onOpenChange={setEditClientOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Client</DialogTitle>
+            <DialogDescription>
+              Update client information. Make changes to the fields below.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4 pt-4">
+              <FormField
+                control={editForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Business Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Acme Inc." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="contact@acme.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="+1 (555) 123-4567" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="businessType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Business Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select business type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Marketing Agency">Marketing Agency</SelectItem>
+                        <SelectItem value="Design Studio">Design Studio</SelectItem>
+                        <SelectItem value="Software House">Software House</SelectItem>
+                        <SelectItem value="Architecture Firm">Architecture Firm</SelectItem>
+                        <SelectItem value="Media Company">Media Company</SelectItem>
+                        <SelectItem value="Small Business">Small Business</SelectItem>
+                        <SelectItem value="Freelancer">Freelancer</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Additional notes about this client"
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <DialogFooter>
+                <Button variant="outline" type="button" onClick={() => setEditClientOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateClientMutation.isPending}>
+                  {updateClientMutation.isPending ? "Updating..." : "Update Client"}
                 </Button>
               </DialogFooter>
             </form>
