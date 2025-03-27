@@ -5,7 +5,8 @@ import {
   revenues, type Revenue, type InsertRevenue,
   quotes, type Quote, type InsertQuote,
   subscriptions, type Subscription, type InsertSubscription,
-  contracts, type Contract, type InsertContract
+  contracts, type Contract, type InsertContract,
+  notifications, type Notification, type InsertNotification
 } from "@shared/schema";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
@@ -73,6 +74,14 @@ export interface IStorage {
   // Dashboard summary data
   getFinanceSummary(dateRange?: string): Promise<any>;
   getFinanceTrends(periodicity?: string): Promise<any[]>;
+  
+  // Notifications
+  getNotifications(userId: number): Promise<Notification[]>;
+  getUnreadNotificationsCount(userId: number): Promise<number>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationAsRead(id: number): Promise<boolean>;
+  markAllNotificationsAsRead(userId: number): Promise<boolean>;
+  deleteNotification(id: number): Promise<boolean>;
 }
 
 // Implement the storage interface with in-memory storage
@@ -84,6 +93,7 @@ export class MemStorage implements IStorage {
   private quotes: Map<number, Quote>;
   private subscriptions: Map<number, Subscription>;
   private contracts: Map<number, Contract>;
+  private notifications: Map<number, Notification>;
   
   // Session store for authentication
   sessionStore: session.Store;
@@ -96,6 +106,7 @@ export class MemStorage implements IStorage {
   private quoteId: number = 1;
   private subscriptionId: number = 1;
   private contractId: number = 1;
+  private notificationId: number = 1;
 
   constructor() {
     this.users = new Map();
@@ -105,6 +116,7 @@ export class MemStorage implements IStorage {
     this.quotes = new Map();
     this.subscriptions = new Map();
     this.contracts = new Map();
+    this.notifications = new Map();
     
     // Initialize session store
     const MemoryStore = createMemoryStore(session);
@@ -659,6 +671,176 @@ export class MemStorage implements IStorage {
     return result;
   }
   
+  // Notifications
+  async getNotifications(userId: number): Promise<Notification[]> {
+    return Array.from(this.notifications.values())
+      .filter(notification => notification.userId === userId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+  
+  async getUnreadNotificationsCount(userId: number): Promise<number> {
+    return Array.from(this.notifications.values())
+      .filter(notification => notification.userId === userId && !notification.isRead)
+      .length;
+  }
+  
+  async createNotification(insertNotification: InsertNotification): Promise<Notification> {
+    const id = this.notificationId++;
+    const notification: Notification = {
+      ...insertNotification,
+      id,
+      isRead: false,
+      createdAt: new Date()
+    };
+    this.notifications.set(id, notification);
+    return notification;
+  }
+  
+  async markNotificationAsRead(id: number): Promise<boolean> {
+    const notification = this.notifications.get(id);
+    if (!notification) {
+      return false;
+    }
+    
+    notification.isRead = true;
+    this.notifications.set(id, notification);
+    return true;
+  }
+  
+  async markAllNotificationsAsRead(userId: number): Promise<boolean> {
+    const userNotifications = Array.from(this.notifications.values())
+      .filter(notification => notification.userId === userId);
+    
+    if (userNotifications.length === 0) {
+      return false;
+    }
+    
+    userNotifications.forEach(notification => {
+      notification.isRead = true;
+      this.notifications.set(notification.id, notification);
+    });
+    
+    return true;
+  }
+  
+  async deleteNotification(id: number): Promise<boolean> {
+    return this.notifications.delete(id);
+  }
+  
+  // Dashboard summary data
+  async getFinanceSummary(dateRange: string = "30"): Promise<any> {
+    const days = parseInt(dateRange);
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+    
+    // Previous period for comparison
+    const prevCutoffDate = new Date(cutoffDate);
+    prevCutoffDate.setDate(prevCutoffDate.getDate() - days);
+    
+    // Current period data
+    const currentExpenses = (await this.getExpenses({ dateRange }))
+      .reduce((sum, expense) => sum + Number(expense.amount), 0);
+    
+    const currentRevenues = (await this.getRevenues({ dateRange }))
+      .reduce((sum, revenue) => sum + Number(revenue.amount), 0);
+    
+    // Previous period data
+    const prevExpenses = Array.from(this.expenses.values())
+      .filter(expense => {
+        const expenseDate = new Date(expense.date);
+        return expenseDate >= prevCutoffDate && expenseDate < cutoffDate;
+      })
+      .reduce((sum, expense) => sum + Number(expense.amount), 0);
+    
+    const prevRevenues = Array.from(this.revenues.values())
+      .filter(revenue => {
+        const revenueDate = new Date(revenue.date);
+        return revenueDate >= prevCutoffDate && revenueDate < cutoffDate;
+      })
+      .reduce((sum, revenue) => sum + Number(revenue.amount), 0);
+    
+    // Calculate change percentages
+    const expensesChange = prevExpenses ? ((currentExpenses - prevExpenses) / prevExpenses) * 100 : 0;
+    const revenueChange = prevRevenues ? ((currentRevenues - prevRevenues) / prevRevenues) * 100 : 0;
+    const currentProfit = currentRevenues - currentExpenses;
+    const prevProfit = prevRevenues - prevExpenses;
+    const profitChange = prevProfit ? ((currentProfit - prevProfit) / Math.abs(prevProfit)) * 100 : 0;
+    
+    // Get clients with outstanding payments
+    const clients = await this.getClients();
+    const clientsWithPendingPayments = clients.filter(client => {
+      const pendingQuotes = Array.from(this.quotes.values())
+        .filter(quote => quote.clientId === client.id && quote.status === "Accepted");
+      
+      return pendingQuotes.length > 0;
+    });
+    
+    const outstandingPayments = Array.from(this.quotes.values())
+      .filter(quote => quote.status === "Accepted")
+      .reduce((sum, quote) => sum + Number(quote.amount), 0);
+    
+    return {
+      totalRevenue: currentRevenues,
+      totalExpenses: currentExpenses,
+      netProfit: currentProfit,
+      outstandingPayments,
+      revenueChange,
+      expensesChange,
+      profitChange,
+      pendingClients: clientsWithPendingPayments.length
+    };
+  }
+  
+  async getFinanceTrends(periodicity: string = "monthly"): Promise<any[]> {
+    const now = new Date();
+    const result = [];
+    
+    let periods = 12; // Default for monthly
+    if (periodicity === "weekly") periods = 8;
+    if (periodicity === "daily") periods = 14;
+    
+    for (let i = periods - 1; i >= 0; i--) {
+      let startDate, endDate, name;
+      
+      if (periodicity === "monthly") {
+        startDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        endDate = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+        name = startDate.toLocaleString('default', { month: 'short' });
+      } else if (periodicity === "weekly") {
+        startDate = new Date(now.getTime() - (i * 7 * 24 * 60 * 60 * 1000));
+        endDate = new Date(startDate.getTime() + (7 * 24 * 60 * 60 * 1000) - 1);
+        name = `W${Math.ceil(startDate.getDate() / 7)}`;
+      } else {
+        startDate = new Date(now.getTime() - (i * 24 * 60 * 60 * 1000));
+        endDate = new Date(startDate.getTime() + (24 * 60 * 60 * 1000) - 1);
+        name = startDate.getDate().toString();
+      }
+      
+      // Filter expenses and revenues for this period
+      const periodExpenses = Array.from(this.expenses.values())
+        .filter(expense => {
+          const expenseDate = new Date(expense.date);
+          return expenseDate >= startDate && expenseDate <= endDate;
+        })
+        .reduce((sum, expense) => sum + Number(expense.amount), 0);
+      
+      const periodRevenues = Array.from(this.revenues.values())
+        .filter(revenue => {
+          const revenueDate = new Date(revenue.date);
+          return revenueDate >= startDate && revenueDate <= endDate;
+        })
+        .reduce((sum, revenue) => sum + Number(revenue.amount), 0);
+      
+      result.push({
+        name,
+        expenses: periodExpenses,
+        revenue: periodRevenues
+      });
+    }
+    
+    return result;
+  }
+  
   // Helper function to seed initial data
   private initializeSampleData() {
     // Sample clients
@@ -912,6 +1094,66 @@ export class DatabaseStorage implements IStorage {
       pool, 
       createTableIfMissing: true 
     });
+  }
+  
+  // Notifications
+  async getNotifications(userId: number): Promise<Notification[]> {
+    return await db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt));
+  }
+  
+  async getUnreadNotificationsCount(userId: number): Promise<number> {
+    const result = await db
+      .select({ count: count() })
+      .from(notifications)
+      .where(and(
+        eq(notifications.userId, userId),
+        eq(notifications.isRead, false)
+      ));
+    
+    return result[0]?.count || 0;
+  }
+  
+  async createNotification(insertNotification: InsertNotification): Promise<Notification> {
+    const result = await db
+      .insert(notifications)
+      .values(insertNotification)
+      .returning();
+    
+    return result[0];
+  }
+  
+  async markNotificationAsRead(id: number): Promise<boolean> {
+    const result = await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.id, id))
+      .returning();
+    
+    return result.length > 0;
+  }
+  
+  async markAllNotificationsAsRead(userId: number): Promise<boolean> {
+    const result = await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(and(
+        eq(notifications.userId, userId),
+        eq(notifications.isRead, false)
+      ));
+    
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+  
+  async deleteNotification(id: number): Promise<boolean> {
+    const result = await db
+      .delete(notifications)
+      .where(eq(notifications.id, id));
+    
+    return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Users

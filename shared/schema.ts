@@ -188,3 +188,28 @@ export const insertContractSchema = createInsertSchema(contracts).pick({
 
 export type InsertContract = z.infer<typeof insertContractSchema>;
 export type Contract = typeof contracts.$inferSelect;
+
+// Notifications table
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  type: text("type").notNull(), // 'level_up', 'transaction_due', 'invitation_accepted'
+  isRead: boolean("is_read").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  relatedEntityType: text("related_entity_type"), // 'expense', 'revenue', 'subscription', etc.
+  relatedEntityId: integer("related_entity_id"),
+});
+
+export const insertNotificationSchema = createInsertSchema(notifications).pick({
+  userId: true,
+  title: true,
+  message: true,
+  type: true,
+  relatedEntityType: true,
+  relatedEntityId: true,
+});
+
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;
