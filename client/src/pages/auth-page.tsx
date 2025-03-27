@@ -20,10 +20,10 @@ const loginSchema = z.object({
 
 // Schema for registration form
 const registerSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
+  email: z.string().email("Please enter a valid email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  name: z.string().optional(),
-  email: z.string().email("Please enter a valid email").optional(),
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  name: z.string().min(1, "Full name is required"),
 });
 
 export default function AuthPage() {
@@ -194,12 +194,12 @@ export default function AuthPage() {
                       <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
                         <FormField
                           control={registerForm.control}
-                          name="username"
+                          name="email"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Username</FormLabel>
+                              <FormLabel>Email</FormLabel>
                               <FormControl>
-                                <Input placeholder="Choose a username" {...field} />
+                                <Input type="email" placeholder="name@company.com" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -218,34 +218,32 @@ export default function AuthPage() {
                             </FormItem>
                           )}
                         />
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                          <FormField
-                            control={registerForm.control}
-                            name="name"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Name (Optional)</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Your name" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={registerForm.control}
-                            name="email"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Email (Optional)</FormLabel>
-                                <FormControl>
-                                  <Input type="email" placeholder="name@company.com" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
+                        <FormField
+                          control={registerForm.control}
+                          name="username"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Username</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Choose a username" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={registerForm.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Full Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Your full name" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                         <Button 
                           type="submit" 
                           className="w-full"

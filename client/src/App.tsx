@@ -20,6 +20,8 @@ import { useEffect, useState } from "react";
 import { AuthProvider } from "./hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
 import AuthPage from "./pages/auth-page";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   // Track viewport size for responsive adjustments
@@ -58,6 +60,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 function Router() {
   return (
     <Switch>
+      {/* Regular app routes */}
       <Route path="/auth" component={AuthPage} />
       <ProtectedRoute path="/" component={() => (
         <AppLayout>
@@ -99,6 +102,11 @@ function Router() {
           <Settings />
         </AppLayout>
       )} />
+      
+      {/* Admin routes */}
+      <Route path="/admin" component={AdminLogin} />
+      <Route path="/admin/dashboard" component={AdminDashboard} />
+      
       <Route component={NotFound} />
     </Switch>
   );
