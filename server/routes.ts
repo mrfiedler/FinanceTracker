@@ -667,25 +667,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username, password } = req.body;
       
+      console.log(`Admin login attempt for username: ${username}`);
+      
       // Find user
       const user = await storage.getUserByUsername(username);
       
-      // Check if user exists and is an admin
-      if (!user || !user.isAdmin || !(await comparePasswords(password, user.password))) {
+      if (!user) {
+        console.log(`No user found with username: ${username}`);
+        return res.status(401).json({ message: "Invalid admin credentials" });
+      }
+      
+      if (!user.isAdmin) {
+        console.log(`User ${username} is not an admin`);
+        return res.status(401).json({ message: "Invalid admin credentials" });
+      }
+      
+      const passwordValid = await comparePasswords(password, user.password);
+      if (!passwordValid) {
+        console.log(`Invalid password for username: ${username}`);
         return res.status(401).json({ message: "Invalid admin credentials" });
       }
       
       // Log in the admin user
       req.login(user, (err) => {
         if (err) {
+          console.error(`Login error for ${username}:`, err);
           return res.status(500).json({ message: "Login failed" });
         }
+        
+        console.log(`Admin login successful for ${username}`);
         
         // Remove password from response
         const { password, ...userWithoutPassword } = user;
         res.status(200).json(userWithoutPassword);
       });
     } catch (error) {
+      console.error("Admin login error:", error);
       res.status(500).json({ message: "Login failed" });
     }
   });
