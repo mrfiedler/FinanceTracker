@@ -81,7 +81,7 @@ const Contracts = () => {
     setSelectedContract(contract);
     editForm.reset({
       title: contract.title,
-      quoteId: contract.quoteId ? contract.quoteId.toString() : "",
+      quoteId: contract.quoteId ? contract.quoteId.toString() : "null",
       description: contract.description || "",
       file: null,
     });
@@ -127,9 +127,12 @@ const Contracts = () => {
   // Mutation for editing contracts
   const editMutation = useMutation({
     mutationFn: async (data) => {
+      // Convert "null" string to actual null value
+      const quoteId = data.quoteId === "null" ? null : data.quoteId;
+      
       return apiRequest("PATCH", `/api/contracts/${selectedContract.id}`, {
         title: data.title,
-        quoteId: data.quoteId || null,
+        quoteId: quoteId,
         description: data.description,
         fileName: data.file ? data.file.name : selectedContract.fileName
       });
@@ -528,7 +531,7 @@ const Contracts = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">No linked quote</SelectItem>
+                        <SelectItem value="null">No linked quote</SelectItem>
                         {quotes?.map((quote) => (
                           <SelectItem key={quote.id} value={quote.id.toString()}>
                             {quote.jobTitle} - {quote.client.name}
