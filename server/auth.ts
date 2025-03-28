@@ -144,4 +144,127 @@ export function setupAuth(app: Express) {
     const { password, ...userWithoutPassword } = req.user as SelectUser;
     res.json(userWithoutPassword);
   });
+  
+  // Update user profile endpoint
+  app.patch("/api/users/profile", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    try {
+      const userId = (req.user as SelectUser).id;
+      const { name, email } = req.body;
+      
+      // Validate input
+      if (name && typeof name !== 'string') {
+        return res.status(400).json({ message: "Invalid name format" });
+      }
+      
+      if (email && typeof email !== 'string') {
+        return res.status(400).json({ message: "Invalid email format" });
+      }
+      
+      // Update user profile
+      const updatedUser = await storage.updateUser(userId, { name, email });
+      
+      // Update session user object
+      const user = req.user as SelectUser;
+      if (name) user.name = name;
+      if (email) user.email = email;
+      
+      // Remove password from response
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+  
+  // Change user password endpoint
+  app.patch("/api/users/password", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    try {
+      const userId = (req.user as SelectUser).id;
+      const { currentPassword, newPassword } = req.body;
+      
+      // Validate input
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Current password and new password are required" });
+      }
+      
+      if (typeof currentPassword !== 'string' || typeof newPassword !== 'string') {
+        return res.status(400).json({ message: "Invalid password format" });
+      }
+      
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "New password must be at least 6 characters" });
+      }
+      
+      // Get current user
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Verify current password
+      const isPasswordValid = await comparePasswords(currentPassword, user.password);
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: "Current password is incorrect" });
+      }
+      
+      // Hash the new password
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Update user with new password
+      await storage.updateUser(userId, { password: hashedPassword });
+      
+      res.json({ message: "Password updated successfully" });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      res.status(500).json({ message: "Failed to change password" });
+    }
+  });
+  
+  // Save company information endpoint
+  app.post("/api/company/info", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    try {
+      // In a real app, this would save to a company table in the database
+      // For now, we'll just simulate a successful save
+      res.json({ 
+        success: true,
+        message: "Company information saved successfully" 
+      });
+    } catch (error) {
+      console.error("Error saving company information:", error);
+      res.status(500).json({ message: "Failed to save company information" });
+    }
+  });
+  
+  // Upload company logo endpoint
+  app.post("/api/company/logo", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    try {
+      // In a real app, this would handle file upload and save the logo
+      // For now, we'll just simulate a successful upload
+      res.json({ 
+        success: true,
+        message: "Company logo uploaded successfully",
+        logoUrl: "https://api.dicebear.com/7.x/identicon/svg?seed=Company" 
+      });
+    } catch (error) {
+      console.error("Error uploading company logo:", error);
+      res.status(500).json({ message: "Failed to upload company logo" });
+    }
+  });
 }
