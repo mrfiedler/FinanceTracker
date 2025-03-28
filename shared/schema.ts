@@ -213,3 +213,43 @@ export const insertNotificationSchema = createInsertSchema(notifications).pick({
 
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Notification = typeof notifications.$inferSelect;
+
+// Finance Categories (for user customization)
+export const financeCategories = pgTable("finance_categories", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  value: text("value").notNull(),
+  label: text("label").notNull(),
+  type: text("type").notNull(), // 'expense' or 'revenue'
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertFinanceCategorySchema = createInsertSchema(financeCategories).pick({
+  userId: true,
+  value: true,
+  label: true,
+  type: true,
+});
+
+export type InsertFinanceCategory = z.infer<typeof insertFinanceCategorySchema>;
+export type FinanceCategory = typeof financeCategories.$inferSelect;
+
+// Finance Accounts (for user customization)
+export const financeAccounts = pgTable("finance_accounts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  value: text("value").notNull(),
+  label: text("label").notNull(),
+  icon: text("icon").notNull().default("default"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertFinanceAccountSchema = createInsertSchema(financeAccounts).pick({
+  userId: true,
+  value: true,
+  label: true,
+  icon: true,
+});
+
+export type InsertFinanceAccount = z.infer<typeof insertFinanceAccountSchema>;
+export type FinanceAccount = typeof financeAccounts.$inferSelect;

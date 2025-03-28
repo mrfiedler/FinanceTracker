@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { dateRanges, quoteStatusOptions } from "@/lib/constants";
 import { useModals } from "@/hooks/useModals";
 import CreateQuoteModal from "@/components/modals/CreateQuoteModal";
+import ConvertToRevenueModal from "@/components/modals/ConvertToRevenueModal";
 import { Plus, Search, FileText, CircleCheck, CircleX, Clock, Filter, Calendar } from "lucide-react";
 
 // Declare global window interface for TypeScript
@@ -38,6 +39,8 @@ const Quotes = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState("30");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [convertToRevenueModalOpen, setConvertToRevenueModalOpen] = useState(false);
+  const [selectedQuote, setSelectedQuote] = useState(null);
   const { quoteModalOpen, closeAllModals, openCreateQuoteModal } = useModals();
 
   // Set up the global window function for opening the modal
@@ -219,6 +222,11 @@ const Quotes = () => {
       </Card>
 
       <CreateQuoteModal isOpen={quoteModalOpen} onClose={closeAllModals} />
+      <ConvertToRevenueModal 
+        isOpen={convertToRevenueModalOpen} 
+        onClose={() => setConvertToRevenueModalOpen(false)} 
+        quote={selectedQuote} 
+      />
     </main>
   );
 };
@@ -314,6 +322,12 @@ const renderQuotesTable = (quotes, isLoading, currency, getStatusIcon, getStatus
                         body: JSON.stringify({ status: value })
                       });
                       queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
+                      
+                      // If the quote is being marked as Accepted, open the ConvertToRevenueModal
+                      if (value === 'Accepted') {
+                        setSelectedQuote(quote);
+                        setConvertToRevenueModalOpen(true);
+                      }
                     }}
                   >
                     <SelectTrigger className={`w-[130px] ${getStatusColor(quote.status)}`}>
@@ -355,6 +369,10 @@ const renderQuotesTable = (quotes, isLoading, currency, getStatusIcon, getStatus
                         variant="outline" 
                         size="sm" 
                         className="text-[#A3E635] border-[#A3E635] hover:bg-[#A3E635]/10 hidden md:inline-flex transition-all duration-200"
+                        onClick={() => {
+                          setSelectedQuote(quote);
+                          setConvertToRevenueModalOpen(true);
+                        }}
                       >
                         Convert to Revenue
                       </Button>

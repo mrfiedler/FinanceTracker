@@ -84,6 +84,18 @@ export interface IStorage {
   markNotificationAsRead(id: number): Promise<boolean>;
   markAllNotificationsAsRead(userId: number): Promise<boolean>;
   deleteNotification(id: number): Promise<boolean>;
+  
+  // Finance Categories
+  getFinanceCategories(userId: number): Promise<FinanceCategory[]>;
+  createFinanceCategory(category: InsertFinanceCategory): Promise<FinanceCategory>;
+  updateFinanceCategory(id: number, category: Partial<FinanceCategory>): Promise<FinanceCategory>;
+  deleteFinanceCategory(id: number): Promise<boolean>;
+  
+  // Finance Accounts
+  getFinanceAccounts(userId: number): Promise<FinanceAccount[]>;
+  createFinanceAccount(account: InsertFinanceAccount): Promise<FinanceAccount>;
+  updateFinanceAccount(id: number, account: Partial<FinanceAccount>): Promise<FinanceAccount>;
+  deleteFinanceAccount(id: number): Promise<boolean>;
 }
 
 // Implement the storage interface with in-memory storage
@@ -96,6 +108,8 @@ export class MemStorage implements IStorage {
   private subscriptions: Map<number, Subscription>;
   private contracts: Map<number, Contract>;
   private notifications: Map<number, Notification>;
+  private financeCategories: Map<number, FinanceCategory>;
+  private financeAccounts: Map<number, FinanceAccount>;
   
   // Session store for authentication
   sessionStore: session.Store;
@@ -109,6 +123,8 @@ export class MemStorage implements IStorage {
   private subscriptionId: number = 1;
   private contractId: number = 1;
   private notificationId: number = 1;
+  private financeCategoryId: number = 1;
+  private financeAccountId: number = 1;
 
   constructor() {
     this.users = new Map();
@@ -119,6 +135,8 @@ export class MemStorage implements IStorage {
     this.subscriptions = new Map();
     this.contracts = new Map();
     this.notifications = new Map();
+    this.financeCategories = new Map();
+    this.financeAccounts = new Map();
     
     // Initialize session store
     const MemoryStore = createMemoryStore(session);
@@ -881,6 +899,70 @@ export class MemStorage implements IStorage {
     }
     
     return result;
+  }
+
+  // Finance Categories
+  async getFinanceCategories(userId: number): Promise<FinanceCategory[]> {
+    const categories = Array.from(this.financeCategories.values());
+    return categories.filter(category => category.userId === userId);
+  }
+
+  async createFinanceCategory(insertCategory: InsertFinanceCategory): Promise<FinanceCategory> {
+    const id = this.financeCategoryId++;
+    const category: FinanceCategory = {
+      ...insertCategory,
+      id,
+      createdAt: new Date()
+    };
+    this.financeCategories.set(id, category);
+    return category;
+  }
+
+  async updateFinanceCategory(id: number, categoryUpdate: Partial<FinanceCategory>): Promise<FinanceCategory> {
+    const category = this.financeCategories.get(id);
+    if (!category) {
+      throw new Error(`Finance category with id ${id} not found`);
+    }
+    
+    const updatedCategory = { ...category, ...categoryUpdate };
+    this.financeCategories.set(id, updatedCategory);
+    return updatedCategory;
+  }
+
+  async deleteFinanceCategory(id: number): Promise<boolean> {
+    return this.financeCategories.delete(id);
+  }
+
+  // Finance Accounts
+  async getFinanceAccounts(userId: number): Promise<FinanceAccount[]> {
+    const accounts = Array.from(this.financeAccounts.values());
+    return accounts.filter(account => account.userId === userId);
+  }
+
+  async createFinanceAccount(insertAccount: InsertFinanceAccount): Promise<FinanceAccount> {
+    const id = this.financeAccountId++;
+    const account: FinanceAccount = {
+      ...insertAccount,
+      id,
+      createdAt: new Date()
+    };
+    this.financeAccounts.set(id, account);
+    return account;
+  }
+
+  async updateFinanceAccount(id: number, accountUpdate: Partial<FinanceAccount>): Promise<FinanceAccount> {
+    const account = this.financeAccounts.get(id);
+    if (!account) {
+      throw new Error(`Finance account with id ${id} not found`);
+    }
+    
+    const updatedAccount = { ...account, ...accountUpdate };
+    this.financeAccounts.set(id, updatedAccount);
+    return updatedAccount;
+  }
+
+  async deleteFinanceAccount(id: number): Promise<boolean> {
+    return this.financeAccounts.delete(id);
   }
   
   // Helper function to seed initial data
@@ -1855,6 +1937,86 @@ export class DatabaseStorage implements IStorage {
     }
     
     return result;
+  }
+
+  // Finance Categories
+  async getFinanceCategories(userId: number): Promise<FinanceCategory[]> {
+    return await db
+      .select()
+      .from(financeCategories)
+      .where(eq(financeCategories.userId, userId))
+      .orderBy(asc(financeCategories.type), asc(financeCategories.label));
+  }
+
+  async createFinanceCategory(insertCategory: InsertFinanceCategory): Promise<FinanceCategory> {
+    const result = await db
+      .insert(financeCategories)
+      .values(insertCategory)
+      .returning();
+    
+    return result[0];
+  }
+
+  async updateFinanceCategory(id: number, categoryUpdate: Partial<FinanceCategory>): Promise<FinanceCategory> {
+    const result = await db
+      .update(financeCategories)
+      .set(categoryUpdate)
+      .where(eq(financeCategories.id, id))
+      .returning();
+    
+    if (result.length === 0) {
+      throw new Error(`Finance category with id ${id} not found`);
+    }
+    
+    return result[0];
+  }
+
+  async deleteFinanceCategory(id: number): Promise<boolean> {
+    const result = await db
+      .delete(financeCategories)
+      .where(eq(financeCategories.id, id));
+    
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  // Finance Accounts
+  async getFinanceAccounts(userId: number): Promise<FinanceAccount[]> {
+    return await db
+      .select()
+      .from(financeAccounts)
+      .where(eq(financeAccounts.userId, userId))
+      .orderBy(asc(financeAccounts.label));
+  }
+
+  async createFinanceAccount(insertAccount: InsertFinanceAccount): Promise<FinanceAccount> {
+    const result = await db
+      .insert(financeAccounts)
+      .values(insertAccount)
+      .returning();
+    
+    return result[0];
+  }
+
+  async updateFinanceAccount(id: number, accountUpdate: Partial<FinanceAccount>): Promise<FinanceAccount> {
+    const result = await db
+      .update(financeAccounts)
+      .set(accountUpdate)
+      .where(eq(financeAccounts.id, id))
+      .returning();
+    
+    if (result.length === 0) {
+      throw new Error(`Finance account with id ${id} not found`);
+    }
+    
+    return result[0];
+  }
+
+  async deleteFinanceAccount(id: number): Promise<boolean> {
+    const result = await db
+      .delete(financeAccounts)
+      .where(eq(financeAccounts.id, id));
+    
+    return result.rowCount !== null && result.rowCount > 0;
   }
 }
 
