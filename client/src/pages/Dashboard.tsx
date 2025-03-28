@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import QuickActions from "@/components/dashboard/QuickActions";
 import FinanceSummary from "@/components/dashboard/FinanceSummary";
 import RevenueExpenseTrends from "@/components/dashboard/RevenueExpenseTrends";
 import QuoteConversion from "@/components/dashboard/QuoteConversion";
@@ -192,11 +191,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Quick actions */}
-        <div className="mb-6">
-          <QuickActions />
-        </div>
-        
         {/* Finance summary */}
         <div className="mb-6">
           <FinanceSummary />
