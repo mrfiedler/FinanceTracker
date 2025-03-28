@@ -1,0 +1,49 @@
+Fixes & Enhancements – Separate Topics
+Each of the following items is a separate, independent task that must be handled individually and not merged with others.
+
+1. Notifications System Fixes
+✅ Users should be able to mark notifications as READ, and once marked, they should disappear completely.
+✅ "View All" in Notifications is not working → Create a new Notifications page where users can see their notification history.
+
+2. Client Management Fixes
+✅ Add Client Modal Enhancements: Users should be able to type the business type and create new pre-made inputs.
+✅ Client Edit Bug: When clicking Edit Client and closing it without modifications, the user gets stuck and can't navigate. Fix this.
+✅ "Expected number, received string" error: Prevents users from creating inputs in any modal that includes Clients. Fix this across the entire platform.
+
+3. Contracts Page Fixes
+✅ Remove "View" button in the Contracts section.
+✅ Download button should directly download the PDF contract stored for that contract.
+✅ Edit button is not working → Ensure users can update contract details.
+
+4. Quick Actions in Dashboard
+✅ Quick Action buttons are not working → Remove them completely from the Dashboard.
+
+5. Settings Page Fixes
+✅ Edit Profile Feature: Opens, but does not save changes (including Phone and Location). Fix this.
+✅ Change Password Functionality: User should be able to change their password successfully.
+✅ Sign Out Button: Currently non-functional → Fix it to log the user out properly.
+✅ Company Info & Logo Upload:
+
+Users should be able to save company details.
+
+Upload logo should work properly.
+✅ Invite Team Member Button:
+
+Should be inactive for now.
+
+Change text to "Invite Team Member (Coming Soon)".
+✅ Company Page Functionalities Not Implemented:
+
+Cover the tab with a dark overlay.
+
+Add a notice in the center that says: "Coming Soon".
+✅ Sidebar Profile Data Unification:
+
+Sidebar is displaying different Name, Email, and Profile Picture from the Settings page.
+
+Ensure all profile information is consistent across the platform.
+
+6. Global Search Bar Fix
+✅ The main search bar in the header is non-functional → Fix it so users can search across the platform.
+
+🔹 IMPORTANT: Each of these is a separate, independent task. DO NOT merge them into a single fix. Each item should be addressed and resolved individually. 🚀

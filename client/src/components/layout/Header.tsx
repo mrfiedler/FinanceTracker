@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "@/context/ThemeContext";
 import { useCurrency } from "@/context/CurrencyContext";
-import { Menu, Search, Bell, Sun, Moon, X, Check, Clock } from "lucide-react";
+import { 
+  Menu, Search, Bell, Sun, Moon, X, 
+  Check, Clock, CheckCheck, Info, AlertTriangle
+} from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -14,6 +17,12 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { Link, useLocation } from "wouter";
+import { Notification } from "@shared/schema";
+import { format, formatDistanceToNow } from "date-fns";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 declare global {
   interface Window {
@@ -24,8 +33,106 @@ declare global {
 const Header = () => {
   const { theme, toggleTheme } = useTheme();
   const { currency, setCurrency } = useCurrency();
+  const { toast } = useToast();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showSearch, setShowSearch] = useState(false);
+  const [location, setLocation] = useLocation();
+
+  // Fetch notifications
+  const { data: notifications = [], isLoading: isLoadingNotifications, refetch: refetchNotifications } = 
+    useQuery<Notification[]>({
+      queryKey: ['/api/notifications'],
+      staleTime: 60000 // 1 minute
+    });
+  
+  // Count unread notifications
+  const unreadCount = notifications.filter(notification => !notification.isRead).length;
+
+  // Mark notification as read
+  const markAsReadMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest('PATCH', `/api/notifications/${id}/mark-read`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+      toast({
+        title: "Notification marked as read",
+        description: "The notification has been marked as read.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to mark notification as read.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Mark all notifications as read
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest('PATCH', '/api/notifications/mark-all-read');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+      toast({
+        title: "All notifications marked as read",
+        description: "All notifications have been marked as read.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to mark all notifications as read.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Get notification icon based on type
+  const getNotificationIcon = (type: string) => {
+    switch(type) {
+      case 'level_up':
+        return <Check className="h-4 w-4" />;
+      case 'transaction_due':
+        return <Clock className="h-4 w-4" />;
+      case 'payment_received':
+        return <CheckCheck className="h-4 w-4" />;
+      case 'alert':
+        return <AlertTriangle className="h-4 w-4" />;
+      default:
+        return <Bell className="h-4 w-4" />;
+    }
+  };
+
+  // Get notification color based on type
+  const getNotificationColor = (type: string) => {
+    switch(type) {
+      case 'level_up':
+        return 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400';
+      case 'transaction_due':
+        return 'bg-amber-100 dark:bg-amber-900 text-amber-600 dark:text-amber-400';
+      case 'payment_received':
+        return 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400';
+      case 'alert':
+        return 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400';
+      default:
+        return 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400';
+    }
+  };
+
+  // Format notification date
+  const formatNotificationDate = (date: string | Date | null) => {
+    if (!date) return 'Unknown date';
+    
+    try {
+      const notificationDate = date instanceof Date ? date : new Date(date);
+      return formatDistanceToNow(notificationDate, { addSuffix: true });
+    } catch (error) {
+      return 'Unknown date';
+    }
+  };
 
   // Monitor screen size changes
   useEffect(() => {
@@ -162,54 +269,71 @@ const Header = () => {
                   aria-label="Notifications"
                 >
                   <Bell className="h-5 w-5" />
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white text-xs">
-                    3
-                  </Badge>
+                  {unreadCount > 0 && (
+                    <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white text-xs">
+                      {unreadCount}
+                    </Badge>
+                  )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-80">
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex justify-between items-center">
                     <h4 className="font-semibold text-sm">Notifications</h4>
-                    <Badge variant="outline" className="text-xs font-normal">3 new</Badge>
+                    {unreadCount > 0 && (
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs font-normal">{unreadCount} new</Badge>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-7 px-2 text-xs"
+                          onClick={() => markAllAsReadMutation.mutate()}
+                          disabled={markAllAsReadMutation.isPending}
+                        >
+                          Mark all read
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <div className="max-h-[300px] overflow-y-auto">
-                  <DropdownMenuItem className="flex items-start gap-3 p-3 cursor-pointer">
-                    <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center text-green-600 dark:text-green-400 flex-shrink-0">
-                      <Check className="h-4 w-4" />
+                  {isLoadingNotifications ? (
+                    <div className="flex justify-center items-center py-8">
+                      <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                     </div>
-                    <div className="space-y-1 flex-1">
-                      <p className="text-sm font-medium">New quote request</p>
-                      <p className="text-xs text-muted-foreground">A client has requested a new quote for website design</p>
-                      <p className="text-xs text-muted-foreground">2 minutes ago</p>
+                  ) : notifications.length === 0 ? (
+                    <div className="py-8 text-center text-sm text-muted-foreground">
+                      <p>No notifications</p>
                     </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-start gap-3 p-3 cursor-pointer">
-                    <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 flex-shrink-0">
-                      <Bell className="h-4 w-4" />
-                    </div>
-                    <div className="space-y-1 flex-1">
-                      <p className="text-sm font-medium">Payment received</p>
-                      <p className="text-xs text-muted-foreground">$2,500.00 payment received from Echo Creative</p>
-                      <p className="text-xs text-muted-foreground">1 hour ago</p>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-start gap-3 p-3 cursor-pointer">
-                    <div className="h-8 w-8 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center text-amber-600 dark:text-amber-400 flex-shrink-0">
-                      <Clock className="h-4 w-4" />
-                    </div>
-                    <div className="space-y-1 flex-1">
-                      <p className="text-sm font-medium">Subscription renewal</p>
-                      <p className="text-xs text-muted-foreground">Nova Design subscription renews in 3 days</p>
-                      <p className="text-xs text-muted-foreground">2 days ago</p>
-                    </div>
-                  </DropdownMenuItem>
+                  ) : (
+                    // Filter to only show unread notifications in the dropdown
+                    notifications.filter(notification => !notification.isRead).map((notification) => (
+                      <DropdownMenuItem 
+                        key={notification.id} 
+                        className="flex items-start gap-3 p-3 cursor-pointer hover:bg-accent"
+                        onClick={() => markAsReadMutation.mutate(notification.id)}
+                      >
+                        <div className={`h-8 w-8 rounded-full ${getNotificationColor(notification.type)} flex items-center justify-center flex-shrink-0`}>
+                          {getNotificationIcon(notification.type)}
+                        </div>
+                        <div className="space-y-1 flex-1">
+                          <p className="text-sm font-medium">{notification.title}</p>
+                          <p className="text-xs text-muted-foreground">{notification.message}</p>
+                          <p className="text-xs text-muted-foreground">{formatNotificationDate(notification.createdAt || '')}</p>
+                        </div>
+                      </DropdownMenuItem>
+                    ))
+                  )}
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="flex justify-center items-center p-2 cursor-pointer">
-                  <Button variant="ghost" size="sm" className="w-full text-center">
+                <DropdownMenuItem className="flex justify-center items-center p-2 cursor-pointer" onSelect={(e) => e.preventDefault()}>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full text-center"
+                    onClick={() => setLocation("/notifications")}
+                  >
                     View all notifications
                   </Button>
                 </DropdownMenuItem>

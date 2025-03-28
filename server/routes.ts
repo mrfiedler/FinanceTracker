@@ -11,6 +11,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
   
   // All API routes
+  
+  // API - Notifications
+  app.get("/api/notifications", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const userId = req.user!.id;
+      const notifications = await storage.getNotifications(userId);
+      res.json(notifications);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+  
+  app.get("/api/notifications/unread-count", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const userId = req.user!.id;
+      const count = await storage.getUnreadNotificationsCount(userId);
+      res.json({ count });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch unread notifications count" });
+    }
+  });
+  
+  app.patch("/api/notifications/:id/mark-read", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const id = parseInt(req.params.id);
+      const success = await storage.markNotificationAsRead(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Notification not found" });
+      }
+      
+      res.json({ success });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+  
+  app.patch("/api/notifications/mark-all-read", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const userId = req.user!.id;
+      const success = await storage.markAllNotificationsAsRead(userId);
+      res.json({ success });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to mark all notifications as read" });
+    }
+  });
 
   // API - Clients
   app.get("/api/clients", async (req, res) => {
@@ -277,7 +339,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid quote data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to create quote", error: error.message });
+      res.status(500).json({ message: "Failed to create quote", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
@@ -353,13 +415,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/contracts", async (req, res) => {
     try {
       const data = insertContractSchema.parse(req.body);
-      // Convert quoteId to number or null
-      const parsedData = {
-        ...data,
-        quoteId: data.quoteId ? parseInt(data.quoteId) : null
-      };
+      // quoteId is now handled by schema transform
       
-      const contract = await storage.createContract(parsedData);
+      const contract = await storage.createContract(data);
       res.status(201).json(contract);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -382,13 +440,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Contract not found" });
       }
       
-      // Convert quoteId to number or null
-      const parsedData = {
-        ...data,
-        quoteId: data.quoteId ? parseInt(data.quoteId) : null
-      };
+      // quoteId is now handled by schema transform
       
-      const updatedContract = await storage.updateContract(contractId, parsedData);
+      const updatedContract = await storage.updateContract(contractId, data);
       res.status(200).json(updatedContract);
     } catch (error) {
       if (error instanceof z.ZodError) {

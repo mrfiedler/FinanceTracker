@@ -200,7 +200,9 @@ export const insertContractSchema = createInsertSchema(contracts).pick({
   title: true,
   description: true,
 }).extend({
-  quoteId: z.string().nullable().optional(),
+  quoteId: z.union([z.string(), z.number()]).nullable().optional().transform(val => 
+    val === null ? null : typeof val === 'string' ? parseInt(val) : val
+  ),
   file: z.any(),
 });
 

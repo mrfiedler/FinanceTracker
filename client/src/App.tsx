@@ -14,6 +14,7 @@ import Subscriptions from "./pages/Subscriptions";
 import Contracts from "./pages/Contracts";
 import Achievements from "./pages/Achievements";
 import Settings from "./pages/Settings";
+import Notifications from "./pages/Notifications";
 import Sidebar from "./components/layout/Sidebar";
 import Header from "./components/layout/Header";
 import { useEffect, useState } from "react";
@@ -100,6 +101,11 @@ function Router() {
       <ProtectedRoute path="/settings" component={() => (
         <AppLayout>
           <Settings />
+        </AppLayout>
+      )} />
+      <ProtectedRoute path="/notifications" component={() => (
+        <AppLayout>
+          <Notifications />
         </AppLayout>
       )} />
       
