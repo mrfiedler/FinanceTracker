@@ -50,7 +50,15 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
   const [showNewClientForm, setShowNewClientForm] = useState(false);
 
   // Get clients for the dropdown
-  const { data: clients } = useQuery({
+  interface Client {
+    id: number;
+    name: string;
+    email: string;
+    phone?: string;
+    businessType: string;
+  }
+  
+  const { data: clients = [] } = useQuery<Client[]>({
     queryKey: ['/api/clients'],
   });
 
@@ -58,25 +66,31 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
   const newClientSchema = z.object({
     name: z.string().min(1, "Business name is required"),
     email: z.string().email("Invalid email address"),
-    phone: z.string().nullable().optional(),
+    phone: z.string().optional(),
     businessType: z.string().min(1, "Business type is required"),
   });
 
-  // Define the type for the form data explicitly
-  type FormData = z.infer<typeof insertQuoteSchema> & {
+  // Define the type for the form data explicitly, allowing clientId to be either a number or "new"
+  type FormData = Omit<z.infer<typeof insertQuoteSchema>, 'clientId'> & {
+    clientId: number | "new";
     status?: string;
     newClient?: {
       name: string;
       email: string;
-      phone?: string | null;
+      phone?: string;
       businessType: string;
     };
   };
   
   // Form schema with nested fields for new client
   const formSchema = insertQuoteSchema.extend({
+    // Override clientId to allow either number or the string "new"
+    clientId: z.union([z.number(), z.literal("new")]),
     // Add optional status field
     status: z.string().optional(),
+    // Make sure validUntil and notes can never be null, only undefined or string
+    validUntil: z.string().optional(),
+    notes: z.string().optional(),
     // For when creating a new client
     newClient: newClientSchema.optional(),
   });
@@ -88,7 +102,7 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
       jobTitle: "",
       jobDescription: "",
       amount: "",
-      clientId: "",
+      clientId: 0, // Initialize with 0 instead of empty string
       status: "Pending",
       validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], // 30 days from now
       currency: currency,
@@ -97,9 +111,9 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
     },
   });
 
-  const mutation = useMutation({
-    mutationFn: async (data) => {
-      return apiRequest("POST", "/api/quotes", data);
+  const mutation = useMutation<any, Error, FormData>({
+    mutationFn: async (data: FormData) => {
+      return await apiRequest("POST", "/api/quotes", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/quotes/recent'] });
@@ -130,13 +144,16 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
   const onSubmit = (data: FormData) => {
     setIsSubmitting(true);
     
-    // If creating a new client, send the form with the clientId set to 'new'
-    // and include the newClient data
+    // Handle form submission with the correct typing
+    const submissionData = {...data};
+    
+    // If creating a new client, set the clientId to "new" string
+    // The backend API expects "new" as a string for this special case
     if (showNewClientForm) {
-      data.clientId = "new";
+      submissionData.clientId = "new";
     }
     
-    mutation.mutate(data);
+    mutation.mutate(submissionData);
   };
 
   // Watch the clientId to toggle the new client form
@@ -146,10 +163,12 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
   const handleClientChange = (value: string) => {
     if (value === "new") {
       setShowNewClientForm(true);
+      form.setValue("clientId", "new");
     } else {
       setShowNewClientForm(false);
+      // Convert string to number for non-"new" client IDs
+      form.setValue("clientId", parseInt(value, 10));
     }
-    form.setValue("clientId", value);
   };
 
   return (
@@ -185,7 +204,7 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
                   <FormLabel>Client</FormLabel>
                   <Select
                     onValueChange={handleClientChange}
-                    value={field.value}
+                    value={field.value.toString()}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -258,7 +277,11 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
                       <FormItem>
                         <FormLabel>Phone (Optional)</FormLabel>
                         <FormControl>
-                          <Input placeholder="+1 (555) 123-4567" {...field} />
+                          <Input 
+                            placeholder="+1 (555) 123-4567" 
+                            {...field} 
+                            value={field.value || ''} 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -351,7 +374,7 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
                   <FormItem>
                     <FormLabel>Valid Until</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input type="date" {...field} value={field.value || ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -416,6 +439,7 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
                       placeholder="Terms and conditions, payment schedule, etc."
                       className="resize-none"
                       {...field}
+                      value={field.value || ''}
                     />
                   </FormControl>
                   <FormMessage />
