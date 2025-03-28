@@ -234,7 +234,7 @@ const AddSubscriptionModal = ({ isOpen, onClose }: AddSubscriptionModalProps) =>
                     <FormLabel>Currency</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -262,7 +262,7 @@ const AddSubscriptionModal = ({ isOpen, onClose }: AddSubscriptionModalProps) =>
                     <FormLabel>Client</FormLabel>
                     <Select
                       onValueChange={(value) => handleClientChange(value)}
-                      defaultValue={field.value}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -297,7 +297,7 @@ const AddSubscriptionModal = ({ isOpen, onClose }: AddSubscriptionModalProps) =>
                     <FormLabel>Frequency</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -431,7 +431,7 @@ const AddSubscriptionModal = ({ isOpen, onClose }: AddSubscriptionModalProps) =>
                             <FormLabel>Business Type</FormLabel>
                             <Select
                               onValueChange={field.onChange}
-                              defaultValue={field.value}
+                              value={field.value}
                             >
                               <FormControl>
                                 <SelectTrigger>

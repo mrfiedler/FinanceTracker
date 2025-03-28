@@ -185,7 +185,7 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
                   <FormLabel>Client</FormLabel>
                   <Select
                     onValueChange={handleClientChange}
-                    defaultValue={field.value}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -271,7 +271,7 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Business Type</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select type" />
@@ -324,7 +324,7 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
                     <FormLabel>Currency</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -366,7 +366,7 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
                     <FormLabel>Status</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
