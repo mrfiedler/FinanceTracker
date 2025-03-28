@@ -70,21 +70,46 @@ const AddRevenueModal = ({ isOpen, onClose }: AddRevenueModalProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showNewClientForm, setShowNewClientForm] = useState(false);
   const [activeTab, setActiveTab] = useState("revenue");
+  const [newBusinessType, setNewBusinessType] = useState("");
+  const [customBusinessTypeMode, setCustomBusinessTypeMode] = useState(false);
+
+  // Define types for the data we're fetching
+  interface FinanceCategory {
+    id: number;
+    value: string;
+    label: string;
+    type: string;
+  }
+
+  interface FinanceAccount {
+    id: number;
+    value: string;
+    label: string;
+    icon: string;
+  }
+
+  interface Client {
+    id: number;
+    name: string;
+    email: string;
+    phone?: string;
+    businessType?: string;
+  }
 
   // Get the list of finance categories from API
-  const { data: financeCategories = [] } = useFinanceQuery({
+  const { data: financeCategories = [] as FinanceCategory[] } = useFinanceQuery<FinanceCategory[]>({
     queryKey: ['/api/finance/categories'],
     enabled: isOpen,
   });
 
   // Get the list of accounts from API
-  const { data: financeAccounts = [] } = useFinanceQuery({
+  const { data: financeAccounts = [] as FinanceAccount[] } = useFinanceQuery<FinanceAccount[]>({
     queryKey: ['/api/finance/accounts'],
     enabled: isOpen,
   });
   
   // Get clients for the dropdown
-  const { data: clients = [], refetch: refetchClients } = useQuery({
+  const { data: clients = [] as Client[], refetch: refetchClients } = useQuery<Client[]>({
     queryKey: ['/api/clients'],
     enabled: isOpen,
   });
@@ -121,8 +146,8 @@ const AddRevenueModal = ({ isOpen, onClose }: AddRevenueModalProps) => {
   });
 
   // Get only revenue categories from the categories list
-  const filteredRevenueCategories = financeCategories
-    ? financeCategories.filter((cat: any) => cat.type === 'revenue')
+  const filteredRevenueCategories = financeCategories && Array.isArray(financeCategories)
+    ? financeCategories.filter((cat) => cat.type === 'revenue')
     : revenueCategories;
 
   // Add Client mutation
@@ -210,7 +235,12 @@ const AddRevenueModal = ({ isOpen, onClose }: AddRevenueModalProps) => {
     
     // Ensure clientId is a number
     if (data.clientId) {
-      data.clientId = parseInt(data.clientId);
+      try {
+        data.clientId = parseInt(data.clientId);
+      } catch (error) {
+        console.error("Error parsing clientId:", error);
+        // If parsing fails, keep the original value
+      }
     }
     
     addRevenueMutation.mutate(data);
@@ -335,7 +365,7 @@ const AddRevenueModal = ({ isOpen, onClose }: AddRevenueModalProps) => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {clients?.map((client: any) => (
+                              {Array.isArray(clients) && clients.map((client) => (
                                 <SelectItem key={client.id} value={client.id.toString()}>
                                   {client.name}
                                 </SelectItem>
@@ -374,7 +404,7 @@ const AddRevenueModal = ({ isOpen, onClose }: AddRevenueModalProps) => {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {filteredRevenueCategories.map((category: any) => (
+                            {Array.isArray(filteredRevenueCategories) && filteredRevenueCategories.map((category) => (
                               <SelectItem key={category.value} value={category.value}>
                                 {category.label}
                               </SelectItem>
@@ -438,8 +468,8 @@ const AddRevenueModal = ({ isOpen, onClose }: AddRevenueModalProps) => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {financeAccounts.length > 0 ? (
-                            financeAccounts.map((account: any) => (
+                          {Array.isArray(financeAccounts) && financeAccounts.length > 0 ? (
+                            financeAccounts.map((account) => (
                               <SelectItem key={account.value} value={account.value}>
                                 <div className="flex items-center">
                                   {renderAccountIcon(account.icon)}
@@ -567,23 +597,79 @@ const AddRevenueModal = ({ isOpen, onClose }: AddRevenueModalProps) => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Business Type *</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {businessTypes.map((type) => (
-                              <SelectItem key={type.value} value={type.value}>
-                                {type.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        {!customBusinessTypeMode ? (
+                          <>
+                            <div className="flex flex-col space-y-2">
+                              <Select
+                                onValueChange={(value) => {
+                                  if (value === "custom") {
+                                    setCustomBusinessTypeMode(true);
+                                  } else {
+                                    field.onChange(value);
+                                  }
+                                }}
+                                value={field.value}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select type" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {businessTypes.map((type) => (
+                                    <SelectItem key={type.value} value={type.value}>
+                                      {type.label}
+                                    </SelectItem>
+                                  ))}
+                                  <SelectItem value="custom">
+                                    <div className="flex items-center">
+                                      <Plus className="mr-2 h-3.5 w-3.5" />
+                                      Add Custom Type
+                                    </div>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="space-y-2">
+                            <div className="flex gap-2">
+                              <FormControl>
+                                <Input
+                                  placeholder="Enter custom business type"
+                                  value={newBusinessType}
+                                  onChange={(e) => setNewBusinessType(e.target.value)}
+                                />
+                              </FormControl>
+                              <Button 
+                                type="button" 
+                                size="sm"
+                                onClick={() => {
+                                  if (newBusinessType.trim()) {
+                                    // Set the form field value
+                                    field.onChange(newBusinessType);
+                                    // Reset the custom mode
+                                    setCustomBusinessTypeMode(false);
+                                  }
+                                }}
+                              >
+                                Add
+                              </Button>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="w-full text-xs"
+                              onClick={() => {
+                                setCustomBusinessTypeMode(false);
+                                setNewBusinessType("");
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
