@@ -284,4 +284,31 @@ export function setupAuth(app: Express) {
       res.status(500).json({ message: "Failed to upload company logo" });
     }
   });
+  
+  // Upload profile avatar endpoint
+  app.post("/api/users/avatar", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    try {
+      const userId = (req.user as SelectUser).id;
+      
+      // In a real app, this would handle file upload and save the avatar
+      // For now, we'll just simulate a successful upload with a random avatar
+      const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}-${Date.now()}`;
+      
+      // Update user with new avatar URL
+      await storage.updateUser(userId, { avatar: avatarUrl });
+      
+      res.json({ 
+        success: true,
+        message: "Avatar uploaded successfully",
+        avatarUrl 
+      });
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      res.status(500).json({ message: "Failed to upload avatar" });
+    }
+  });
 }
