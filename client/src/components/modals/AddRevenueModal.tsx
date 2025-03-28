@@ -233,17 +233,15 @@ const AddRevenueModal = ({ isOpen, onClose }: AddRevenueModalProps) => {
   const onSubmitRevenue = (data: any) => {
     setIsSubmitting(true);
     
-    // Ensure clientId is a number
-    if (data.clientId) {
-      try {
-        data.clientId = parseInt(data.clientId);
-      } catch (error) {
-        console.error("Error parsing clientId:", error);
-        // If parsing fails, keep the original value
-      }
-    }
+    // Create a copy of the data to avoid mutating the form values
+    const submissionData = {
+      ...data,
+      // Ensure clientId is a number - use Number() which is more reliable than parseInt
+      clientId: data.clientId ? Number(data.clientId) : undefined
+    };
     
-    addRevenueMutation.mutate(data);
+    console.log("Submitting revenue with data:", submissionData);
+    addRevenueMutation.mutate(submissionData);
   };
 
   // Toggle new client form

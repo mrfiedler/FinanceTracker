@@ -105,6 +105,12 @@ export const insertRevenueSchema = createInsertSchema(revenues).pick({
   currency: true,
   account: true,
   isPaid: true,
+}).transform((data) => {
+  return {
+    ...data,
+    // Ensure clientId is always a number
+    clientId: typeof data.clientId === 'string' ? Number(data.clientId) : data.clientId,
+  };
 });
 
 export type InsertRevenue = z.infer<typeof insertRevenueSchema>;
@@ -132,6 +138,12 @@ export const insertQuoteSchema = createInsertSchema(quotes).pick({
   currency: true,
   validUntil: true,
   notes: true,
+}).transform((data) => {
+  return {
+    ...data,
+    // Ensure clientId is always a number
+    clientId: typeof data.clientId === 'string' ? Number(data.clientId) : data.clientId,
+  };
 });
 
 export type InsertQuote = z.infer<typeof insertQuoteSchema>;
@@ -162,6 +174,12 @@ export const insertSubscriptionSchema = createInsertSchema(subscriptions).pick({
   isActive: true,
   currency: true,
   description: true,
+}).transform((data) => {
+  return {
+    ...data,
+    // Ensure clientId is always a number
+    clientId: typeof data.clientId === 'string' ? Number(data.clientId) : data.clientId,
+  };
 });
 
 export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;

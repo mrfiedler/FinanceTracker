@@ -83,14 +83,19 @@ const CreateQuoteModal = ({ isOpen, onClose }: CreateQuoteModalProps) => {
   };
   
   // Form schema with nested fields for new client
-  const formSchema = insertQuoteSchema.extend({
-    // Override clientId to allow either number or the string "new"
+  // Use z.object with the shape of the schema instead of extending a transformed schema
+  const formSchema = z.object({
+    jobTitle: z.string().min(1, "Job title is required"),
+    jobDescription: z.string().min(1, "Job description is required"),
+    amount: z.string().min(1, "Amount is required"),
+    // Allow either number or the string "new"
     clientId: z.union([z.number(), z.literal("new")]),
     // Add optional status field
     status: z.string().optional(),
     // Make sure validUntil and notes can never be null, only undefined or string
     validUntil: z.string().optional(),
     notes: z.string().optional(),
+    currency: z.string().default("USD"),
     // For when creating a new client
     newClient: newClientSchema.optional(),
   });
