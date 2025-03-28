@@ -365,6 +365,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid contract data", errors: error.errors });
       }
+      console.error("Contract creation error:", error);
       res.status(500).json({ message: "Failed to create contract" });
     }
   });
@@ -393,6 +394,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid contract data", errors: error.errors });
       }
+      console.error("Contract update error:", error);
       res.status(500).json({ message: "Failed to update contract" });
     }
   });
@@ -411,6 +413,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.deleteContract(contractId);
       res.status(204).send();
     } catch (error) {
+      console.error("Contract deletion error:", error);
       res.status(500).json({ message: "Failed to delete contract" });
     }
   });

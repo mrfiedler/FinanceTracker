@@ -1438,7 +1438,8 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Quotes
-  async getQuote(id: number): Promise<Quote | undefined> {
+  async getQuote(id: number | null): Promise<Quote | undefined> {
+    if (id === null) return undefined;
     const result = await db.select().from(quotes).where(eq(quotes.id, id));
     return result[0];
   }

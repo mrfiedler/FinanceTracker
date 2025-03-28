@@ -182,7 +182,7 @@ export const insertContractSchema = createInsertSchema(contracts).pick({
   title: true,
   description: true,
 }).extend({
-  quoteId: z.string().optional(),
+  quoteId: z.string().nullable().optional(),
   file: z.any(),
 });
 

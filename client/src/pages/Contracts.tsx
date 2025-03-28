@@ -302,21 +302,33 @@ const Contracts = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium border border-primary/20">
-                              {getInitials(contract.quote.client.name)}
+                              {contract.quote && contract.quote.client 
+                                ? getInitials(contract.quote.client.name) 
+                                : "N/A"}
                             </div>
                             <div className="ml-3">
-                              <p className="text-sm font-medium text-foreground">{contract.quote.client.name}</p>
+                              <p className="text-sm font-medium text-foreground">
+                                {contract.quote && contract.quote.client 
+                                  ? contract.quote.client.name 
+                                  : "No client"}
+                              </p>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <p className="text-sm text-foreground">{contract.quote.jobTitle}</p>
+                            <p className="text-sm text-foreground">
+                              {contract.quote 
+                                ? contract.quote.jobTitle 
+                                : "No linked quote"}
+                            </p>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <p className="text-sm font-medium text-foreground">
-                            {formatCurrency(contract.quote.amount, currency)}
+                            {contract.quote 
+                              ? formatCurrency(contract.quote.amount, currency) 
+                              : "-"}
                           </p>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
