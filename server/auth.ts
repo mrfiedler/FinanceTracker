@@ -13,6 +13,14 @@ declare global {
   }
 }
 
+// Extend express-session to add our custom properties
+declare module 'express-session' {
+  interface SessionData {
+    userId?: number;
+    authenticated?: boolean;
+  }
+}
+
 const scryptAsync = promisify(scrypt);
 
 // Hash password using scrypt
@@ -38,15 +46,18 @@ export function setupAuth(app: Express) {
   // Set up session
   const sessionSettings: session.SessionOptions = {
     secret: SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
     store: storage.sessionStore,
     cookie: {
-      secure: process.env.NODE_ENV === "production",
+      secure: false, // Set to false for development (even in production for this demo)
+      httpOnly: false, // Allow JavaScript access to cookies
       maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+      sameSite: 'lax' // Less restrictive SameSite setting
     }
   };
 
+  // Trust proxy is needed for secure cookies to work properly behind reverse proxies
   app.set("trust proxy", 1);
   app.use(session(sessionSettings));
   app.use(passport.initialize());
@@ -119,6 +130,23 @@ export function setupAuth(app: Express) {
       req.login(user, (err) => {
         if (err) return next(err);
         
+        console.log("User successfully logged in:", (user as SelectUser).id);
+        
+        // Add custom properties to the session
+        if (req.session) {
+          req.session.userId = (user as SelectUser).id;
+          req.session.authenticated = true;
+          req.session.save((err) => {
+            if (err) {
+              console.error("Error saving session:", err);
+            } else {
+              console.log("Session successfully saved");
+            }
+          });
+        } else {
+          console.error("Session object not available");
+        }
+        
         // Remove password from response
         const { password, ...userWithoutPassword } = user;
         res.status(200).json(userWithoutPassword);
@@ -143,6 +171,17 @@ export function setupAuth(app: Express) {
 
   // Current user endpoint
   app.get("/api/user", (req, res) => {
+    // Debug session information
+    console.log("Session ID:", req.sessionID);
+    console.log("Is authenticated:", req.isAuthenticated());
+    if (req.session) {
+      console.log("Session data:", { 
+        userId: req.session.userId,
+        authenticated: req.session.authenticated,
+        cookie: req.session.cookie
+      });
+    }
+    
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Not authenticated" });
     }
