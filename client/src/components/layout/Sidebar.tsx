@@ -16,14 +16,25 @@ import {
   X
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useTheme } from "@/context/ThemeContext";
 import { useGamification } from "@/context/GamificationContext";
 import { Separator } from "@/components/ui/separator";
+import { useQuery } from "@tanstack/react-query";
 
 declare global {
   interface Window {
     toggleSidebar?: () => void;
   }
+}
+
+interface UserType {
+  id?: number;
+  username?: string;
+  name?: string;
+  email?: string;
+  avatar?: string;
+  role?: string;
 }
 
 const navItems = [
@@ -34,6 +45,88 @@ const navItems = [
   { href: "/subscriptions", label: "Subscriptions", icon: <Bell className="h-5 w-5 mr-3" /> },
   { href: "/contracts", label: "Contracts", icon: <FileSignature className="h-5 w-5 mr-3" /> },
 ];
+
+// UserProfileSection component to display user information
+interface UserProfileSectionProps {
+  closeMobileSidebar: () => void;
+}
+
+const UserProfileSection = ({ closeMobileSidebar }: UserProfileSectionProps) => {
+  const { data: userData, isLoading } = useQuery<UserType | null>({
+    queryKey: ['/api/user'],
+    retry: false,
+  });
+
+  const user = userData || {};
+
+  // Generate initials from name
+  const getInitials = (name?: string) => {
+    if (!name) return 'U';
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
+  return (
+    <div className="flex items-center space-x-3">
+      {isLoading ? (
+        <>
+          <Skeleton className="h-10 w-10 rounded-full" />
+          <div className="flex-1 min-w-0">
+            <Skeleton className="h-4 w-24 mb-1" />
+            <Skeleton className="h-3 w-32" />
+          </div>
+        </>
+      ) : user ? (
+        <>
+          <Avatar className="h-10 w-10 border border-gray-200 dark:border-gray-700">
+            <AvatarImage 
+              src={user.avatar} 
+              alt={user.name || "User"} 
+            />
+            <AvatarFallback className="bg-primary/10 text-primary font-medium">
+              {getInitials(user.name)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 dark:text-[#e6e6e6] truncate">
+              {user.name || "User"}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-[#b3b3b3] truncate">
+              {user.email || "user@example.com"}
+            </p>
+          </div>
+        </>
+      ) : (
+        <>
+          <Avatar className="h-10 w-10">
+            <AvatarFallback className="bg-primary/10 text-primary font-medium">
+              U
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 dark:text-[#e6e6e6] truncate">
+              Guest User
+            </p>
+            <p className="text-xs text-gray-500 dark:text-[#b3b3b3] truncate">
+              Not logged in
+            </p>
+          </div>
+        </>
+      )}
+      <Link
+        href="/settings"
+        onClick={closeMobileSidebar}
+        className="rounded-full p-1 text-gray-400 hover:text-gray-600 dark:text-[#b3b3b3] dark:hover:text-[#e6e6e6]"
+      >
+        <Settings className="h-5 w-5" />
+      </Link>
+    </div>
+  );
+};
 
 const Sidebar = () => {
   const [location] = useLocation();
@@ -321,23 +414,7 @@ const Sidebar = () => {
         </nav>
 
         <div className="absolute bottom-0 w-full border-t border-gray-200 dark:border-[#3d3d3d] px-4 py-4">
-          <div className="flex items-center space-x-3">
-            <Avatar>
-              <AvatarImage src="https://github.com/shadcn.png" alt="User" />
-              <AvatarFallback>AM</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 dark:text-[#e6e6e6] truncate">Alex Morgan</p>
-              <p className="text-xs text-gray-500 dark:text-[#b3b3b3] truncate">alex@designstudio.com</p>
-            </div>
-            <Link
-              href="/settings"
-              onClick={closeMobileSidebar}
-              className="rounded-full p-1 text-gray-400 hover:text-gray-600 dark:text-[#b3b3b3] dark:hover:text-[#e6e6e6]"
-            >
-              <Settings className="h-5 w-5" />
-            </Link>
-          </div>
+          <UserProfileSection closeMobileSidebar={closeMobileSidebar} />
         </div>
       </aside>
     </>

@@ -7,7 +7,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
 import {
   Tabs,
@@ -49,11 +48,8 @@ import {
   Building,
   FileText,
   Check,
-  Clock,
-  BadgeInfo,
-  Send,
   AlertCircle,
-  AlertTriangle
+  ArrowUpDown
 } from "lucide-react";
 
 const Settings = () => {
@@ -77,6 +73,8 @@ const Settings = () => {
   const [companyEditMode, setCompanyEditMode] = useState(false);
   const companyNameRef = useRef<HTMLInputElement>(null);
   const companyRegNumberRef = useRef<HTMLInputElement>(null);
+  const companyEmailRef = useRef<HTMLInputElement>(null);
+  const companyPhoneRef = useRef<HTMLInputElement>(null);
   const companyAddressRef = useRef<HTMLInputElement>(null);
   const companyLogoInputRef = useRef<HTMLInputElement>(null);
   const [companyLogo, setCompanyLogo] = useState<File | null>(null);
@@ -87,10 +85,6 @@ const Settings = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  
-  // Payment states
-  const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
-  const [billingAddress, setBillingAddress] = useState("");
   
   // Get current user data
   const { data: user, isLoading: isLoadingUser } = useQuery({
@@ -358,8 +352,10 @@ const Settings = () => {
   const handleSaveCompanyInfo = () => {
     const companyData = {
       name: companyNameRef.current?.value,
-      registrationNumber: companyRegNumberRef.current?.value,
-      address: companyAddressRef.current?.value
+      email: companyEmailRef.current?.value,
+      phone: companyPhoneRef.current?.value,
+      address: companyAddressRef.current?.value,
+      registrationNumber: companyRegNumberRef.current?.value
     };
     
     saveCompanyInfoMutation.mutate(companyData);
@@ -377,24 +373,6 @@ const Settings = () => {
     companyLogoInputRef.current?.click();
   };
   
-  // Handle payment method selection
-  const handlePaymentMethodSelection = (method: string) => {
-    setPaymentMethod(method);
-    
-    toast({
-      title: "Payment method updated",
-      description: `Your payment method has been set to ${method}.`,
-    });
-  };
-  
-  // Handle saving billing address
-  const handleSaveBillingAddress = () => {
-    toast({
-      title: "Billing address saved",
-      description: "Your billing address has been saved successfully.",
-    });
-  };
-  
   // Generate user initials for avatar fallback
   const getUserInitials = () => {
     if (!user?.name) return 'U';
@@ -402,10 +380,10 @@ const Settings = () => {
   };
 
   return (
-    <main className="w-full h-full overflow-y-auto bg-background p-4 md:p-6 pb-20">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Account Settings</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+    <main className="w-full h-full overflow-y-auto bg-background pb-20">
+      <div className="page-header mb-6">
+        <h1 className="page-title">Account Settings</h1>
+        <p className="page-description">
           Manage your profile, company information, and payment settings
         </p>
       </div>
@@ -428,13 +406,13 @@ const Settings = () => {
 
         {/* Profile Tab */}
         <TabsContent value="profile" className="space-y-6 max-w-4xl">
-          <Card className="overflow-hidden border-none shadow-md">
-            <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 pb-8">
+          <Card className="border-border/60 shadow-sm">
+            <CardHeader className="pb-8 border-b border-border/40">
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle className="text-2xl">Profile Information</CardTitle>
-                  <CardDescription className="text-sm mt-1">
-                    Update your personal profile details
+                  <CardTitle>Profile Information</CardTitle>
+                  <CardDescription className="mt-1">
+                    Update your personal profile details and security settings
                   </CardDescription>
                 </div>
                 <Button 
@@ -443,30 +421,35 @@ const Settings = () => {
                   className="transition-all duration-300"
                 >
                   {editMode ? (
-                    <Check className="mr-2 h-4 w-4" />
+                    <>
+                      <Check className="mr-2 h-4 w-4" />
+                      Save Changes
+                    </>
                   ) : (
-                    <Edit className="mr-2 h-4 w-4" />
+                    <>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit Profile
+                    </>
                   )}
-                  {editMode ? "Save Changes" : "Edit Profile"}
                 </Button>
               </div>
             </CardHeader>
             
-            <CardContent className="pt-0 mt-[-2rem]">
-              <div className="bg-background rounded-xl shadow-sm p-6 space-y-6">
+            <CardContent className="pt-6">
+              <div className="space-y-6">
                 {/* Profile Photo Section */}
                 <div className="flex flex-col md:flex-row gap-6 items-start">
                   <div className="flex flex-col items-center space-y-3">
                     {isLoadingUser ? (
-                      <Skeleton className="h-28 w-28 rounded-full" />
+                      <Skeleton className="h-24 w-24 rounded-full" />
                     ) : (
                       <div className="relative">
-                        <Avatar className="h-28 w-28 border-4 border-background shadow-xl">
+                        <Avatar className="h-24 w-24 border-4 border-background shadow-md">
                           <AvatarImage 
-                            src={profilePhoto ? URL.createObjectURL(profilePhoto) : (user?.avatar || undefined)}
+                            src={profilePhoto ? URL.createObjectURL(profilePhoto) : user?.avatar}
                             alt={user?.name || "User Profile"}
                           />
-                          <AvatarFallback className="text-lg font-semibold bg-primary/20 text-primary">
+                          <AvatarFallback className="text-lg font-semibold bg-primary/10 text-primary">
                             {getUserInitials()}
                           </AvatarFallback>
                         </Avatar>
@@ -501,7 +484,7 @@ const Settings = () => {
                   </div>
 
                   {/* Profile Details */}
-                  <div className="flex-1 space-y-6">
+                  <div className="flex-1 space-y-4">
                     {/* Basic Info Row */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Full Name */}
@@ -519,7 +502,7 @@ const Settings = () => {
                             className="border-gray-300 focus:border-primary"
                           />
                         ) : (
-                          <div className="py-2 px-3 bg-gray-50 dark:bg-gray-800/50 rounded-md text-gray-900 dark:text-gray-100 font-medium min-h-9">
+                          <div className="py-2 px-3 bg-muted/30 rounded-md text-foreground font-medium min-h-9">
                             {isLoadingUser ? <Skeleton className="h-5 w-full" /> : user?.name || "Not set"}
                           </div>
                         )}
@@ -541,7 +524,7 @@ const Settings = () => {
                             className="border-gray-300 focus:border-primary"
                           />
                         ) : (
-                          <div className="py-2 px-3 bg-gray-50 dark:bg-gray-800/50 rounded-md text-gray-900 dark:text-gray-100 font-medium min-h-9">
+                          <div className="py-2 px-3 bg-muted/30 rounded-md text-foreground font-medium min-h-9">
                             {isLoadingUser ? <Skeleton className="h-5 w-full" /> : user?.email || "Not set"}
                           </div>
                         )}
@@ -565,7 +548,7 @@ const Settings = () => {
                             className="border-gray-300 focus:border-primary"
                           />
                         ) : (
-                          <div className="py-2 px-3 bg-gray-50 dark:bg-gray-800/50 rounded-md text-gray-900 dark:text-gray-100 font-medium min-h-9">
+                          <div className="py-2 px-3 bg-muted/30 rounded-md text-foreground font-medium min-h-9">
                             {isLoadingUser ? <Skeleton className="h-5 w-full" /> : user?.phone || "Not set"}
                           </div>
                         )}
@@ -586,7 +569,7 @@ const Settings = () => {
                             className="border-gray-300 focus:border-primary"
                           />
                         ) : (
-                          <div className="py-2 px-3 bg-gray-50 dark:bg-gray-800/50 rounded-md text-gray-900 dark:text-gray-100 font-medium min-h-9">
+                          <div className="py-2 px-3 bg-muted/30 rounded-md text-foreground font-medium min-h-9">
                             {isLoadingUser ? <Skeleton className="h-5 w-full" /> : user?.location || "Not set"}
                           </div>
                         )}
@@ -595,29 +578,25 @@ const Settings = () => {
                   </div>
                 </div>
                 
-                <Separator />
+                <Separator className="my-4" />
                 
                 {/* Account Security Section */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold flex items-center">
-                    <Lock className="mr-2 h-5 w-5 text-primary/70" />
-                    Account Security
-                  </h3>
+                  <h3 className="text-lg font-semibold">Account Security</h3>
                   
                   {/* Password Section */}
                   <div className="grid grid-cols-1 gap-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-gray-50 dark:bg-gray-800/40 rounded-lg">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-muted/30 rounded-lg">
                       <div>
-                        <h4 className="font-medium text-gray-900 dark:text-white flex items-center">
+                        <h4 className="font-medium text-foreground flex items-center">
                           Password
                           {user?.lastPasswordChange && (
                             <Badge variant="outline" className="ml-2 text-xs">
-                              <Clock className="mr-1 h-3 w-3" />
                               Updated
                             </Badge>
                           )}
                         </h4>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        <p className="text-sm text-muted-foreground mt-1">
                           {user?.lastPasswordChange 
                             ? `Last changed: ${user.lastPasswordChange}`
                             : "Secure your account with a strong password"}
@@ -634,10 +613,10 @@ const Settings = () => {
                     </div>
                     
                     {/* Sign Out Section */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-gray-50 dark:bg-gray-800/40 rounded-lg">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-muted/30 rounded-lg">
                       <div>
-                        <h4 className="font-medium text-gray-900 dark:text-white">Session</h4>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        <h4 className="font-medium text-foreground">Session</h4>
+                        <p className="text-sm text-muted-foreground mt-1">
                           End your current session and log out
                         </p>
                       </div>
@@ -718,13 +697,13 @@ const Settings = () => {
 
         {/* Company Tab */}
         <TabsContent value="company" className="space-y-6 max-w-4xl">
-          <Card className="overflow-hidden border-none shadow-md relative">
-            <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 pb-8">
+          <Card className="border-border/60 shadow-sm">
+            <CardHeader className="pb-8 border-b border-border/40">
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle className="text-2xl">Company Information</CardTitle>
-                  <CardDescription className="text-sm mt-1">
-                    Manage your company details and team
+                  <CardTitle>Company Information</CardTitle>
+                  <CardDescription className="mt-1">
+                    Manage your company details and team members
                   </CardDescription>
                 </div>
                 <Button 
@@ -733,23 +712,28 @@ const Settings = () => {
                   className="transition-all duration-300"
                 >
                   {companyEditMode ? (
-                    <Check className="mr-2 h-4 w-4" />
+                    <>
+                      <Check className="mr-2 h-4 w-4" />
+                      Save Changes
+                    </>
                   ) : (
-                    <Edit className="mr-2 h-4 w-4" />
+                    <>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit Company
+                    </>
                   )}
-                  {companyEditMode ? "Save Changes" : "Edit Company"}
                 </Button>
               </div>
             </CardHeader>
             
-            <CardContent className="pt-0 mt-[-2rem]">
-              <div className="bg-background rounded-xl shadow-sm p-6 space-y-6">
+            <CardContent className="pt-6">
+              <div className="space-y-6">
                 {/* Company Logo & Info Section */}
                 <div className="flex flex-col md:flex-row gap-6 items-start">
                   <div className="flex flex-col items-center space-y-3">
                     {/* Company Logo */}
                     <div className="relative">
-                      <div className="w-28 h-28 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center overflow-hidden border-4 border-background shadow-xl">
+                      <div className="w-24 h-24 bg-muted/60 rounded-lg flex items-center justify-center overflow-hidden border border-border/60 shadow-sm">
                         {companyLogo ? (
                           <img
                             src={URL.createObjectURL(companyLogo)}
@@ -757,7 +741,7 @@ const Settings = () => {
                             className="w-full h-full object-contain"
                           />
                         ) : (
-                          <Building className="h-14 w-14 text-gray-400 dark:text-gray-600" />
+                          <Building className="h-14 w-14 text-muted-foreground/70" />
                         )}
                       </div>
                       {companyEditMode && (
@@ -790,45 +774,89 @@ const Settings = () => {
                   </div>
 
                   {/* Company Details */}
-                  <div className="flex-1 space-y-6">
-                    {/* Company Name */}
-                    <div className="space-y-2">
-                      <Label htmlFor="company-name" className="flex items-center text-sm font-medium">
-                        <Building2 className="mr-2 h-4 w-4 text-gray-500" />
-                        Company Name
-                      </Label>
-                      {companyEditMode ? (
-                        <Input 
-                          id="company-name" 
-                          ref={companyNameRef}
-                          placeholder="Enter company name" 
-                          className="border-gray-300 focus:border-primary"
-                        />
-                      ) : (
-                        <div className="py-2 px-3 bg-gray-50 dark:bg-gray-800/50 rounded-md text-gray-900 dark:text-gray-100 font-medium min-h-9">
-                          ACME Corporation
-                        </div>
-                      )}
+                  <div className="flex-1 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Company Name */}
+                      <div className="space-y-2">
+                        <Label htmlFor="company-name" className="flex items-center text-sm font-medium">
+                          <Building2 className="mr-2 h-4 w-4 text-gray-500" />
+                          Company Name
+                        </Label>
+                        {companyEditMode ? (
+                          <Input 
+                            id="company-name" 
+                            ref={companyNameRef}
+                            placeholder="Enter company name" 
+                            className="border-gray-300 focus:border-primary"
+                          />
+                        ) : (
+                          <div className="py-2 px-3 bg-muted/30 rounded-md text-foreground font-medium min-h-9">
+                            ACME Corporation
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Registration Number */}
+                      <div className="space-y-2">
+                        <Label htmlFor="reg-number" className="flex items-center text-sm font-medium">
+                          <FileText className="mr-2 h-4 w-4 text-gray-500" />
+                          Registration Number
+                        </Label>
+                        {companyEditMode ? (
+                          <Input 
+                            id="reg-number" 
+                            ref={companyRegNumberRef}
+                            placeholder="Enter company registration number" 
+                            className="border-gray-300 focus:border-primary"
+                          />
+                        ) : (
+                          <div className="py-2 px-3 bg-muted/30 rounded-md text-foreground font-medium min-h-9">
+                            12345-ABC-67890
+                          </div>
+                        )}
+                      </div>
                     </div>
                     
-                    {/* Registration Number */}
-                    <div className="space-y-2">
-                      <Label htmlFor="reg-number" className="flex items-center text-sm font-medium">
-                        <BadgeInfo className="mr-2 h-4 w-4 text-gray-500" />
-                        Registration Number
-                      </Label>
-                      {companyEditMode ? (
-                        <Input 
-                          id="reg-number" 
-                          ref={companyRegNumberRef}
-                          placeholder="Enter company registration number" 
-                          className="border-gray-300 focus:border-primary"
-                        />
-                      ) : (
-                        <div className="py-2 px-3 bg-gray-50 dark:bg-gray-800/50 rounded-md text-gray-900 dark:text-gray-100 font-medium min-h-9">
-                          12345-ABC-67890
-                        </div>
-                      )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Company Email */}
+                      <div className="space-y-2">
+                        <Label htmlFor="company-email" className="flex items-center text-sm font-medium">
+                          <Mail className="mr-2 h-4 w-4 text-gray-500" />
+                          Company Email
+                        </Label>
+                        {companyEditMode ? (
+                          <Input 
+                            id="company-email" 
+                            ref={companyEmailRef}
+                            placeholder="company@example.com" 
+                            className="border-gray-300 focus:border-primary"
+                          />
+                        ) : (
+                          <div className="py-2 px-3 bg-muted/30 rounded-md text-foreground font-medium min-h-9">
+                            info@acmecorp.com
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Company Phone */}
+                      <div className="space-y-2">
+                        <Label htmlFor="company-phone" className="flex items-center text-sm font-medium">
+                          <Phone className="mr-2 h-4 w-4 text-gray-500" />
+                          Company Phone
+                        </Label>
+                        {companyEditMode ? (
+                          <Input 
+                            id="company-phone" 
+                            ref={companyPhoneRef}
+                            placeholder="+1 (555) 000-0000" 
+                            className="border-gray-300 focus:border-primary"
+                          />
+                        ) : (
+                          <div className="py-2 px-3 bg-muted/30 rounded-md text-foreground font-medium min-h-9">
+                            +1 (555) 123-4567
+                          </div>
+                        )}
+                      </div>
                     </div>
                     
                     {/* Company Address */}
@@ -845,7 +873,7 @@ const Settings = () => {
                           className="border-gray-300 focus:border-primary"
                         />
                       ) : (
-                        <div className="py-2 px-3 bg-gray-50 dark:bg-gray-800/50 rounded-md text-gray-900 dark:text-gray-100 font-medium min-h-9">
+                        <div className="py-2 px-3 bg-muted/30 rounded-md text-foreground font-medium min-h-9">
                           123 Business Ave, Suite 100, San Francisco, CA 94107
                         </div>
                       )}
@@ -853,183 +881,202 @@ const Settings = () => {
                   </div>
                 </div>
                 
-                <Separator />
+                <Separator className="my-4" />
                 
                 {/* Team Members Section */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold flex items-center">
-                    <Users className="mr-2 h-5 w-5 text-primary/70" />
-                    Team Members
-                  </h3>
+                  <h3 className="text-lg font-semibold">Team Members</h3>
                   
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-gray-50 dark:bg-gray-800/40 rounded-lg">
-                    <div>
-                      <h4 className="font-medium text-gray-900 dark:text-white">Invite Team Member</h4>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        Add colleagues to your company account
-                      </p>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="relative overflow-x-auto rounded-lg border border-border/60 shadow-sm">
+                      <table className="w-full text-sm text-left">
+                        <thead className="text-xs uppercase tracking-wide bg-muted/40 border-b border-border">
+                          <tr>
+                            <th scope="col" className="px-4 py-3 font-medium text-muted-foreground">
+                              Name
+                            </th>
+                            <th scope="col" className="px-4 py-3 font-medium text-muted-foreground">
+                              Email
+                            </th>
+                            <th scope="col" className="px-4 py-3 font-medium text-muted-foreground">
+                              Role
+                            </th>
+                            <th scope="col" className="px-4 py-3 font-medium text-muted-foreground">
+                              <span className="sr-only">Actions</span>
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="border-b border-border last:border-0">
+                            <td className="px-4 py-3 font-medium">
+                              <div className="flex items-center space-x-3">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarImage src={user?.avatar} />
+                                  <AvatarFallback className="text-xs">
+                                    {getUserInitials()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span>{user?.name || "Current User"}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              {user?.email || "user@example.com"}
+                            </td>
+                            <td className="px-4 py-3">
+                              <Badge variant="secondary">Admin</Badge>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <Button variant="ghost" size="sm" disabled>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      className="mt-3 sm:mt-0"
-                      disabled
-                    >
-                      <Send className="mr-2 h-4 w-4" />
-                      Coming Soon
-                    </Button>
+                    
+                    <div className="p-4 bg-muted/30 rounded-lg">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                        <div>
+                          <h4 className="font-medium text-foreground">Invite New Team Member</h4>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Add colleagues to your company account
+                          </p>
+                        </div>
+                        <Button className="mt-3 md:mt-0">
+                          <Users className="mr-2 h-4 w-4" />
+                          Invite Member
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </CardContent>
-            
-            {/* Coming Soon Overlay */}
-            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-10">
-              <div className="text-center p-6 max-w-md">
-                <AlertTriangle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
-                <h3 className="text-2xl font-bold mb-2">Coming Soon</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  We're working hard to bring you Company management features. These will be available in a future update.
-                </p>
-                <Button onClick={() => setActiveTab("profile")}>
-                  Return to Profile
-                </Button>
-              </div>
-            </div>
           </Card>
         </TabsContent>
 
         {/* Payment Tab */}
-        <TabsContent value="payment" className="space-y-6 max-w-4xl">
-          <Card className="overflow-hidden border-none shadow-md">
-            <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 pb-8">
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle className="text-2xl">Payment Settings</CardTitle>
-                  <CardDescription className="text-sm mt-1">
-                    Manage your payment methods and billing information
-                  </CardDescription>
-                </div>
-              </div>
+        <TabsContent value="payment" className="space-y-6 max-w-4xl relative">
+          <Card className="border-border/60 shadow-sm">
+            <CardHeader className="pb-8 border-b border-border/40">
+              <CardTitle>Payment Settings</CardTitle>
+              <CardDescription className="mt-1">
+                Manage your payment methods, billing information and invoices
+              </CardDescription>
             </CardHeader>
-            
-            <CardContent className="pt-0 mt-[-2rem]">
-              <div className="bg-background rounded-xl shadow-sm p-6 space-y-6">
+            <CardContent className="pt-6">
+              <div className="space-y-6">
                 {/* Payment Methods Section */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold flex items-center">
-                    <CreditCard className="mr-2 h-5 w-5 text-primary/70" />
-                    Payment Methods
-                  </h3>
+                  <h3 className="text-lg font-semibold">Payment Methods</h3>
                   
-                  {/* Credit Card */}
-                  <div 
-                    className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                      paymentMethod === 'credit_card' 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                    }`}
-                    onClick={() => handlePaymentMethodSelection('credit_card')}
-                  >
+                  <div className="p-4 bg-muted/30 rounded-lg flex flex-col md:flex-row md:items-center justify-between">
                     <div className="flex items-center">
-                      <div className="h-12 w-16 rounded-md bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center mr-4 text-white font-bold">
-                        CC
+                      <div className="h-10 w-14 rounded-md bg-muted/80 flex items-center justify-center mr-4">
+                        <CreditCard className="h-6 w-6 text-muted-foreground" />
                       </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium text-gray-900 dark:text-white flex items-center">
-                          Credit Card
-                          {paymentMethod === 'credit_card' && (
-                            <Badge variant="default" className="ml-2">
-                              <Check className="mr-1 h-3 w-3" />
-                              Selected
-                            </Badge>
-                          )}
-                        </h4>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Pay with Visa, Mastercard, or American Express
+                      <div>
+                        <h4 className="font-medium text-foreground">Add Payment Method</h4>
+                        <p className="text-sm text-muted-foreground">
+                          No payment methods added yet
                         </p>
                       </div>
                     </div>
+                    <Button variant="outline" className="mt-3 md:mt-0">
+                      Add Method
+                    </Button>
                   </div>
-                  
-                  {/* Bank Transfer */}
-                  <div 
-                    className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                      paymentMethod === 'bank_transfer' 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                    }`}
-                    onClick={() => handlePaymentMethodSelection('bank_transfer')}
-                  >
-                    <div className="flex items-center">
-                      <div className="h-12 w-16 rounded-md bg-gradient-to-br from-green-600 to-teal-600 flex items-center justify-center mr-4 text-white font-bold">
-                        BANK
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium text-gray-900 dark:text-white flex items-center">
-                          Bank Transfer
-                          {paymentMethod === 'bank_transfer' && (
-                            <Badge variant="default" className="ml-2">
-                              <Check className="mr-1 h-3 w-3" />
-                              Selected
-                            </Badge>
-                          )}
-                        </h4>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Pay directly from your bank account
+
+                  <Separator className="my-4" />
+
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Billing Information</h3>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="p-4 bg-muted/30 rounded-lg">
+                        <h4 className="font-medium text-foreground">Billing Address</h4>
+                        <p className="text-sm text-muted-foreground mt-1 mb-4">
+                          Same as company address
                         </p>
+                        <div className="flex items-center mt-2">
+                          <MapPin className="h-4 w-4 text-muted-foreground mr-2" />
+                          <span className="text-sm">123 Business Ave, Suite 100, San Francisco, CA 94107</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                
-                <Separator />
-                
-                {/* Billing Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold flex items-center">
-                    <FileText className="mr-2 h-5 w-5 text-primary/70" />
-                    Billing Information
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="billing-address">Billing Address</Label>
-                      <Input 
-                        id="billing-address" 
-                        placeholder="Enter your billing address" 
-                        value={billingAddress}
-                        onChange={(e) => setBillingAddress(e.target.value)}
-                      />
+
+                  <Separator className="my-4" />
+
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Invoices</h3>
+                    <div className="relative overflow-x-auto rounded-lg border border-border/60 shadow-sm">
+                      <table className="w-full text-sm text-left">
+                        <thead className="text-xs uppercase tracking-wide bg-muted/40 border-b border-border">
+                          <tr>
+                            <th scope="col" className="px-4 py-3 font-medium text-muted-foreground">
+                              <div className="flex items-center">
+                                Invoice
+                                <ArrowUpDown className="ml-1 h-3 w-3" />
+                              </div>
+                            </th>
+                            <th scope="col" className="px-4 py-3 font-medium text-muted-foreground">
+                              <div className="flex items-center">
+                                Date
+                                <ArrowUpDown className="ml-1 h-3 w-3" />
+                              </div>
+                            </th>
+                            <th scope="col" className="px-4 py-3 font-medium text-muted-foreground">
+                              <div className="flex items-center">
+                                Amount
+                                <ArrowUpDown className="ml-1 h-3 w-3" />
+                              </div>
+                            </th>
+                            <th scope="col" className="px-4 py-3 font-medium text-muted-foreground">
+                              <div className="flex items-center">
+                                Status
+                                <ArrowUpDown className="ml-1 h-3 w-3" />
+                              </div>
+                            </th>
+                            <th scope="col" className="px-4 py-3 font-medium text-muted-foreground">
+                              <span className="sr-only">Actions</span>
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="border-b border-border last:border-0">
+                            <td colSpan={5} className="px-4 py-8 text-center">
+                              <div className="flex flex-col items-center justify-center">
+                                <Receipt className="h-8 w-8 text-muted-foreground mb-2" />
+                                <h4 className="font-medium text-foreground">No invoices yet</h4>
+                                <p className="text-sm text-muted-foreground max-w-md mt-1">
+                                  Your invoice history will appear here once you make your first payment
+                                </p>
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
                     </div>
-                    
-                    <div className="flex justify-end">
-                      <Button onClick={handleSaveBillingAddress}>
-                        Save Billing Info
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-                
-                <Separator />
-                
-                {/* Invoices Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold flex items-center">
-                    <Receipt className="mr-2 h-5 w-5 text-primary/70" />
-                    Invoices
-                  </h3>
-                  
-                  <div className="p-6 bg-gray-50 dark:bg-gray-800/40 rounded-lg text-center">
-                    <Receipt className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                    <h4 className="text-lg font-medium text-gray-900 dark:text-white">No invoices yet</h4>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto mt-1">
-                      Your invoice history will appear here once you make your first payment
-                    </p>
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
+          
+          {/* Payment Coming Soon Overlay */}
+          <div className="absolute inset-0 bg-background/90 backdrop-blur-sm flex items-center justify-center z-10 rounded-lg">
+            <div className="text-center p-6 max-w-md">
+              <CreditCard className="h-16 w-16 text-primary mx-auto mb-4" />
+              <h3 className="text-2xl font-bold mb-2">Coming Soon</h3>
+              <p className="text-muted-foreground mb-6">
+                Payment management features are coming soon. We're working hard to bring you a seamless payment experience.
+              </p>
+              <Button onClick={() => setActiveTab("profile")}>
+                Return to Profile
+              </Button>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </main>
