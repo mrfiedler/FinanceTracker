@@ -34,13 +34,27 @@ declare global {
   }
 }
 
+// Quote interface
+interface Quote {
+  id: number;
+  jobTitle: string;
+  amount: number;
+  status: string;
+  createdAt: string;
+  validUntil: string;
+  client: {
+    id: number;
+    name: string;
+  };
+}
+
 const Quotes = () => {
   const { currency } = useCurrency();
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState("30");
   const [statusFilter, setStatusFilter] = useState("all");
   const [convertToRevenueModalOpen, setConvertToRevenueModalOpen] = useState(false);
-  const [selectedQuote, setSelectedQuote] = useState(null);
+  const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const { quoteModalOpen, closeAllModals, openCreateQuoteModal } = useModals();
 
   // Set up the global window function for opening the modal
@@ -56,7 +70,7 @@ const Quotes = () => {
     };
   }, [openCreateQuoteModal]);
 
-  const { data: quotes, isLoading } = useQuery({
+  const { data: quotes = [], isLoading } = useQuery<Quote[]>({
     queryKey: ['/api/quotes', dateRange, statusFilter],
   });
   
@@ -65,25 +79,23 @@ const Quotes = () => {
     queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
   };
 
-  const filteredQuotes = quotes
-    ? quotes.filter(quote => {
-        // Filter by status
-        if (statusFilter !== "all" && quote.status !== statusFilter) {
-          return false;
-        }
+  const filteredQuotes = quotes.filter((quote: Quote) => {
+    // Filter by status
+    if (statusFilter !== "all" && quote.status !== statusFilter) {
+      return false;
+    }
 
-        // Filter by search query
-        if (searchQuery && 
-            !quote.jobTitle.toLowerCase().includes(searchQuery.toLowerCase()) &&
-            !quote.client.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-          return false;
-        }
+    // Filter by search query
+    if (searchQuery && 
+        !quote.jobTitle.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        !quote.client.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false;
+    }
 
-        return true;
-      })
-    : [];
+    return true;
+  });
 
-  const getStatusIcon = (status) => {
+  const getStatusIcon = (status: string): JSX.Element => {
     switch (status) {
       case 'Accepted':
         return <CircleCheck className="h-4 w-4 text-[#A3E635]" />;
@@ -95,7 +107,7 @@ const Quotes = () => {
     }
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string): string => {
     switch (status) {
       case 'Accepted':
         return 'bg-[#A3E635]/20 dark:bg-[#A3E635]/30 text-[#85BC21] dark:text-[#A3E635]';
@@ -217,7 +229,7 @@ const Quotes = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {renderQuotesTable(filteredQuotes, isLoading, currency, getStatusIcon, getStatusColor, invalidateQuoteQueries)}
+          {renderQuotesTable(filteredQuotes, isLoading, currency, getStatusIcon, getStatusColor, invalidateQuoteQueries, setSelectedQuote, setConvertToRevenueModalOpen)}
         </CardContent>
       </Card>
 
@@ -231,7 +243,16 @@ const Quotes = () => {
   );
 };
 
-const renderQuotesTable = (quotes, isLoading, currency, getStatusIcon, getStatusColor, invalidateQuery) => {
+const renderQuotesTable = (
+  quotes: Quote[], 
+  isLoading: boolean, 
+  currency: string,
+  getStatusIcon: (status: string) => JSX.Element, 
+  getStatusColor: (status: string) => string, 
+  invalidateQuery: () => void,
+  setSelectedQuote: React.Dispatch<React.SetStateAction<Quote | null>>,
+  setConvertToRevenueModalOpen: React.Dispatch<React.SetStateAction<boolean>>
+) => {
   if (isLoading) {
     return (
       <div className="p-6">
