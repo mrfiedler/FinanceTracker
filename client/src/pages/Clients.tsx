@@ -61,11 +61,11 @@ const Clients = () => {
   const [activeStatus, setActiveStatus] = useState("all"); // all, active, inactive
   const [addClientOpen, setAddClientOpen] = useState(false);
   const [editClientOpen, setEditClientOpen] = useState(false);
-  const [currentClient, setCurrentClient] = useState(null);
+  const [currentClient, setCurrentClient] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: clients, isLoading, refetch } = useQuery({
+  const { data: clients = [], isLoading, refetch } = useQuery<any[]>({
     queryKey: ['/api/clients'],
   });
 
@@ -92,7 +92,7 @@ const Clients = () => {
   });
 
   // Handler to open edit modal for a client
-  const handleEditClient = (client) => {
+  const handleEditClient = (client: any) => {
     setCurrentClient(client);
     
     // Reset form and set form values
@@ -131,7 +131,7 @@ const Clients = () => {
   });
 
   const updateClientMutation = useMutation({
-    mutationFn: async ({ id, data }) => {
+    mutationFn: async ({ id, data }: { id: number, data: any }) => {
       return apiRequest("PATCH", `/api/clients/${id}`, data);
     },
     onSuccess: () => {
@@ -153,18 +153,18 @@ const Clients = () => {
     },
   });
 
-  const onSubmit = (data) => {
+  const onSubmit = (data: any) => {
     mutation.mutate(data);
   };
   
-  const onEditSubmit = (data) => {
+  const onEditSubmit = (data: any) => {
     if (currentClient) {
       updateClientMutation.mutate({ id: currentClient.id, data });
     }
   };
 
   const filteredClients = clients
-    ? clients.filter(client => {
+    ? clients.filter((client: any) => {
         // Filter by search query
         const matchesSearch = (
           client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -338,7 +338,7 @@ const Clients = () => {
                                       description: `Client ${client.name} status changed to ${!client.isActive ? "Active" : "Inactive"}`,
                                       variant: "default",
                                     });
-                                  } catch (error) {
+                                  } catch (error: any) {
                                     toast({
                                       title: "Failed to update client status",
                                       description: error.message || "Please try again later",
@@ -467,23 +467,29 @@ const Clients = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Business Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select business type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Marketing Agency">Marketing Agency</SelectItem>
-                        <SelectItem value="Design Studio">Design Studio</SelectItem>
-                        <SelectItem value="Software House">Software House</SelectItem>
-                        <SelectItem value="Architecture Firm">Architecture Firm</SelectItem>
-                        <SelectItem value="Media Company">Media Company</SelectItem>
-                        <SelectItem value="Small Business">Small Business</SelectItem>
-                        <SelectItem value="Freelancer">Freelancer</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Input
+                        list="business-types"
+                        placeholder="Enter or select business type"
+                        {...field}
+                      />
+                    </FormControl>
+                    <datalist id="business-types">
+                      <option value="Marketing Agency" />
+                      <option value="Design Studio" />
+                      <option value="Software House" />
+                      <option value="Architecture Firm" />
+                      <option value="Media Company" />
+                      <option value="Small Business" />
+                      <option value="Freelancer" />
+                      <option value="E-commerce" />
+                      <option value="Retail" />
+                      <option value="Manufacturing" />
+                      <option value="Consulting" />
+                      <option value="Education" />
+                      <option value="Healthcare" />
+                      <option value="Non-profit" />
+                    </datalist>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -521,7 +527,15 @@ const Clients = () => {
       </Dialog>
 
       {/* Edit Client Dialog */}
-      <Dialog open={editClientOpen} onOpenChange={setEditClientOpen}>
+      <Dialog 
+        open={editClientOpen} 
+        onOpenChange={(open) => {
+          setEditClientOpen(open);
+          if (!open) {
+            // Reset current client when dialog is closed
+            setCurrentClient(null);
+          }
+        }}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit Client</DialogTitle>
@@ -579,23 +593,29 @@ const Clients = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Business Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select business type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Marketing Agency">Marketing Agency</SelectItem>
-                        <SelectItem value="Design Studio">Design Studio</SelectItem>
-                        <SelectItem value="Software House">Software House</SelectItem>
-                        <SelectItem value="Architecture Firm">Architecture Firm</SelectItem>
-                        <SelectItem value="Media Company">Media Company</SelectItem>
-                        <SelectItem value="Small Business">Small Business</SelectItem>
-                        <SelectItem value="Freelancer">Freelancer</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Input
+                        list="edit-business-types"
+                        placeholder="Enter or select business type"
+                        {...field}
+                      />
+                    </FormControl>
+                    <datalist id="edit-business-types">
+                      <option value="Marketing Agency" />
+                      <option value="Design Studio" />
+                      <option value="Software House" />
+                      <option value="Architecture Firm" />
+                      <option value="Media Company" />
+                      <option value="Small Business" />
+                      <option value="Freelancer" />
+                      <option value="E-commerce" />
+                      <option value="Retail" />
+                      <option value="Manufacturing" />
+                      <option value="Consulting" />
+                      <option value="Education" />
+                      <option value="Healthcare" />
+                      <option value="Non-profit" />
+                    </datalist>
                     <FormMessage />
                   </FormItem>
                 )}
