@@ -13,6 +13,7 @@ import connectPg from "connect-pg-simple";
 import createMemoryStore from "memorystore";
 import { db, pool } from "./db";
 import { eq, desc, and, gte, count, sum, sql } from 'drizzle-orm';
+import { hashPassword } from "./auth";
 
 // Define the storage interface with all CRUD operations
 export interface IStorage {
@@ -126,7 +127,9 @@ export class MemStorage implements IStorage {
     });
     
     // Initialize with sample data
-    this.initializeSampleData();
+    this.initializeSampleData().catch(err => {
+      console.error("Error initializing sample data:", err);
+    });
   }
 
   // Users
@@ -881,7 +884,18 @@ export class MemStorage implements IStorage {
   }
   
   // Helper function to seed initial data
-  private initializeSampleData() {
+  private async initializeSampleData() {
+    // Create admin user
+    const hashedPassword = await hashPassword('tryout2025');
+    
+    this.createUser({
+      username: 'admintesto',
+      password: hashedPassword,
+      name: 'Admin User',
+      email: 'admin@example.com',
+      isAdmin: true
+    });
+    
     // Sample clients
     const client1 = this.createClient({
       name: "Nova Design",
