@@ -361,12 +361,12 @@ export function setupAuth(app: Express) {
       const userId = (req.user as SelectUser).id;
       console.log(`Processing avatar upload for user ${userId}`);
       
-      // In a real app, this would handle file upload and save the avatar
-      // For now, we'll just simulate a successful upload with a random avatar
-      const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}-${Date.now()}`;
-      
-      // Update user with new avatar URL
-      await storage.updateUser(userId, { avatar: avatarUrl });
+      if (!req.body.image) {
+        return res.status(400).json({ message: "No image data provided" });
+      }
+
+      // Update user with new avatar URL (base64 image)
+      await storage.updateUser(userId, { avatar: req.body.image });
       
       console.log(`Avatar successfully updated for user ${userId}`);
       res.json({ 
