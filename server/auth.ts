@@ -155,27 +155,33 @@ export function setupAuth(app: Express) {
   // Update user profile endpoint
   app.patch("/api/users/profile", async (req, res) => {
     if (!req.isAuthenticated()) {
+      console.log("Profile update failed: Not authenticated");
       return res.status(401).json({ message: "Not authenticated" });
     }
     
     try {
       const userId = (req.user as SelectUser).id;
+      console.log(`Processing profile update for user ${userId}`, req.body);
       const { name, email, phone, location } = req.body;
       
       // Validate input
       if (name && typeof name !== 'string') {
+        console.log("Invalid name format:", name);
         return res.status(400).json({ message: "Invalid name format" });
       }
       
       if (email && typeof email !== 'string') {
+        console.log("Invalid email format:", email);
         return res.status(400).json({ message: "Invalid email format" });
       }
       
       if (phone && typeof phone !== 'string') {
+        console.log("Invalid phone format:", phone);
         return res.status(400).json({ message: "Invalid phone format" });
       }
       
       if (location && typeof location !== 'string') {
+        console.log("Invalid location format:", location);
         return res.status(400).json({ message: "Invalid location format" });
       }
       
@@ -189,6 +195,8 @@ export function setupAuth(app: Express) {
       if (phone) user.phone = phone;
       if (location) user.location = location;
       
+      console.log(`Profile successfully updated for user ${userId}`);
+      
       // Remove password from response
       const { password, ...userWithoutPassword } = updatedUser;
       res.json(userWithoutPassword);
@@ -201,35 +209,42 @@ export function setupAuth(app: Express) {
   // Change user password endpoint
   app.patch("/api/users/password", async (req, res) => {
     if (!req.isAuthenticated()) {
+      console.log("Password change failed: Not authenticated");
       return res.status(401).json({ message: "Not authenticated" });
     }
     
     try {
       const userId = (req.user as SelectUser).id;
+      console.log(`Processing password change for user ${userId}`);
       const { currentPassword, newPassword } = req.body;
       
       // Validate input
       if (!currentPassword || !newPassword) {
+        console.log("Password change failed: Missing required fields");
         return res.status(400).json({ message: "Current password and new password are required" });
       }
       
       if (typeof currentPassword !== 'string' || typeof newPassword !== 'string') {
+        console.log("Password change failed: Invalid password format");
         return res.status(400).json({ message: "Invalid password format" });
       }
       
       if (newPassword.length < 6) {
+        console.log("Password change failed: New password too short");
         return res.status(400).json({ message: "New password must be at least 6 characters" });
       }
       
       // Get current user
       const user = await storage.getUser(userId);
       if (!user) {
+        console.log(`Password change failed: User ${userId} not found`);
         return res.status(404).json({ message: "User not found" });
       }
       
       // Verify current password
       const isPasswordValid = await comparePasswords(currentPassword, user.password);
       if (!isPasswordValid) {
+        console.log("Password change failed: Incorrect current password");
         return res.status(401).json({ message: "Current password is incorrect" });
       }
       
@@ -239,6 +254,7 @@ export function setupAuth(app: Express) {
       // Update user with new password
       await storage.updateUser(userId, { password: hashedPassword });
       
+      console.log(`Password successfully updated for user ${userId}`);
       res.json({ message: "Password updated successfully" });
     } catch (error) {
       console.error("Error changing password:", error);
@@ -249,12 +265,17 @@ export function setupAuth(app: Express) {
   // Save company information endpoint
   app.post("/api/company/info", async (req, res) => {
     if (!req.isAuthenticated()) {
+      console.log("Company info save failed: Not authenticated");
       return res.status(401).json({ message: "Not authenticated" });
     }
     
     try {
+      const userId = (req.user as SelectUser).id;
+      console.log(`Processing company info save for user ${userId}`, req.body);
+      
       // In a real app, this would save to a company table in the database
       // For now, we'll just simulate a successful save
+      console.log("Company info saved successfully");
       res.json({ 
         success: true,
         message: "Company information saved successfully" 
@@ -268,12 +289,17 @@ export function setupAuth(app: Express) {
   // Upload company logo endpoint
   app.post("/api/company/logo", async (req, res) => {
     if (!req.isAuthenticated()) {
+      console.log("Company logo upload failed: Not authenticated");
       return res.status(401).json({ message: "Not authenticated" });
     }
     
     try {
+      const userId = (req.user as SelectUser).id;
+      console.log(`Processing company logo upload for user ${userId}`);
+      
       // In a real app, this would handle file upload and save the logo
       // For now, we'll just simulate a successful upload
+      console.log("Company logo uploaded successfully");
       res.json({ 
         success: true,
         message: "Company logo uploaded successfully",
@@ -288,11 +314,13 @@ export function setupAuth(app: Express) {
   // Upload profile avatar endpoint
   app.post("/api/users/avatar", async (req, res) => {
     if (!req.isAuthenticated()) {
+      console.log("Avatar upload failed: Not authenticated");
       return res.status(401).json({ message: "Not authenticated" });
     }
     
     try {
       const userId = (req.user as SelectUser).id;
+      console.log(`Processing avatar upload for user ${userId}`);
       
       // In a real app, this would handle file upload and save the avatar
       // For now, we'll just simulate a successful upload with a random avatar
@@ -301,6 +329,7 @@ export function setupAuth(app: Express) {
       // Update user with new avatar URL
       await storage.updateUser(userId, { avatar: avatarUrl });
       
+      console.log(`Avatar successfully updated for user ${userId}`);
       res.json({ 
         success: true,
         message: "Avatar uploaded successfully",

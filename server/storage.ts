@@ -189,6 +189,7 @@ export class MemStorage implements IStorage {
     
     const updatedUser = { ...user, ...userData };
     this.users.set(id, updatedUser);
+    console.log(`User ${id} updated successfully with:`, userData);
     return updatedUser;
   }
   
