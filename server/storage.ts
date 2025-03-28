@@ -6,7 +6,9 @@ import {
   quotes, type Quote, type InsertQuote,
   subscriptions, type Subscription, type InsertSubscription,
   contracts, type Contract, type InsertContract,
-  notifications, type Notification, type InsertNotification
+  notifications, type Notification, type InsertNotification,
+  financeCategories, type FinanceCategory, type InsertFinanceCategory,
+  financeAccounts, type FinanceAccount, type InsertFinanceAccount
 } from "@shared/schema";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
