@@ -339,14 +339,17 @@ const Contracts = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex justify-end space-x-1">
-                            <Button variant="ghost" size="sm" className="h-8 flex items-center text-muted-foreground hover:text-foreground">
-                              <Eye className="h-4 w-4 mr-1.5" />
-                              View
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-8 flex items-center text-muted-foreground hover:text-foreground">
-                              <Download className="h-4 w-4 mr-1.5" />
-                              Download
-                            </Button>
+                            <a 
+                              href={`/api/contracts/${contract.id}/download`} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex"
+                            >
+                              <Button variant="ghost" size="sm" className="h-8 flex items-center text-muted-foreground hover:text-foreground">
+                                <Download className="h-4 w-4 mr-1.5" />
+                                Download
+                              </Button>
+                            </a>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="sm" className="h-8 px-2">

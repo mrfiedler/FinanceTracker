@@ -471,6 +471,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete contract" });
     }
   });
+  
+  // Download contract
+  app.get("/api/contracts/:id/download", async (req, res) => {
+    try {
+      const contractId = parseInt(req.params.id);
+      
+      // Check if contract exists
+      const existingContract = await storage.getContract(contractId);
+      if (!existingContract) {
+        return res.status(404).json({ message: "Contract not found" });
+      }
+      
+      // In a real application, you would retrieve the actual PDF file
+      // For now, we'll create a simple PDF response
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${existingContract.fileName}"`);
+      
+      // This is a placeholder for a real PDF file
+      // In a production app, you would fetch the actual file from storage/DB
+      const pdfContent = Buffer.from(`
+        %PDF-1.7
+        1 0 obj
+        << /Type /Catalog /Pages 2 0 R >>
+        endobj
+        2 0 obj
+        << /Type /Pages /Kids [3 0 R] /Count 1 >>
+        endobj
+        3 0 obj
+        << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << >> /Contents 4 0 R >>
+        endobj
+        4 0 obj
+        << /Length 68 >>
+        stream
+        BT
+        /F1 24 Tf
+        100 700 Td
+        (Contract: ${existingContract.title}) Tj
+        ET
+        endstream
+        endobj
+        xref
+        0 5
+        0000000000 65535 f
+        0000000010 00000 n
+        0000000059 00000 n
+        0000000118 00000 n
+        0000000217 00000 n
+        trailer
+        << /Size 5 /Root 1 0 R >>
+        startxref
+        335
+        %%EOF
+      `);
+      
+      res.send(pdfContent);
+    } catch (error) {
+      console.error("Contract download error:", error);
+      res.status(500).json({ message: "Failed to download contract" });
+    }
+  });
 
   // API - Finance summary
   app.get("/api/finance/summary", async (req, res) => {
