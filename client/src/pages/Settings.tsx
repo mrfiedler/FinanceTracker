@@ -128,20 +128,12 @@ const Settings = () => {
   // Upload profile photo mutation
   const uploadProfilePhotoMutation = useMutation({
     mutationFn: async (photoFile: File) => {
-      // Convert file to base64
-      const reader = new FileReader();
-      const base64Promise = new Promise((resolve) => {
-        reader.onload = () => resolve(reader.result);
-      });
-      reader.readAsDataURL(photoFile);
-      const base64Image = await base64Promise;
+      const formData = new FormData();
+      formData.append('avatar', photoFile);
       
       const response = await fetch('/api/users/avatar', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ image: base64Image }),
+        body: formData,
         credentials: 'include'
       });
       
