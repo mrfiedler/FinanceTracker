@@ -9,16 +9,16 @@ import session from "express-session";
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
   setupAuth(app);
-  
+
   // All API routes
-  
+
   // API - Notifications
   app.get("/api/notifications", async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Unauthorized" });
       }
-      
+
       const userId = req.user!.id;
       const notifications = await storage.getNotifications(userId);
       res.json(notifications);
@@ -26,13 +26,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch notifications" });
     }
   });
-  
+
   app.get("/api/notifications/unread-count", async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Unauthorized" });
       }
-      
+
       const userId = req.user!.id;
       const count = await storage.getUnreadNotificationsCount(userId);
       res.json({ count });
@@ -40,32 +40,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch unread notifications count" });
     }
   });
-  
+
   app.patch("/api/notifications/:id/mark-read", async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Unauthorized" });
       }
-      
+
       const id = parseInt(req.params.id);
       const success = await storage.markNotificationAsRead(id);
-      
+
       if (!success) {
         return res.status(404).json({ message: "Notification not found" });
       }
-      
+
       res.json({ success });
     } catch (error) {
       res.status(500).json({ message: "Failed to mark notification as read" });
     }
   });
-  
+
   app.patch("/api/notifications/mark-all-read", async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Unauthorized" });
       }
-      
+
       const userId = req.user!.id;
       const success = await storage.markAllNotificationsAsRead(userId);
       res.json({ success });
@@ -98,11 +98,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const client = await storage.getClient(id);
-      
+
       if (!client) {
         return res.status(404).json({ message: "Client not found" });
       }
-      
+
       res.json(client);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch client" });
@@ -126,11 +126,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const client = await storage.getClient(id);
-      
+
       if (!client) {
         return res.status(404).json({ message: "Client not found" });
       }
-      
+
       const data = req.body;
       const updatedClient = await storage.updateClient(id, data);
       res.json(updatedClient);
@@ -145,14 +145,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const dateRange = req.query.dateRange as string;
       const startDate = req.query.startDate as string;
       const endDate = req.query.endDate as string;
-      
+
       // Pass all date filtering options
       const expenses = await storage.getExpenses({ 
         dateRange, 
         startDate, 
         endDate 
       });
-      
+
       res.json(expenses);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch expenses" });
@@ -176,11 +176,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const expense = await storage.getExpense(id);
-      
+
       if (!expense) {
         return res.status(404).json({ message: "Expense not found" });
       }
-      
+
       const data = req.body;
       const updatedExpense = await storage.updateExpense(id, data);
       res.json(updatedExpense);
@@ -193,11 +193,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteExpense(id);
-      
+
       if (!success) {
         return res.status(404).json({ message: "Expense not found" });
       }
-      
+
       res.status(204).end();
     } catch (error) {
       res.status(500).json({ message: "Failed to delete expense" });
@@ -210,14 +210,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const dateRange = req.query.dateRange as string;
       const startDate = req.query.startDate as string;
       const endDate = req.query.endDate as string;
-      
+
       // Pass all date filtering options
       const revenues = await storage.getRevenues({ 
         dateRange, 
         startDate, 
         endDate 
       });
-      
+
       res.json(revenues);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch revenues" });
@@ -241,11 +241,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const revenue = await storage.getRevenue(id);
-      
+
       if (!revenue) {
         return res.status(404).json({ message: "Revenue not found" });
       }
-      
+
       const data = req.body;
       const updatedRevenue = await storage.updateRevenue(id, data);
       res.json(updatedRevenue);
@@ -258,11 +258,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteRevenue(id);
-      
+
       if (!success) {
         return res.status(404).json({ message: "Revenue not found" });
       }
-      
+
       res.status(204).end();
     } catch (error) {
       res.status(500).json({ message: "Failed to delete revenue" });
@@ -304,7 +304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Check if we need to create a new client first
       let clientId = req.body.clientId;
-      
+
       if (req.body.newClient && typeof clientId === 'string' && clientId === 'new') {
         // Create a new client as a draft
         const clientData = {
@@ -315,23 +315,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           notes: "Created as draft from Quote form",
           isActive: true
         };
-        
+
         const newClient = await storage.createClient(clientData);
         clientId = newClient.id;
       }
-      
+
       // Now create the quote with the client ID (either existing or newly created)
       const quoteData = {
         ...req.body,
         clientId,
         status: req.body.status || "Pending", // Use provided status or default to Pending
       };
-      
+
       // Remove the newClient field before validation
       if (quoteData.newClient) {
         delete quoteData.newClient;
       }
-      
+
       const data = insertQuoteSchema.parse(quoteData);
       const quote = await storage.createQuote(data);
       res.status(201).json(quote);
@@ -347,11 +347,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const quote = await storage.getQuote(id);
-      
+
       if (!quote) {
         return res.status(404).json({ message: "Quote not found" });
       }
-      
+
       const data = req.body;
       const updatedQuote = await storage.updateQuote(id, data);
       res.json(updatedQuote);
@@ -388,11 +388,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const subscription = await storage.getSubscription(id);
-      
+
       if (!subscription) {
         return res.status(404).json({ message: "Subscription not found" });
       }
-      
+
       const data = req.body;
       const updatedSubscription = await storage.updateSubscription(id, data);
       res.json(updatedSubscription);
@@ -416,7 +416,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const data = insertContractSchema.parse(req.body);
       // quoteId is now handled by schema transform
-      
+
       const contract = await storage.createContract(data);
       res.status(201).json(contract);
     } catch (error) {
@@ -427,21 +427,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to create contract" });
     }
   });
-  
+
   // Update contract
   app.patch("/api/contracts/:id", async (req, res) => {
     try {
       const contractId = parseInt(req.params.id);
       const data = insertContractSchema.parse(req.body);
-      
+
       // Check if contract exists
       const existingContract = await storage.getContract(contractId);
       if (!existingContract) {
         return res.status(404).json({ message: "Contract not found" });
       }
-      
+
       // quoteId is now handled by schema transform
-      
+
       const updatedContract = await storage.updateContract(contractId, data);
       res.status(200).json(updatedContract);
     } catch (error) {
@@ -452,18 +452,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to update contract" });
     }
   });
-  
+
   // Delete contract
   app.delete("/api/contracts/:id", async (req, res) => {
     try {
       const contractId = parseInt(req.params.id);
-      
+
       // Check if contract exists
       const existingContract = await storage.getContract(contractId);
       if (!existingContract) {
         return res.status(404).json({ message: "Contract not found" });
       }
-      
+
       await storage.deleteContract(contractId);
       res.status(204).send();
     } catch (error) {
@@ -471,23 +471,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete contract" });
     }
   });
-  
+
   // Download contract
   app.get("/api/contracts/:id/download", async (req, res) => {
     try {
       const contractId = parseInt(req.params.id);
-      
+
       // Check if contract exists
       const existingContract = await storage.getContract(contractId);
       if (!existingContract) {
         return res.status(404).json({ message: "Contract not found" });
       }
-      
+
       // In a real application, you would retrieve the actual PDF file
       // For now, we'll create a simple PDF response
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="${existingContract.fileName}"`);
-      
+
       // This is a placeholder for a real PDF file
       // In a production app, you would fetch the actual file from storage/DB
       const pdfContent = Buffer.from(`
@@ -524,7 +524,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         335
         %%EOF
       `);
-      
+
       res.send(pdfContent);
     } catch (error) {
       console.error("Contract download error:", error);
@@ -552,7 +552,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch finance trends" });
     }
   });
-  
+
   // API - Finance Categories
   app.get("/api/finance/categories", async (req, res) => {
     try {
@@ -573,41 +573,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch categories" });
     }
   });
-  
+
   app.post("/api/finance/categories", async (req, res) => {
     try {
       // In a real app, this would add to database
       // For now, simulate success response with made-up ID
       const { name, type } = req.body;
-      
+
       // Validate inputs
       if (!name || !type || (type !== 'expense' && type !== 'revenue')) {
         return res.status(400).json({ message: "Invalid category data" });
       }
-      
+
       const newCategory = {
         id: Math.floor(Math.random() * 1000) + 10, // Random ID (would be DB-generated)
         value: name.toLowerCase().replace(/\s+/g, ''), // Convert spaces to empty string
         label: name,
         type
       };
-      
+
       res.status(200).json(newCategory);
     } catch (error) {
       res.status(500).json({ message: "Failed to create category" });
     }
   });
-  
+
   app.put("/api/finance/categories/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const { name, type } = req.body;
-      
+
       // Validate inputs
       if (!name || !type || (type !== 'expense' && type !== 'revenue')) {
         return res.status(400).json({ message: "Invalid category data" });
       }
-      
+
       // In a real app, this would update the database
       const updatedCategory = {
         id,
@@ -615,17 +615,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         label: name,
         type
       };
-      
+
       res.json(updatedCategory);
     } catch (error) {
       res.status(500).json({ message: "Failed to update category" });
     }
   });
-  
+
   app.delete("/api/finance/categories/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      
+
       // In a real app, this would delete from the database
       // For now, simulate success
       res.status(200).json({ message: "Category deleted successfully" });
@@ -633,7 +633,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete category" });
     }
   });
-  
+
   // API - Finance Accounts
   app.get("/api/finance/accounts", async (req, res) => {
     try {
@@ -648,40 +648,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch accounts" });
     }
   });
-  
+
   app.post("/api/finance/accounts", async (req, res) => {
     try {
       // In a real app, this would add to database
       const { name, type } = req.body;
-      
+
       // Validate inputs
       if (!name || !type) {
         return res.status(400).json({ message: "Invalid account data" });
       }
-      
+
       const newAccount = {
         id: Math.floor(Math.random() * 1000) + 10, // Random ID (would be DB-generated)
         value: name.toLowerCase().replace(/\s+/g, ''), // Convert spaces to empty string
         label: name,
         icon: type
       };
-      
+
       res.status(200).json(newAccount);
     } catch (error) {
       res.status(500).json({ message: "Failed to create account" });
     }
   });
-  
+
   app.put("/api/finance/accounts/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const { name, type } = req.body;
-      
+
       // Validate inputs
       if (!name || !type) {
         return res.status(400).json({ message: "Invalid account data" });
       }
-      
+
       // In a real app, this would update the database
       const updatedAccount = {
         id,
@@ -689,17 +689,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         label: name,
         icon: type
       };
-      
+
       res.json(updatedAccount);
     } catch (error) {
       res.status(500).json({ message: "Failed to update account" });
     }
   });
-  
+
   app.delete("/api/finance/accounts/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      
+
       // In a real app, this would delete from the database
       // For now, simulate success
       res.status(200).json({ message: "Account deleted successfully" });
@@ -714,10 +714,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const transactionType = req.query.transactionType as string || "all";
       const startDate = req.query.startDate as string;
       const endDate = req.query.endDate as string;
-      
+
       // Create filter object based on the query parameters
       const filter: { dateRange?: string; startDate?: string; endDate?: string } = {};
-      
+
       // Handle custom date ranges for monthly view
       if (dateRange === "month" && startDate && endDate) {
         filter.startDate = startDate;
@@ -725,15 +725,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         filter.dateRange = dateRange;
       }
-      
+
       const expenses = (transactionType === "all" || transactionType === "expense") 
         ? await storage.getExpenses(filter) 
         : [];
-        
+
       const revenues = (transactionType === "all" || transactionType === "revenue") 
         ? await storage.getRevenues(filter) 
         : [];
-      
+
       // Combine and format transactions
       const transactions = [
         ...expenses.map(expense => ({
@@ -745,11 +745,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           type: "revenue"
         }))
       ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      
+
       // Calculate totals
       const totalExpenses = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
       const totalRevenue = revenues.reduce((sum, revenue) => sum + Number(revenue.amount), 0);
-      
+
       res.json({
         transactions,
         totalExpenses,
@@ -767,12 +767,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Not authenticated" });
     }
-    
+
     const user = req.user as Express.User;
     if (!user.isAdmin) {
       return res.status(403).json({ message: "Not authorized" });
     }
-    
+
     next();
   };
 
@@ -780,37 +780,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/login", async (req, res) => {
     try {
       const { username, password } = req.body;
-      
+
       console.log(`Admin login attempt for username: ${username}`);
-      
+
       // Find user
       const user = await storage.getUserByUsername(username);
-      
+
       if (!user) {
         console.log(`No user found with username: ${username}`);
         return res.status(401).json({ message: "Invalid admin credentials" });
       }
-      
+
       if (!user.isAdmin) {
         console.log(`User ${username} is not an admin`);
         return res.status(401).json({ message: "Invalid admin credentials" });
       }
-      
+
       const passwordValid = await comparePasswords(password, user.password);
       if (!passwordValid) {
         console.log(`Invalid password for username: ${username}`);
         return res.status(401).json({ message: "Invalid admin credentials" });
       }
-      
+
       // Log in the admin user
       req.login(user, (err) => {
         if (err) {
           console.error(`Login error for ${username}:`, err);
           return res.status(500).json({ message: "Login failed" });
         }
-        
+
         console.log(`Admin login successful for ${username}`);
-        
+
         // Remove password from response
         const { password, ...userWithoutPassword } = user;
         res.status(200).json(userWithoutPassword);
@@ -825,13 +825,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/users", isAdmin, async (req, res) => {
     try {
       const users = await storage.getAllUsers();
-      
+
       // Remove passwords from response
       const sanitizedUsers = users.map(user => {
         const { password, ...userWithoutPassword } = user;
         return userWithoutPassword;
       });
-      
+
       res.json(sanitizedUsers);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch users" });
@@ -843,22 +843,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Validate input
       const userData = insertUserSchema.parse(req.body);
-      
+
       // Check if username already exists
       const existingUser = await storage.getUserByUsername(userData.username);
       if (existingUser) {
         return res.status(400).json({ message: "Username already exists" });
       }
-      
+
       // Hash password
       const hashedPassword = await hashPassword(userData.password);
-      
+
       // Create user
       const user = await storage.createUser({
         ...userData,
         password: hashedPassword,
       });
-      
+
       // Remove password from response
       const { password, ...userWithoutPassword } = user;
       res.status(201).json(userWithoutPassword);
@@ -874,18 +874,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/admin/users/:id", isAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      
+
       // Don't allow admin to delete themselves
       if (id === (req.user as Express.User).id) {
         return res.status(400).json({ message: "Cannot delete your own account" });
       }
-      
+
       const success = await storage.deleteUser(id);
-      
+
       if (!success) {
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       res.status(204).end();
     } catch (error) {
       res.status(500).json({ message: "Failed to delete user" });
@@ -897,29 +897,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const { newPassword } = req.body;
-      
+
       // Validate password
       if (!newPassword || newPassword.length < 6) {
         return res.status(400).json({ message: "Password must be at least 6 characters" });
       }
-      
+
       // Check if user exists
       const user = await storage.getUser(id);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       // Hash the new password
       const hashedPassword = await hashPassword(newPassword);
-      
+
       // Update user with new password
       const updatedUser = await storage.updateUser(id, { password: hashedPassword });
-      
+
       // Remove password from response
       const { password, ...userWithoutPassword } = updatedUser;
       res.json({ message: "Password updated successfully", user: userWithoutPassword });
     } catch (error) {
       res.status(500).json({ message: "Failed to update password" });
+    }
+  });
+
+  // API - Company Info
+  app.post("/api/company/info", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      // Validate the required fields
+      const { name, email, phone, address, registrationNumber } = req.body;
+      if (!name || !email) {
+        return res.status(400).json({ message: "Name and email are required" });
+      }
+
+      // In a real app, this would save to database
+      // For now, simulate success
+      console.log("Company info saved:", req.body);
+
+      res.json({ 
+        success: true,
+        message: "Company information saved successfully",
+        data: req.body
+      });
+    } catch (error) {
+      console.error("Error saving company info:", error);
+      res.status(500).json({ message: "Failed to save company information" });
+    }
+  });
+
+  // API - Profile Update
+  app.patch("/api/users/profile", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const userId = (req.user as Express.User).id;
+      const { name, email, phone, location } = req.body;
+
+      // Update user profile
+      const updatedUser = await storage.updateUser(userId, { name, email, phone, location });
+
+      // Remove password from response
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
     }
   });
 
