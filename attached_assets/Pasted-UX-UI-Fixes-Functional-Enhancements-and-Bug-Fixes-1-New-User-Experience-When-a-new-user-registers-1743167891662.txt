@@ -1,0 +1,112 @@
+UX/UI Fixes, Functional Enhancements, and Bug Fixes
+1. New User Experience
+When a new user registers, the platform should be completely empty, with:
+
+No records in tables (Transactions, Quotes, Subscriptions, Contracts, Clients, etc.).
+
+No pre-filled categories, banks, or financial data.
+
+2. Convert Quote to Revenue
+Once a Quote is set to Accepted, the user should be able to Convert to Revenue.
+
+When clicking Convert to Revenue, a new modal should open, asking for:
+
+Number of installments.
+
+Amount per installment.
+
+Due dates for each installment.
+
+Once the user confirms, the Revenue should be created and added to the Finance page accordingly.
+
+3. Finance Page Fixes
+Finance modal is not working → Fix all issues.
+
+Finance Add Revenue (Client selection) is not working → Allow users to select or create a new client.
+
+Editing & Deleting Transactions: Users should be able to edit or delete both Expenses and Revenues directly from the Transactions table.
+
+4. Notifications System Fixes
+Users should be able to mark notifications as READ, and once marked, they should disappear completely.
+
+"View All" in Notifications is not working:
+
+Create a new Notifications page where users can see their notification history.
+
+5. Client Management Fixes
+Add Client Modal Enhancements:
+
+Users should be able to type the business type and create new pre-made inputs.
+
+Client Edit Bug:
+
+When clicking Edit Client and closing it without modifications, the user gets stuck and can't navigate. Fix this issue.
+
+"Expected number, received string" error:
+
+Prevents users from creating inputs in any modal that includes Clients. Fix this across the entire platform.
+
+6. Contracts Page Fixes
+Remove "View" button in the Contracts section.
+
+Download button should directly download the PDF contract stored for that contract.
+
+Edit button is not working → Ensure users can update contract details.
+
+7. Quick Actions in Dashboard
+Quick Action buttons are not working → Remove them completely from the Dashboard.
+
+8. Settings Page Fixes
+Edit Profile Feature: Opens, but does not save changes (including Phone and Location). Fix this.
+
+Change Password Functionality: User should be able to change their password successfully.
+
+Sign Out Button: Currently non-functional → Fix it to log the user out properly.
+
+Company Info & Logo Upload:
+
+Users should be able to save company details.
+
+Upload logo should work properly.
+
+Invite Team Member Button:
+
+Should be inactive for now.
+
+Change text to "Invite Team Member (Coming Soon)".
+
+Company Page Functionalities Not Implemented:
+
+Cover the tab with a dark overlay.
+
+Add a notice in the center that says: "Coming Soon".
+
+Sidebar Profile Data Unification:
+
+Sidebar is displaying different Name, Email, and Profile Picture from the Settings page.
+
+Ensure all profile information is consistent across the platform.
+
+9. Global Search Bar Fix
+The main search bar in the header is non-functional → Fix it so users can search across the platform.
+
+Final Deliverables:
+✅ Clean platform for new users (no pre-filled data)
+✅ Fully functional "Convert Quote to Revenue" with installment setup
+✅ Finance page fully operational (modal, transactions, add/edit/delete functionality)
+✅ Notifications system (mark as read, notification history page)
+✅ Client management fixes (editable fields, no stuck issues, data type errors fixed)
+✅ Contracts page fixes (remove "View", fix "Edit" & "Download" buttons)
+✅ Quick Actions removed from Dashboard
+✅ Settings page fully functional (profile edit, password change, logout, company info, logo upload, sidebar sync)
+✅ Global search bar working properly
+
+This will ensure a seamless, consistent, and user-friendly experience for all users. 🚀
+
+
+
+
+
+
+
+

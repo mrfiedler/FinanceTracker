@@ -885,7 +885,7 @@ export class MemStorage implements IStorage {
   
   // Helper function to seed initial data
   private async initializeSampleData() {
-    // Create admin user
+    // Create admin user only - no sample data for regular users
     const hashedPassword = await hashPassword('tryout2025');
     
     this.createUser({
@@ -896,6 +896,14 @@ export class MemStorage implements IStorage {
       isAdmin: true
     });
     
+    // Skip creating sample data for regular users
+    if (process.env.NODE_ENV === 'development' && process.env.INCLUDE_SAMPLE_DATA === 'true') {
+      await this.createSampleData();
+    }
+  }
+  
+  // Create sample data for development and testing only
+  private async createSampleData() {
     // Sample clients
     const client1 = this.createClient({
       name: "Nova Design",
