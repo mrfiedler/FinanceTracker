@@ -53,9 +53,11 @@ import {
 interface AddExpenseModalProps {
   isOpen: boolean;
   onClose: () => void;
+  expense?: any;
+  isEditing?: boolean;
 }
 
-const AddExpenseModal = ({ isOpen, onClose }: AddExpenseModalProps) => {
+const AddExpenseModal = ({ isOpen, onClose, expense, isEditing = false }: AddExpenseModalProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { currency } = useCurrency();
@@ -63,38 +65,57 @@ const AddExpenseModal = ({ isOpen, onClose }: AddExpenseModalProps) => {
 
   const form = useForm({
     resolver: zodResolver(insertExpenseSchema),
-    defaultValues: {
-      description: "",
-      amount: "",
-      category: "",
-      date: new Date().toISOString().split("T")[0],
-      dueDate: "",
-      currency: currency,
-      account: "default",
-      notes: "",
-      isPaid: false,
-    },
+    defaultValues: isEditing && expense
+      ? {
+          description: expense.description,
+          amount: expense.amount.toString(),
+          category: expense.category,
+          date: expense.date.split('T')[0],
+          dueDate: expense.dueDate ? expense.dueDate.split('T')[0] : "",
+          currency: expense.currency || currency,
+          account: expense.account || "default",
+          notes: expense.notes || "",
+          isPaid: expense.isPaid || false,
+        }
+      : {
+          description: "",
+          amount: "",
+          category: "",
+          date: new Date().toISOString().split("T")[0],
+          dueDate: "",
+          currency: currency,
+          account: "default",
+          notes: "",
+          isPaid: false,
+        },
   });
 
   const mutation = useMutation({
     mutationFn: async (data) => {
-      return apiRequest("POST", "/api/expenses", data);
+      if (isEditing && expense) {
+        return apiRequest("PATCH", `/api/expenses/${expense.id}`, data);
+      } else {
+        return apiRequest("POST", "/api/expenses", data);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/summary'] });
       queryClient.invalidateQueries({ queryKey: ['/api/finance/trends'] });
       queryClient.invalidateQueries({ queryKey: ['/api/expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/finance/transactions'] });
+      
       toast({
-        title: "Expense added successfully",
-        description: "Your expense has been recorded",
+        title: isEditing ? "Expense updated successfully" : "Expense added successfully",
+        description: isEditing ? "Your expense has been updated" : "Your expense has been recorded",
         variant: "default",
       });
+      
       form.reset();
       onClose();
     },
     onError: (error) => {
       toast({
-        title: "Failed to add expense",
+        title: isEditing ? "Failed to update expense" : "Failed to add expense",
         description: error.message || "Please try again later",
         variant: "destructive",
       });
@@ -113,9 +134,9 @@ const AddExpenseModal = ({ isOpen, onClose }: AddExpenseModalProps) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add Expense</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit Expense" : "Add Expense"}</DialogTitle>
           <DialogDescription>
-            Record a new expense for your business
+            {isEditing ? "Update expense details" : "Record a new expense for your business"}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -322,7 +343,10 @@ const AddExpenseModal = ({ isOpen, onClose }: AddExpenseModalProps) => {
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Adding..." : "Add Expense"}
+                {isSubmitting 
+                  ? (isEditing ? "Updating..." : "Adding...") 
+                  : (isEditing ? "Update Expense" : "Add Expense")
+                }
               </Button>
             </DialogFooter>
           </form>

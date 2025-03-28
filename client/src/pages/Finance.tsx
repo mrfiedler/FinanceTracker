@@ -41,7 +41,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Edit,
-  Pencil
+  Pencil,
+  Trash2,
+  MoreVertical
 } from "lucide-react";
 import { 
   SiChase, 
@@ -76,6 +78,12 @@ const Finance = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [optimisticUpdates, setOptimisticUpdates] = useState<{[key: string]: boolean}>({});
+  
+  // State for edit and delete
+  const [editExpenseModalOpen, setEditExpenseModalOpen] = useState(false);
+  const [editRevenueModalOpen, setEditRevenueModalOpen] = useState(false);
+  const [currentTransaction, setCurrentTransaction] = useState<any>(null);
+  
   const {
     expenseModalOpen,
     revenueModalOpen,
@@ -125,6 +133,57 @@ const Finance = () => {
     setCustomDateStart(format(startDate, 'yyyy-MM-dd'));
     setCustomDateEnd(format(endDate, 'yyyy-MM-dd'));
     setDateRange("month");
+  };
+
+  // Function to edit a transaction
+  const handleEditTransaction = (transaction: any) => {
+    setCurrentTransaction(transaction);
+    if (transaction.type === 'expense') {
+      setEditExpenseModalOpen(true);
+    } else {
+      setEditRevenueModalOpen(true);
+    }
+  };
+
+  // Function to delete a transaction
+  const handleDeleteTransaction = async (transaction: any) => {
+    if (!window.confirm(`Are you sure you want to delete this ${transaction.type}?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/${transaction.type === 'expense' ? 'expenses' : 'revenues'}/${transaction.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete ${transaction.type}`);
+      }
+
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({
+        queryKey: ['/api/finance/transactions']
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['/api/finance/summary']
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['/api/finance/trends']
+      });
+
+      toast({
+        title: "Deleted successfully",
+        description: `The ${transaction.type} has been deleted`,
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
+      toast({
+        title: "Delete failed",
+        description: `Failed to delete the ${transaction.type}`,
+        variant: "destructive"
+      });
+    }
   };
 
   // Function to update transaction status instantly
@@ -235,6 +294,32 @@ const Finance = () => {
 
   return (
     <main className="w-full h-full overflow-y-auto bg-background p-4 md:p-6 pb-20">
+      {/* Edit Expense Modal */}
+      {editExpenseModalOpen && currentTransaction && (
+        <AddExpenseModal
+          isOpen={editExpenseModalOpen}
+          onClose={() => {
+            setEditExpenseModalOpen(false);
+            setCurrentTransaction(null);
+          }}
+          expense={currentTransaction}
+          isEditing={true}
+        />
+      )}
+      
+      {/* Edit Revenue Modal */}
+      {editRevenueModalOpen && currentTransaction && (
+        <AddRevenueModal
+          isOpen={editRevenueModalOpen}
+          onClose={() => {
+            setEditRevenueModalOpen(false);
+            setCurrentTransaction(null);
+          }}
+          revenue={currentTransaction}
+          isEditing={true}
+        />
+      )}
+      
       <div className="page-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="page-title">Finance</h1>
@@ -574,22 +659,71 @@ const Finance = () => {
 
           <Tabs defaultValue="all" onValueChange={setTransactionType} className="w-full mt-4">
             <TabsContent value="all" className="mt-0">
-              {renderTransactionsTable(filteredTransactions, isLoading, currency, optimisticUpdates, updateTransactionStatus)}
+              {renderTransactionsTable(
+                filteredTransactions, 
+                isLoading, 
+                currency, 
+                optimisticUpdates, 
+                updateTransactionStatus,
+                handleEditTransaction,
+                handleDeleteTransaction
+              )}
             </TabsContent>
             <TabsContent value="revenue" className="mt-0">
-              {renderTransactionsTable(filteredTransactions.filter(t => t.type === 'revenue'), isLoading, currency, optimisticUpdates, updateTransactionStatus)}
+              {renderTransactionsTable(
+                filteredTransactions.filter(t => t.type === 'revenue'), 
+                isLoading, 
+                currency, 
+                optimisticUpdates, 
+                updateTransactionStatus,
+                handleEditTransaction,
+                handleDeleteTransaction
+              )}
             </TabsContent>
             <TabsContent value="expense" className="mt-0">
-              {renderTransactionsTable(filteredTransactions.filter(t => t.type === 'expense'), isLoading, currency, optimisticUpdates, updateTransactionStatus)}
+              {renderTransactionsTable(
+                filteredTransactions.filter(t => t.type === 'expense'), 
+                isLoading, 
+                currency, 
+                optimisticUpdates, 
+                updateTransactionStatus,
+                handleEditTransaction,
+                handleDeleteTransaction
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
 
       {/* Modals */}
-      <AddExpenseModal isOpen={expenseModalOpen} onClose={closeAllModals} />
-      <AddRevenueModal isOpen={revenueModalOpen} onClose={closeAllModals} />
-      <FinanceSettingsModal isOpen={settingsModalOpen} onClose={() => setSettingsModalOpen(false)} />
+      {/* Regular Add Modals */}
+      <AddExpenseModal 
+        isOpen={expenseModalOpen} 
+        onClose={closeAllModals} 
+      />
+      <AddRevenueModal 
+        isOpen={revenueModalOpen} 
+        onClose={closeAllModals} 
+      />
+      
+      {/* Edit Modals */}
+      <AddExpenseModal 
+        isOpen={editExpenseModalOpen} 
+        onClose={() => setEditExpenseModalOpen(false)} 
+        expense={currentTransaction}
+        isEditing={true}
+      />
+      <AddRevenueModal 
+        isOpen={editRevenueModalOpen} 
+        onClose={() => setEditRevenueModalOpen(false)} 
+        revenue={currentTransaction}
+        isEditing={true}
+      />
+      
+      <FinanceSettingsModal 
+        isOpen={settingsModalOpen} 
+        onClose={() => setSettingsModalOpen(false)} 
+      />
     </main>
   );
 };
@@ -604,7 +738,9 @@ const renderTransactionsTable = (
   isLoading: boolean, 
   currency: string, 
   optimisticUpdates: {[key: string]: boolean} = {}, 
-  updateTransactionStatus: (transaction: any) => void
+  updateTransactionStatus: (transaction: any) => void,
+  handleEditTransaction?: (transaction: any) => void,
+  handleDeleteTransaction?: (transaction: any) => void
 ) => {
   if (isLoading) {
     return Array(5).fill(0).map((_, index) => (
@@ -637,6 +773,7 @@ const renderTransactionsTable = (
             <th className="px-6 py-3 font-medium">Amount</th>
             <th className="px-6 py-3 font-medium">Type</th>
             <th className="px-6 py-3 font-medium">Status</th>
+            <th className="px-6 py-3 font-medium">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border/40">
@@ -721,6 +858,34 @@ const renderTransactionsTable = (
                       </div>
                     );
                   })()}
+                </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-center space-x-2 justify-center">
+                  {typeof handleEditTransaction === 'function' && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      className="h-8 w-8 rounded-full hover:bg-muted" 
+                      onClick={() => {
+                        if (handleEditTransaction) handleEditTransaction(transaction);
+                      }}
+                    >
+                      <Pencil className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                  )}
+                  {typeof handleDeleteTransaction === 'function' && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      className="h-8 w-8 rounded-full hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30" 
+                      onClick={() => {
+                        if (handleDeleteTransaction) handleDeleteTransaction(transaction);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </td>
             </tr>

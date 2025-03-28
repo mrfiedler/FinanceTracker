@@ -62,9 +62,11 @@ import { useQuery as useFinanceQuery } from "@tanstack/react-query";
 interface AddRevenueModalProps {
   isOpen: boolean;
   onClose: () => void;
+  revenue?: any;
+  isEditing?: boolean;
 }
 
-const AddRevenueModal = ({ isOpen, onClose }: AddRevenueModalProps) => {
+const AddRevenueModal = ({ isOpen, onClose, revenue, isEditing = false }: AddRevenueModalProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { currency } = useCurrency();
@@ -148,18 +150,31 @@ const AddRevenueModal = ({ isOpen, onClose }: AddRevenueModalProps) => {
   // Main form for the revenue
   const revenueForm = useForm<RevenueFormValues>({
     resolver: zodResolver(customRevenueSchema),
-    defaultValues: {
-      description: "",
-      amount: "",
-      clientId: "",
-      category: "",
-      date: new Date().toISOString().split("T")[0],
-      dueDate: "",
-      currency: currency,
-      account: "default",
-      notes: "",
-      isPaid: false,
-    },
+    defaultValues: isEditing && revenue
+      ? {
+          description: revenue.description,
+          amount: revenue.amount.toString(),
+          clientId: revenue.clientId?.toString() || "",
+          category: revenue.category,
+          date: revenue.date?.split('T')[0] || new Date().toISOString().split("T")[0],
+          dueDate: revenue.dueDate ? revenue.dueDate.split('T')[0] : "",
+          currency: revenue.currency || currency,
+          account: revenue.account || "default",
+          notes: revenue.notes || "",
+          isPaid: revenue.isPaid || false,
+        }
+      : {
+          description: "",
+          amount: "",
+          clientId: "",
+          category: "",
+          date: new Date().toISOString().split("T")[0],
+          dueDate: "",
+          currency: currency,
+          account: "default",
+          notes: "",
+          isPaid: false,
+        },
   });
 
   // Get only revenue categories from the categories list
@@ -206,10 +221,14 @@ const AddRevenueModal = ({ isOpen, onClose }: AddRevenueModalProps) => {
     },
   });
 
-  // Add Revenue mutation
+  // Add/Edit Revenue mutation
   const addRevenueMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest("POST", "/api/revenues", data);
+      if (isEditing && revenue) {
+        return apiRequest("PATCH", `/api/revenues/${revenue.id}`, data);
+      } else {
+        return apiRequest("POST", "/api/revenues", data);
+      }
     },
     onSuccess: () => {
       // Invalidate queries to refresh data
@@ -220,8 +239,8 @@ const AddRevenueModal = ({ isOpen, onClose }: AddRevenueModalProps) => {
       queryClient.invalidateQueries({ queryKey: ['/api/clients/top'] });
       
       toast({
-        title: "Revenue added successfully",
-        description: "Your revenue has been recorded",
+        title: isEditing ? "Revenue updated successfully" : "Revenue added successfully",
+        description: isEditing ? "Your revenue has been updated" : "Your revenue has been recorded",
         variant: "default",
       });
       
@@ -231,7 +250,7 @@ const AddRevenueModal = ({ isOpen, onClose }: AddRevenueModalProps) => {
     },
     onError: (error) => {
       toast({
-        title: "Failed to add revenue",
+        title: isEditing ? "Failed to update revenue" : "Failed to add revenue",
         description: error.message || "Please try again later",
         variant: "destructive",
       });
@@ -282,12 +301,17 @@ const AddRevenueModal = ({ isOpen, onClose }: AddRevenueModalProps) => {
                 <ChevronLeft className="h-4 w-4" />
               </Button>
             )}
-            {showNewClientForm ? "Add New Client" : "Add Revenue"}
+            {showNewClientForm 
+              ? "Add New Client" 
+              : (isEditing ? "Edit Revenue" : "Add Revenue")
+            }
           </DialogTitle>
           <DialogDescription>
             {showNewClientForm 
               ? "Create a new client for your revenue transaction" 
-              : "Record a new revenue transaction for your business"
+              : isEditing
+                ? "Modify the details of this revenue transaction"
+                : "Record a new revenue transaction for your business"
             }
           </DialogDescription>
         </DialogHeader>
@@ -545,7 +569,10 @@ const AddRevenueModal = ({ isOpen, onClose }: AddRevenueModalProps) => {
                     Cancel
                   </Button>
                   <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Adding..." : "Add Revenue"}
+                    {isSubmitting 
+                      ? (isEditing ? "Updating..." : "Adding...") 
+                      : (isEditing ? "Update Revenue" : "Add Revenue")
+                    }
                   </Button>
                 </DialogFooter>
               </form>
