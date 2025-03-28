@@ -130,7 +130,14 @@ export function setupAuth(app: Express) {
   app.post("/api/logout", (req, res, next) => {
     req.logout((err) => {
       if (err) return next(err);
-      res.sendStatus(200);
+      req.session.destroy((err) => {
+        if (err) {
+          console.error("Error destroying session:", err);
+          return res.status(500).json({ message: "Failed to destroy session" });
+        }
+        res.clearCookie('connect.sid');
+        res.json({ message: "Logged out successfully" });
+      });
     });
   });
 
@@ -153,7 +160,7 @@ export function setupAuth(app: Express) {
     
     try {
       const userId = (req.user as SelectUser).id;
-      const { name, email } = req.body;
+      const { name, email, phone, location } = req.body;
       
       // Validate input
       if (name && typeof name !== 'string') {
@@ -164,13 +171,23 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "Invalid email format" });
       }
       
+      if (phone && typeof phone !== 'string') {
+        return res.status(400).json({ message: "Invalid phone format" });
+      }
+      
+      if (location && typeof location !== 'string') {
+        return res.status(400).json({ message: "Invalid location format" });
+      }
+      
       // Update user profile
-      const updatedUser = await storage.updateUser(userId, { name, email });
+      const updatedUser = await storage.updateUser(userId, { name, email, phone, location });
       
       // Update session user object
       const user = req.user as SelectUser;
       if (name) user.name = name;
       if (email) user.email = email;
+      if (phone) user.phone = phone;
+      if (location) user.location = location;
       
       // Remove password from response
       const { password, ...userWithoutPassword } = updatedUser;
