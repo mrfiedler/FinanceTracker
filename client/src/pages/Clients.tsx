@@ -530,11 +530,12 @@ const Clients = () => {
       <Dialog 
         open={editClientOpen} 
         onOpenChange={(open) => {
-          setEditClientOpen(open);
           if (!open) {
-            // Reset current client when dialog is closed
+            // Reset form and state when dialog is closed
             setCurrentClient(null);
+            editForm.reset();
           }
+          setEditClientOpen(open);
         }}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -640,7 +641,15 @@ const Clients = () => {
               />
 
               <DialogFooter>
-                <Button variant="outline" type="button" onClick={() => setEditClientOpen(false)}>
+                <Button 
+                  variant="outline" 
+                  type="button" 
+                  onClick={() => {
+                    setEditClientOpen(false);
+                    setCurrentClient(null);
+                    editForm.reset();
+                  }}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={updateClientMutation.isPending}>
