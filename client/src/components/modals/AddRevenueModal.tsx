@@ -128,9 +128,25 @@ const AddRevenueModal = ({ isOpen, onClose }: AddRevenueModalProps) => {
     },
   });
 
+  // Create a custom schema for revenue form that allows string clientId which will be converted to number
+  const customRevenueSchema = z.object({
+    description: z.string().min(1, "Description is required"),
+    amount: z.string().min(1, "Amount is required"),
+    clientId: z.string().min(1, "Client is required"),
+    category: z.string().min(1, "Category is required"),
+    date: z.string(),
+    dueDate: z.string().optional(),
+    notes: z.string().optional(),
+    currency: z.string(),
+    account: z.string(),
+    isPaid: z.boolean().default(false),
+  });
+
+  type RevenueFormValues = z.infer<typeof customRevenueSchema>;
+
   // Main form for the revenue
-  const revenueForm = useForm({
-    resolver: zodResolver(insertRevenueSchema),
+  const revenueForm = useForm<RevenueFormValues>({
+    resolver: zodResolver(customRevenueSchema),
     defaultValues: {
       description: "",
       amount: "",
