@@ -66,18 +66,28 @@ const AddSubscriptionModal = ({ isOpen, onClose }: AddSubscriptionModalProps) =>
     queryKey: ['/api/clients'],
   });
 
+  // Create a custom schema for the form to handle both subscription and new client
+  const formSchema = z.object({
+    name: z.string().min(2, "Name is required"),
+    amount: z.string().min(1, "Amount is required"),
+    clientId: z.union([z.number(), z.string()]),
+    frequency: z.string(),
+    startDate: z.string(),
+    endDate: z.string().optional(),
+    isActive: z.boolean().default(true),
+    currency: z.string(),
+    description: z.string().optional(),
+    // Add optional schema for new client
+    newClient: z.object({
+      name: z.string().min(2, "Name must be at least 2 characters"),
+      email: z.string().email("Please enter a valid email"),
+      phone: z.string().nullable().optional(),
+      businessType: z.string().min(1, "Business type is required"),
+    }).optional(),
+  });
+
   const form = useForm<FormData>({
-    resolver: zodResolver(
-      insertSubscriptionSchema.extend({
-        // Add optional schema for new client
-        newClient: z.object({
-          name: z.string().min(2, "Name must be at least 2 characters"),
-          email: z.string().email("Please enter a valid email"),
-          phone: z.string().nullable().optional(),
-          businessType: z.string().min(1, "Business type is required"),
-        }).optional(),
-      })
-    ),
+    resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       amount: "",
