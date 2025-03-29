@@ -556,19 +556,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API - Finance Categories
   app.get("/api/finance/categories", async (req, res) => {
     try {
-      // For now, return predefined categories (in a real app, this would fetch from DB)
-      const categories = [
-        { id: 1, value: "groceries", label: "Groceries", type: "expense" },
-        { id: 2, value: "transportation", label: "Transportation", type: "expense" },
-        { id: 3, value: "utilities", label: "Utilities", type: "expense" },
-        { id: 4, value: "entertainment", label: "Entertainment", type: "expense" },
-        { id: 5, value: "dining", label: "Dining", type: "expense" },
-        { id: 6, value: "healthcare", label: "Healthcare", type: "expense" },
-        { id: 7, value: "salary", label: "Salary", type: "revenue" },
-        { id: 8, value: "freelance", label: "Freelance", type: "revenue" },
-        { id: 9, value: "investments", label: "Investments", type: "revenue" }
-      ];
-      res.json(categories);
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      // Get categories from storage - will be empty for new users
+      const userId = req.session.userId;
+      const categories = await storage.getFinanceCategories(userId);
+      
+      // Map to the expected format
+      const formattedCategories = categories.map(cat => ({
+        id: cat.id,
+        value: cat.value,
+        label: cat.label,
+        type: cat.type
+      }));
+      
+      res.json(formattedCategories);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch categories" });
     }
@@ -576,21 +579,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/finance/categories", async (req, res) => {
     try {
-      // In a real app, this would add to database
-      // For now, simulate success response with made-up ID
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
       const { name, type } = req.body;
 
       // Validate inputs
       if (!name || !type || (type !== 'expense' && type !== 'revenue')) {
         return res.status(400).json({ message: "Invalid category data" });
       }
-
-      const newCategory = {
-        id: Math.floor(Math.random() * 1000) + 10, // Random ID (would be DB-generated)
-        value: name.toLowerCase().replace(/\s+/g, ''), // Convert spaces to empty string
+      
+      // Create category in storage
+      const userId = req.session.userId;
+      const value = name.toLowerCase().replace(/\s+/g, '_'); // Convert spaces to underscores
+      
+      const newCategory = await storage.createFinanceCategory({
+        userId,
+        value,
         label: name,
         type
-      };
+      });
 
       res.status(200).json(newCategory);
     } catch (error) {
@@ -600,6 +609,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/finance/categories/:id", async (req, res) => {
     try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
       const id = parseInt(req.params.id);
       const { name, type } = req.body;
 
@@ -608,13 +621,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid category data" });
       }
 
-      // In a real app, this would update the database
-      const updatedCategory = {
-        id,
-        value: name.toLowerCase().replace(/\s+/g, ''),
+      // Format data
+      const value = name.toLowerCase().replace(/\s+/g, '_');
+      
+      // Update category in storage
+      const updatedCategory = await storage.updateFinanceCategory(id, {
+        value,
         label: name,
         type
-      };
+      });
 
       res.json(updatedCategory);
     } catch (error) {
@@ -624,10 +639,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/finance/categories/:id", async (req, res) => {
     try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
       const id = parseInt(req.params.id);
+      
+      // Delete category from storage
+      const success = await storage.deleteFinanceCategory(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Category not found" });
+      }
 
-      // In a real app, this would delete from the database
-      // For now, simulate success
       res.status(200).json({ message: "Category deleted successfully" });
     } catch (error) {
       res.status(500).json({ message: "Failed to delete category" });
@@ -637,13 +661,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API - Finance Accounts
   app.get("/api/finance/accounts", async (req, res) => {
     try {
-      // For now, return predefined accounts (in a real app, this would fetch from DB)
-      const accounts = [
-        { id: 1, value: "checking", label: "Checking Account", icon: "default" },
-        { id: 2, value: "savings", label: "Savings Account", icon: "default" },
-        { id: 3, value: "credit", label: "Credit Card", icon: "creditcard" }
-      ];
-      res.json(accounts);
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Get accounts from storage - will be empty for new users
+      const userId = req.session.userId;
+      const accounts = await storage.getFinanceAccounts(userId);
+      
+      // Map to the expected format
+      const formattedAccounts = accounts.map(acc => ({
+        id: acc.id,
+        value: acc.value,
+        label: acc.label,
+        icon: acc.icon || 'default'
+      }));
+      
+      res.json(formattedAccounts);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch accounts" });
     }
@@ -651,21 +685,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/finance/accounts", async (req, res) => {
     try {
-      // In a real app, this would add to database
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
       const { name, type } = req.body;
 
       // Validate inputs
-      if (!name || !type) {
-        return res.status(400).json({ message: "Invalid account data" });
+      if (!name) {
+        return res.status(400).json({ message: "Invalid account data: Name is required" });
       }
 
-      const newAccount = {
-        id: Math.floor(Math.random() * 1000) + 10, // Random ID (would be DB-generated)
-        value: name.toLowerCase().replace(/\s+/g, ''), // Convert spaces to empty string
+      // Create account in storage
+      const userId = req.session.userId;
+      const value = name.toLowerCase().replace(/\s+/g, '_'); // Convert spaces to underscores
+      
+      const newAccount = await storage.createFinanceAccount({
+        userId,
+        value,
         label: name,
-        icon: type
-      };
-
+        icon: type || 'default'
+      });
+      
       res.status(200).json(newAccount);
     } catch (error) {
       res.status(500).json({ message: "Failed to create account" });
@@ -674,21 +715,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/finance/accounts/:id", async (req, res) => {
     try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
       const id = parseInt(req.params.id);
       const { name, type } = req.body;
 
       // Validate inputs
-      if (!name || !type) {
-        return res.status(400).json({ message: "Invalid account data" });
+      if (!name) {
+        return res.status(400).json({ message: "Invalid account data: Name is required" });
       }
 
-      // In a real app, this would update the database
-      const updatedAccount = {
-        id,
-        value: name.toLowerCase().replace(/\s+/g, ''),
+      // Format account data
+      const value = name.toLowerCase().replace(/\s+/g, '_');
+      
+      // Update account in storage
+      const updatedAccount = await storage.updateFinanceAccount(id, {
+        value,
         label: name,
-        icon: type
-      };
+        icon: type || 'default'
+      });
 
       res.json(updatedAccount);
     } catch (error) {
@@ -698,10 +745,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/finance/accounts/:id", async (req, res) => {
     try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
       const id = parseInt(req.params.id);
 
-      // In a real app, this would delete from the database
-      // For now, simulate success
+      // Delete account from storage
+      const success = await storage.deleteFinanceAccount(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Account not found" });
+      }
+      
       res.status(200).json({ message: "Account deleted successfully" });
     } catch (error) {
       res.status(500).json({ message: "Failed to delete account" });
