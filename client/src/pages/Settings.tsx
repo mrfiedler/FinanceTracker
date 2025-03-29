@@ -297,7 +297,7 @@ const Settings = () => {
               headers: {
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify({ imageUrl }),
+              body: JSON.stringify({ imageUrl: imageUrl.split(',')[1] }), // Send only base64 data
               credentials: 'include'
             });
 

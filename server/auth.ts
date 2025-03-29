@@ -370,15 +370,18 @@ export function setupAuth(app: Express) {
       const userId = (req.user as SelectUser).id;
       console.log(`Processing avatar upload for user ${userId}`);
 
-      // Get the actual image URL from the request body
+      // Get the actual image data from the request body
       const { imageUrl } = req.body;
 
       if (!imageUrl) {
-        return res.status(400).json({ message: "No image URL provided" });
+        return res.status(400).json({ message: "No image data provided" });
       }
 
+      // Create a proper data URL
+      const fullImageUrl = `data:image/jpeg;base64,${imageUrl}`;
+
       // Update user with the actual image data
-      await storage.updateUser(userId, { avatar: imageUrl });
+      await storage.updateUser(userId, { companyLogo: fullImageUrl });
 
       console.log(`Avatar successfully updated for user ${userId}`);
       res.json({ 
