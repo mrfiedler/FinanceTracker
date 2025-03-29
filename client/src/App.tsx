@@ -6,6 +6,7 @@ import NotFound from "@/pages/not-found";
 import { ThemeProvider } from "./context/ThemeContext";
 import { CurrencyProvider } from "./context/CurrencyContext";
 import { GamificationProvider } from "./context/GamificationContext";
+import { LanguageProvider } from "./context/LanguageContext";
 import Dashboard from "./pages/Dashboard";
 import Finance from "./pages/Finance";
 import Clients from "./pages/Clients";
@@ -125,8 +126,10 @@ function App() {
         <CurrencyProvider>
           <AuthProvider>
             <GamificationProvider>
-              <Router />
-              <Toaster />
+              <LanguageProvider>
+                <Router />
+                <Toaster />
+              </LanguageProvider>
             </GamificationProvider>
           </AuthProvider>
         </CurrencyProvider>

@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useTheme } from "@/context/ThemeContext";
 import { useCurrency } from "@/context/CurrencyContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { 
-  Menu, Search, Bell, Sun, Moon, X, 
+  Menu, Search, Bell, Sun, Moon, X, Globe,
   Check, Clock, CheckCheck, Info, AlertTriangle,
   FileText, User, DollarSign, File, CalendarClock
 } from "lucide-react";
@@ -20,6 +21,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
+import LanguageSelector from "@/components/ui/LanguageSelector";
 import { Notification } from "@shared/schema";
 import { format, formatDistanceToNow } from "date-fns";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -71,6 +73,7 @@ interface SearchResult {
 const Header = () => {
   const { theme, toggleTheme } = useTheme();
   const { currency, setCurrency } = useCurrency();
+  const { language, t } = useLanguage();
   const { toast } = useToast();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showSearch, setShowSearch] = useState(false);
@@ -546,6 +549,11 @@ const Header = () => {
                   <SelectItem value="BRL">BRL</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            
+            {/* Language selector */}
+            <div className="hidden sm:block ml-2">
+              <LanguageSelector />
             </div>
             
             {/* Theme toggle */}
