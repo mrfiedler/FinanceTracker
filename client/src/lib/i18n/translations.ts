@@ -91,7 +91,7 @@ export const translations: TranslationMap = {
     "en": "Portuguese",
     "pt-BR": "Português"
   },
-  
+
   // Navigation
   "nav.dashboard": {
     "en": "Dashboard",
@@ -268,7 +268,7 @@ export const translations: TranslationMap = {
   "settings.uploadLogo": {
     "en": "Upload Logo",
     "pt-BR": "Enviar Logo"
-  }
+  },
   "save": {
     "en": "Save",
     "pt-BR": "Salvar"
@@ -341,7 +341,7 @@ export const translations: TranslationMap = {
     "en": "Portuguese",
     "pt-BR": "Português"
   },
-  
+
   // Navigation
   "nav.dashboard": {
     "en": "Dashboard",
@@ -383,7 +383,7 @@ export const translations: TranslationMap = {
     "en": "ARCADE",
     "pt-BR": "ARCADE"
   },
-  
+
   // Dashboard
   "dashboard.title": {
     "en": "Dashboard",
@@ -577,7 +577,7 @@ export const translations: TranslationMap = {
     "en": "View All",
     "pt-BR": "Ver Tudo"
   },
-  
+
   // Finance
   "finance.title": {
     "en": "Finance",
@@ -927,7 +927,7 @@ export const translations: TranslationMap = {
     "en": "Add New Client",
     "pt-BR": "Adicionar Novo Cliente"
   },
-  
+
   // Clients
   "clients.title": {
     "en": "Clients",
@@ -1017,7 +1017,7 @@ export const translations: TranslationMap = {
     "en": "Are you sure you want to delete this client?",
     "pt-BR": "Tem certeza que deseja excluir este cliente?"
   },
-  
+
   // Quotes
   "quotes.title": {
     "en": "Quotes",
@@ -1048,7 +1048,7 @@ export const translations: TranslationMap = {
     "pt-BR": "Aceito"
   },
   "quotes.rejected": {
-    "en": "Rejected",
+    ""en": "Rejected",
     "pt-BR": "Rejeitado"
   },
   "quotes.issued": {
@@ -1147,7 +1147,7 @@ export const translations: TranslationMap = {
     "en": "Are you sure you want to delete this quote?",
     "pt-BR": "Tem certeza que deseja excluir este orçamento?"
   },
-  
+
   // Contracts
   "contracts.title": {
     "en": "Contracts",
@@ -1237,7 +1237,7 @@ export const translations: TranslationMap = {
     "en": "Are you sure you want to delete this contract?",
     "pt-BR": "Tem certeza que deseja excluir este contrato?"
   },
-  
+
   // Subscriptions
   "subscriptions.title": {
     "en": "Subscriptions",
@@ -1339,7 +1339,7 @@ export const translations: TranslationMap = {
     "en": "Are you sure you want to delete this subscription?",
     "pt-BR": "Tem certeza que deseja excluir esta assinatura?"
   },
-  
+
   // Achievements
   "achievements.title": {
     "en": "Achievements",
@@ -1401,7 +1401,7 @@ export const translations: TranslationMap = {
     "en": "Reward Points",
     "pt-BR": "Pontos de Recompensa"
   },
-  
+
   // Settings
   "settings.title": {
     "en": "Settings",
@@ -1511,7 +1511,7 @@ export const translations: TranslationMap = {
     "en": "Remove",
     "pt-BR": "Remover"
   },
-  
+
   // Notifications
   "notifications.title": {
     "en": "Notifications",
@@ -1533,7 +1533,7 @@ export const translations: TranslationMap = {
     "en": "View All",
     "pt-BR": "Ver Todas"
   },
-  
+
   // Auth
   "auth.login": {
     "en": "Login",
@@ -1571,7 +1571,7 @@ export const translations: TranslationMap = {
     "en": "Sign Up",
     "pt-BR": "Cadastrar"
   },
-  
+
   // Errors and messages
   "error.required": {
     "en": "This field is required",
