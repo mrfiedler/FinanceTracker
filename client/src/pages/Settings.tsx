@@ -946,7 +946,7 @@ const Settings = () => {
                           className="border-gray-300 focus:border-primary"
                         />
                       ) : (
-                        <div className="py-2 px-3 bg-muted/30 rounded-md text-foreground font-medium min-h-9">
+                        <div className="py-2 px-3 bg-muted/30 rounded-md text-foreground fontmedium min-h-9">
                           123 Business Ave, Suite 100, San Francisco, CA 94107
                         </div>
                       )}
@@ -1016,7 +1016,12 @@ const Settings = () => {
                             Add colleagues to your company account
                           </p>
                         </div>
-                        <Button className="mt-3 md:mt-0">
+                        <Button
+                          variant="secondary"
+                          disabled
+                          className="opacity-60 cursor-not-allowed"
+                          title="Coming Soon"
+                        >
                           <Users className="mr-2 h-4 w-4" />
                           Invite Member
                         </Button>
