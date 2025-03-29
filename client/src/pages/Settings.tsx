@@ -58,7 +58,7 @@ const Settings = () => {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   // Company info state
   const [companyName, setCompanyName] = useState('');
   const [companyEmail, setCompanyEmail] = useState('');
@@ -898,7 +898,7 @@ const Settings = () => {
                           />
                         ) : (
                           <div className="py-2 px-3 bg-muted/30 rounded-md text-foreground font-medium min-h-9">
-                            12345-ABC-67890
+                            {companyRegNumber || 'No registration number set'}
                           </div>
                         )}
                       </div>
@@ -920,7 +920,7 @@ const Settings = () => {
                           />
                         ) : (
                           <div className="py-2 px-3 bg-muted/30 rounded-md text-foreground font-medium min-h-9">
-                            info@acmecorp.com
+                            {companyEmail || 'No email set'}
                           </div>
                         )}
                       </div>
@@ -940,14 +940,14 @@ const Settings = () => {
                           />
                         ) : (
                           <div className="py-2 px-3 bg-muted/30 rounded-md text-foreground font-medium min-h-9">
-                            +1 (555) 123-4567
+                            {companyPhone || 'No phone number set'}
                           </div>
                         )}
                       </div>
                     </div>
 
                     {/* Company Address */}
-                    <div className="space-y-2">
+                    <<div className="space-y-2">
                       <Label htmlFor="company-address" className="flex items-center text-sm font-medium">
                         <MapPin className="mr-2 h-4 w-4 text-gray-500" />
                         Company Address
@@ -960,8 +960,8 @@ const Settings = () => {
                           className="border-gray-300 focus:border-primary"
                         />
                       ) : (
-                        <div className="py-2 px-3 bg-muted/30 rounded-md text-foreground fontmedium min-h-9">
-                          123 Business Ave, Suite 100, San Francisco, CA 94107
+                        <div className="py-2 px-3 bg-muted/30 rounded-md text-foreground font-medium min-h-9">
+                          {companyAddress || 'No address set'}
                         </div>
                       )}
                     </div>
