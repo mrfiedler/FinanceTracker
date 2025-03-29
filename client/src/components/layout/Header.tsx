@@ -91,7 +91,7 @@ const Header = () => {
       queryKey: ['/api/notifications'],
       staleTime: 60000 // 1 minute
     });
-  
+
   // Count unread notifications
   const unreadCount = notifications.filter(notification => !notification.isRead).length;
 
@@ -172,7 +172,7 @@ const Header = () => {
   // Format notification date
   const formatNotificationDate = (date: string | Date | null) => {
     if (!date) return 'Unknown date';
-    
+
     try {
       const notificationDate = date instanceof Date ? date : new Date(date);
       return formatDistanceToNow(notificationDate, { addSuffix: true });
@@ -258,7 +258,7 @@ const Header = () => {
         setShowSearch(false);
       }
     };
-    
+
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [showSearch]);
@@ -316,7 +316,7 @@ const Header = () => {
             >
               <Menu className="h-6 w-6" />
             </button>
-            
+
             {/* Logo shown only when sidebar is hidden on mobile */}
             {isMobile && (
               <img 
@@ -326,7 +326,7 @@ const Header = () => {
               />
             )}
           </div>
-          
+
           {/* Search - adaptive for mobile and desktop */}
           <div className={`${isMobile && !showSearch ? 'hidden' : 'flex-1 flex'} 
                           items-center justify-center transition-all duration-200 ease-in-out 
@@ -339,7 +339,7 @@ const Header = () => {
                 <X className="h-5 w-5" />
               </button>
             )}
-            
+
             <div className={`relative w-full ${isMobile && showSearch ? 'pl-10' : ''} max-w-md mx-auto`}>
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 {isSearching ? (
@@ -369,7 +369,7 @@ const Header = () => {
                       No results found for "{searchQuery}"
                     </div>
                   )}
-                  
+
                   {/* Clients section */}
                   {searchResults.clients.length > 0 && (
                     <div>
@@ -397,7 +397,7 @@ const Header = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Contracts section */}
                   {searchResults.contracts.length > 0 && (
                     <div>
@@ -427,7 +427,7 @@ const Header = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Quotes section */}
                   {searchResults.quotes.length > 0 && (
                     <div>
@@ -457,7 +457,7 @@ const Header = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Transactions section */}
                   {searchResults.transactions.length > 0 && (
                     <div>
@@ -490,7 +490,7 @@ const Header = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Subscriptions section */}
                   {searchResults.subscriptions.length > 0 && (
                     <div>
@@ -522,7 +522,7 @@ const Header = () => {
               )}
             </div>
           </div>
-          
+
           {/* Right side controls */}
           <div className="flex items-center space-x-2 sm:space-x-3">
             {/* Search toggle button (mobile only) */}
@@ -536,7 +536,7 @@ const Header = () => {
                 <Search className="h-5 w-5" />
               </button>
             )}
-            
+
             {/* Currency selector - hidden on smallest screens */}
             <div className="hidden sm:block">
               <Select value={currency} onValueChange={setCurrency}>
@@ -550,12 +550,12 @@ const Header = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             {/* Language selector */}
             <div className="hidden sm:block ml-2">
               <LanguageSelector />
             </div>
-            
+
             {/* Theme toggle */}
             <TooltipProvider delayDuration={300}>
               <Tooltip>
@@ -580,7 +580,7 @@ const Header = () => {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            
+
             {/* Notification dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
