@@ -343,10 +343,8 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "No image data provided" });
       }
 
-      const fullImageUrl = `data:image/jpeg;base64,${imageUrl}`;
-
       // Update user with company logo
-      await storage.updateUser(userId, { companyLogo: fullImageUrl });
+      await storage.updateUser(userId, { companyLogo: imageUrl });
 
       console.log("Company logo uploaded successfully");
       res.json({ 
@@ -378,10 +376,8 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "No image data provided" });
       }
 
-      const fullImageUrl = `data:image/jpeg;base64,${imageUrl}`;
-
-      // Update user with the avatar
-      await storage.updateUser(userId, { avatar: fullImageUrl });
+      // Update user with the avatar  
+      await storage.updateUser(userId, { avatar: imageUrl });
 
       console.log("Avatar successfully updated for user", userId);
       res.json({ 

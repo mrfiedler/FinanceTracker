@@ -297,7 +297,7 @@ const Settings = () => {
               headers: {
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify({ imageUrl: imageUrl.split(',')[1] }), // Send only base64 data
+              body: JSON.stringify({ imageUrl }), // Send only base64 data
               credentials: 'include'
             });
 
@@ -462,24 +462,18 @@ const Settings = () => {
     const reader = new FileReader();
     reader.onloadend = async () => {
       const imageUrl = reader.result as string;
-      const base64Data = imageUrl.split(',')[1];
 
       const response = await fetch("/api/company/logo", {
         method: "POST",
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ imageUrl: base64Data }),
+        body: JSON.stringify({ imageUrl }),
         credentials: 'include'
       });
 
       if (response.ok) {
-        const data = await response.json();
-        // Update local user state with new logo
-        queryClient.setQueryData(['user'], (oldData: any) => ({
-          ...oldData,
-          companyLogo: data.logoUrl
-        }));
+        queryClient.invalidateQueries(['user']);
         toast({
           description: "Logo updated successfully",
         });
@@ -493,28 +487,23 @@ const Settings = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    console.log("Converting avatar to data URL");
+    console.log("Converting image to data URL");
     const reader = new FileReader();
     reader.onloadend = async () => {
       const imageUrl = reader.result as string;
-      const base64Data = imageUrl.split(',')[1];
 
       const response = await fetch("/api/users/avatar", {
         method: "POST",
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ imageUrl: base64Data }),
+        body: JSON.stringify({ imageUrl }),
         credentials: 'include'
       });
 
       if (response.ok) {
         const data = await response.json();
-        // Update local user state with new avatar
-        queryClient.setQueryData(['user'], (oldData: any) => ({
-          ...oldData,
-          avatar: data.avatarUrl
-        }));
+        queryClient.invalidateQueries(['user']);
         toast({
           description: "Avatar updated successfully",
         });
@@ -972,7 +961,7 @@ const Settings = () => {
                             className="border-gray-300 focus:border-primary"
                           />
                         ) : (
-                          <div className="py-2 px-3 bg-muted/30 rounded-md text-foreground font-medium min-h-9">
+                          <div className="py-2 px-3 bg-muted/30 roundedmd text-foreground font-medium min-h-9">
                             {companyRegNumber || 'No registration number set'}
                           </div>
                         )}
