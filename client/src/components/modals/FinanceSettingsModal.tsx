@@ -200,9 +200,12 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
         setIsProcessing(false);
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/categories'] });
+      // Also invalidate transactions to update UI in case deleted categories were used
+      queryClient.invalidateQueries({ queryKey: ['/api/finance/transactions'] });
       showSuccessNotification("Category deleted successfully");
+      resetCategoryForm();
     },
     onError: (error: Error) => {
       toast({
@@ -280,7 +283,10 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/accounts'] });
+      // Also invalidate transactions to update UI in case deleted accounts were used
+      queryClient.invalidateQueries({ queryKey: ['/api/finance/transactions'] });
       showSuccessNotification("Account deleted successfully");
+      resetAccountForm();
     },
     onError: (error: Error) => {
       toast({

@@ -46,7 +46,10 @@ import {
   Plus,
   ChevronLeft,
   Save,
-  UserPlus
+  UserPlus,
+  X,
+  CheckCircle,
+  ArrowUpCircle
 } from "lucide-react";
 import { 
   SiChase, 
@@ -75,6 +78,14 @@ const AddRevenueModal = ({ isOpen, onClose, revenue, isEditing = false }: AddRev
   const [activeTab, setActiveTab] = useState("revenue");
   const [newBusinessType, setNewBusinessType] = useState("");
   const [customBusinessTypeMode, setCustomBusinessTypeMode] = useState(false);
+  
+  // States for adding new categories and accounts on the fly
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [showAddAccount, setShowAddAccount] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newAccountName, setNewAccountName] = useState("");
+  const [addingCategory, setAddingCategory] = useState(false);
+  const [addingAccount, setAddingAccount] = useState(false);
 
   // Define types for the data we're fetching
   interface FinanceCategory {
@@ -182,6 +193,115 @@ const AddRevenueModal = ({ isOpen, onClose, revenue, isEditing = false }: AddRev
     ? financeCategories.filter((cat) => cat.type === 'revenue')
     : revenueCategories;
 
+  // Add category mutation
+  const addCategoryMutation = useMutation({
+    mutationFn: async (data: { name: string, type: string }) => {
+      setAddingCategory(true);
+      try {
+        const res = await apiRequest('POST', '/api/finance/categories', {
+          name: data.name,
+          type: data.type
+        });
+        return await res.json();
+      } finally {
+        setAddingCategory(false);
+      }
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/finance/categories'] });
+      setShowAddCategory(false);
+      setNewCategoryName("");
+      
+      if (data && data.value) {
+        revenueForm.setValue('category', data.value);
+      }
+      
+      toast({
+        title: "Category added",
+        description: "New revenue category has been created",
+        variant: "default",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to add category",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Add account mutation
+  const addAccountMutation = useMutation({
+    mutationFn: async (data: { name: string }) => {
+      setAddingAccount(true);
+      try {
+        const res = await apiRequest('POST', '/api/finance/accounts', {
+          name: data.name,
+          type: 'default'
+        });
+        return await res.json();
+      } finally {
+        setAddingAccount(false);
+      }
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/finance/accounts'] });
+      setShowAddAccount(false);
+      setNewAccountName("");
+      
+      if (data && data.value) {
+        revenueForm.setValue('account', data.value);
+      }
+      
+      toast({
+        title: "Account added",
+        description: "New account has been created",
+        variant: "default",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to add account",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Handle adding new category
+  const handleAddCategory = () => {
+    if (!newCategoryName.trim()) {
+      toast({
+        title: "Error",
+        description: "Category name cannot be empty",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    addCategoryMutation.mutate({
+      name: newCategoryName.trim(),
+      type: 'revenue'
+    });
+  };
+  
+  // Handle adding new account
+  const handleAddAccount = () => {
+    if (!newAccountName.trim()) {
+      toast({
+        title: "Error",
+        description: "Account name cannot be empty",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    addAccountMutation.mutate({
+      name: newAccountName.trim()
+    });
+  };
+  
   // Add Client mutation
   const addClientMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -433,23 +553,80 @@ const AddRevenueModal = ({ isOpen, onClose, revenue, isEditing = false }: AddRev
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Category *</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select category" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {Array.isArray(filteredRevenueCategories) && filteredRevenueCategories.map((category) => (
-                              <SelectItem key={category.value} value={category.value}>
-                                {category.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        {showAddCategory ? (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Input
+                                placeholder="Enter new category name"
+                                value={newCategoryName}
+                                onChange={(e) => setNewCategoryName(e.target.value)}
+                                className="flex-1"
+                              />
+                              <Button 
+                                type="button"
+                                size="sm"
+                                onClick={handleAddCategory}
+                                disabled={addingCategory}
+                                className="px-2"
+                              >
+                                {addingCategory ? "Adding..." : "Save"}
+                              </Button>
+                              <Button 
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setShowAddCategory(false)}
+                                className="px-2 h-9 w-9"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <div className="flex items-center">
+                              <ArrowUpCircle className="h-4 w-4 mr-2 text-green-500" />
+                              <span className="text-xs">This will be added as a Revenue category</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select category" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {filteredRevenueCategories.length === 0 ? (
+                                  <div className="px-2 py-4 text-center">
+                                    <p className="text-sm text-gray-500">No categories found</p>
+                                  </div>
+                                ) : (
+                                  filteredRevenueCategories.map((category) => (
+                                    <SelectItem key={category.value} value={category.value}>
+                                      {category.label}
+                                    </SelectItem>
+                                  ))
+                                )}
+                                <div className="px-2 py-1.5">
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    className="w-full h-8 justify-start text-sm font-normal"
+                                    onClick={() => {
+                                      setShowAddCategory(true);
+                                      setNewCategoryName("");
+                                    }}
+                                  >
+                                    <Plus className="h-3.5 w-3.5 mr-2" />
+                                    Add New Category
+                                  </Button>
+                                </div>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
@@ -497,37 +674,79 @@ const AddRevenueModal = ({ isOpen, onClose, revenue, isEditing = false }: AddRev
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Account *</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select account" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {Array.isArray(financeAccounts) && financeAccounts.length > 0 ? (
-                            financeAccounts.map((account) => (
-                              <SelectItem key={account.value} value={account.value}>
-                                <div className="flex items-center">
-                                  {renderAccountIcon(account.icon)}
-                                  {account.label}
+                      {showAddAccount ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Input
+                              placeholder="Enter new account name"
+                              value={newAccountName}
+                              onChange={(e) => setNewAccountName(e.target.value)}
+                              className="flex-1"
+                            />
+                            <Button 
+                              type="button"
+                              size="sm"
+                              onClick={handleAddAccount}
+                              disabled={addingAccount}
+                              className="px-2"
+                            >
+                              {addingAccount ? "Adding..." : "Save"}
+                            </Button>
+                            <Button 
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setShowAddAccount(false)}
+                              className="px-2 h-9 w-9"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select account" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {financeAccounts.length === 0 ? (
+                                <div className="px-2 py-4 text-center">
+                                  <p className="text-sm text-gray-500">No accounts found</p>
                                 </div>
-                              </SelectItem>
-                            ))
-                          ) : (
-                            bankAccounts.map((account) => (
-                              <SelectItem key={account.value} value={account.value}>
-                                <div className="flex items-center">
-                                  {renderAccountIcon(account.value)}
-                                  {account.label}
-                                </div>
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
+                              ) : (
+                                financeAccounts.map((account) => (
+                                  <SelectItem key={account.value} value={account.value}>
+                                    <div className="flex items-center">
+                                      {renderAccountIcon(account.icon)}
+                                      {account.label}
+                                    </div>
+                                  </SelectItem>
+                                ))
+                              )}
+                              <div className="px-2 py-1.5">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  className="w-full h-8 justify-start text-sm font-normal"
+                                  onClick={() => {
+                                    setShowAddAccount(true);
+                                    setNewAccountName("");
+                                  }}
+                                >
+                                  <Plus className="h-3.5 w-3.5 mr-2" />
+                                  Add New Account
+                                </Button>
+                              </div>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}

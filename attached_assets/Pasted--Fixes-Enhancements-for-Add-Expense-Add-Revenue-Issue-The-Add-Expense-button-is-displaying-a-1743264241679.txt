@@ -1,0 +1,54 @@
+🛠 Fixes & Enhancements for Add Expense & Add Revenue
+Issue:
+
+The Add Expense button is displaying accounts and categories that are not in the Finance Settings modal.
+
+The Accounts table shown in the Expense & Revenue modals does not match the accounts set in the Finance Settings modal.
+
+When users try to add an Expense or Revenue, but haven’t set up a category or account, they should be able to add them directly from the modal.
+
+Add Revenue modal is using a different client selection method compared to Create Quote and Add Subscription, which are better and should be used instead.
+
+Deleting a category or account freezes the app and closes the modal. The user should remain in the modal instead.
+
+🚀 Fixes & New Functionalities
+1️⃣ Fix Data Sync Between Finance Settings & Add Expense/Add Revenue Modals
+✅ Ensure that the categories and accounts shown in the Add Expense & Add Revenue modals match exactly with what’s in the Finance Settings modal.
+✅ Remove any incorrect, outdated, or system-generated categories/accounts.
+
+2️⃣ Allow Users to Add Categories & Accounts on the Fly
+💡 New Feature:
+
+If a user clicks Add Expense or Add Revenue, but hasn’t set up a Category or Account, allow them to add it directly from the modal without leaving the page.
+
+After adding a new category or account, it should immediately be available for selection in the Expense/Revenue form.
+
+Include a clear "+" button inside the Category and Account dropdowns to allow users to add new options instantly.
+
+🎯 End Goal:
+Users should never get stuck if they haven’t set up a category or account beforehand.
+
+3️⃣ Standardize Client Selection in Add Revenue Modal
+✅ Update the Add Revenue modal to use the same client selection method as Create Quote & Add Subscription.
+✅ Ensure consistency across the platform for a seamless user experience.
+
+4️⃣ Improve Delete Functionality for Categories & Accounts
+💡 Fixes Needed:
+
+When deleting a category or account, keep the user inside the Finance Settings modal instead of closing it.
+
+Prevent app freezing after deletion.
+
+Display a confirmation message after a successful delete (e.g., “Category successfully deleted”).
+
+🎯 End Goal:
+Deleting a category or account should be smooth and non-disruptive.
+
+🚀 Final Implementation Requirements:
+Thoroughly test the Expense & Revenue modals after implementing fixes.
+
+Ensure the Finance Settings modal fully syncs with all related functionalities.
+
+Optimize error handling so users receive proper feedback for all actions.
+
+Once these updates are completed, the Finance module will work seamlessly with accurate data, flexible inputs, and a more intuitive experience! 🚀
