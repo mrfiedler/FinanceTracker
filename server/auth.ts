@@ -47,13 +47,13 @@ export function setupAuth(app: Express) {
   // Set up session
   const sessionSettings: session.SessionOptions = {
     secret: SESSION_SECRET,
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
     store: storage.sessionStore,
     name: 'finance_tracker.sid',
     cookie: {
-      secure: false,
-      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
       sameSite: 'lax'
     }
