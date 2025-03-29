@@ -125,7 +125,7 @@ const AddRevenueModal = ({ isOpen, onClose, revenue, isEditing = false }: AddRev
   const customRevenueSchema = z.object({
     description: z.string().min(1, "Description is required"),
     amount: z.string().min(1, "Amount is required"),
-    clientId: z.string().min(1, "Client is required"),
+    clientId: z.string().refine(val => val === "new" || val.length > 0, "Client is required"),
     category: z.string().min(1, "Category is required"),
     date: z.string(),
     dueDate: z.string().optional(),
@@ -294,7 +294,7 @@ const AddRevenueModal = ({ isOpen, onClose, revenue, isEditing = false }: AddRev
   const addRevenueMutation = useMutation({
     mutationFn: async (data: any) => {
       // If creating a new client as part of this submission
-      if (showNewClientForm && data.newClient) {
+      if (data.clientId === "new" && data.newClient) {
         try {
           const newClient = await createClientMutation.mutateAsync({
             name: data.newClient.name,
@@ -375,16 +375,25 @@ const AddRevenueModal = ({ isOpen, onClose, revenue, isEditing = false }: AddRev
   const handleClientChange = (value: string) => {
     if (value === "new") {
       setShowNewClientForm(true);
-      revenueForm.setValue("clientId", "");
+      revenueForm.setValue("clientId", "new");
+      // Initialize the newClient fields
+      revenueForm.setValue("newClient", {
+        name: "",
+        email: "",
+        phone: "",
+        businessType: ""
+      });
     } else {
       setShowNewClientForm(false);
       revenueForm.setValue("clientId", value);
+      revenueForm.setValue("newClient", undefined);
     }
   };
 
   // Cancel creating a new client
   const cancelNewClientForm = () => {
     setShowNewClientForm(false);
+    revenueForm.setValue("clientId", "");
     revenueForm.setValue("newClient", undefined);
   };
 
