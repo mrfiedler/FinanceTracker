@@ -389,7 +389,7 @@ const Settings = () => {
     reader.onloadend = () => {
       const dataUrl = reader.result as string;
       setCompanyLogo(dataUrl);
-      
+
       // Upload to server
       try {
         uploadCompanyLogoMutation.mutate(dataUrl);
@@ -413,7 +413,7 @@ const Settings = () => {
     reader.onloadend = () => {
       const dataUrl = reader.result as string;
       setProfilePhoto(dataUrl);
-      
+
       // Upload to server
       try {
         uploadProfilePhotoMutation.mutate(dataUrl);
@@ -439,10 +439,7 @@ const Settings = () => {
   return (
     <main className="w-full h-full overflow-y-auto bg-background pb-20">
       <div className="page-header mb-14 pt-8">
-        <h1 className="page-title text-3xl font-bold mb-3">Account Settings</h1>
-        <p className="page-description text-muted-foreground text-lg">
-          Manage your profile, company information, and payment settings
-        </p>
+        {/*Removed header text here*/}
       </div>
 
       <Tabs defaultValue="profile" value={activeTab} onValueChange={setActiveTab} className="space-y-8">
