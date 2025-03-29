@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 import {
   Form,
   FormControl,
@@ -400,6 +401,20 @@ const AddRevenueModal = ({ isOpen, onClose, revenue, isEditing = false }: AddRev
     addRevenueMutation.mutate(submissionData);
   };
 
+  // When user selects "Create new client" in the dropdown
+  const handleClientChange = (value: string) => {
+    if (value === "new") {
+      setShowNewClientForm(true);
+      setActiveTab("client");
+      revenueForm.setValue("clientId", "");
+    } else {
+      setShowNewClientForm(false);
+      setActiveTab("revenue");
+      // Convert string to number for non-"new" client IDs
+      revenueForm.setValue("clientId", value);
+    }
+  };
+  
   // Toggle new client form
   const toggleNewClientForm = () => {
     setShowNewClientForm(!showNewClientForm);
@@ -513,35 +528,30 @@ const AddRevenueModal = ({ isOpen, onClose, revenue, isEditing = false }: AddRev
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Client *</FormLabel>
-                        <div className="space-y-2">
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select client" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {Array.isArray(clients) && clients.map((client) => (
-                                <SelectItem key={client.id} value={client.id.toString()}>
-                                  {client.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            size="sm" 
-                            className="w-full text-xs h-7"
-                            onClick={() => setActiveTab("client")}
-                          >
-                            <UserPlus className="h-3 w-3 mr-1" />
-                            Add New Client
-                          </Button>
-                        </div>
+                        <Select
+                          onValueChange={(value) => handleClientChange(value)}
+                          value={field.value ? field.value.toString() : ""}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select client" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="new" className="font-medium text-primary">
+                              <div className="flex items-center">
+                                <UserPlus className="mr-2 h-4 w-4" />
+                                Create New Client
+                              </div>
+                            </SelectItem>
+                            <Separator className="my-1" />
+                            {Array.isArray(clients) && clients.map((client) => (
+                              <SelectItem key={client.id} value={client.id.toString()}>
+                                {client.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}

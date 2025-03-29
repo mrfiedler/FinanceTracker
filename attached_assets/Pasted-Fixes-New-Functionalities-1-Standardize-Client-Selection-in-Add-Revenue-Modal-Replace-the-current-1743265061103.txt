@@ -1,0 +1,59 @@
+Fixes & New Functionalities
+1. Standardize Client Selection in Add Revenue Modal
+Replace the current flawed client selection method in the Add Revenue modal with the better one used in Create Quote & Add Subscription.
+
+Ensure full consistency across all modals in the platform.
+
+Goal: Users should experience a seamless and uniform way of selecting clients across different financial actions.
+
+2. Rebuild the Tab System for Finance Modals
+The current tab system needs to be redesigned with a clearer, more intuitive layout.
+
+Ensure smooth navigation between sections (Category, Accounts, Transactions).
+
+Improve UI clarity for adding, editing, and deleting items.
+
+The new system should be consistent with the rest of the platform's UI/UX style.
+
+3. Fix Navigation Freezing Issue After Deleting Accounts & Categories
+Critical Bug:
+
+When deleting a Category or Account, the app freezes and prevents further navigation.
+
+This issue has persisted despite multiple fixes, meaning deeper debugging is required.
+
+The user must remain inside the modal after deleting a category or account.
+
+Prevent unexpected modal closures or app crashes.
+
+Implement a success message after deletion.
+
+Goal: Users should be able to delete categories/accounts without disrupting their workflow.
+
+4. Fix Incorrect Account Name Display in Transactions Table
+Bug:
+
+When adding a Revenue or Expense, the transactions table incorrectly shows “Default” as the account name.
+
+This is incorrect because “Default” is not an account created by the user.
+
+Instead, the table must show the actual account name that the user selected.
+
+Fix how accounts are mapped when displaying transactions.
+
+Ensure that each row accurately reflects the correct category and account names.
+
+Goal: Users should always see the correct data in their finance records—no phantom or incorrect entries.
+
+Next Steps & Implementation Plan
+Deep debug and permanently fix the navigation freezing issue.
+
+Rebuild the Finance modal’s tab system for better UX/UI.
+
+Replace the Add Revenue modal’s client selection method with the standard one used elsewhere.
+
+Ensure the transaction table reflects the correct account names, not “Default.”
+
+Test everything thoroughly to guarantee a smooth, bug-free experience.
+
+End Goal: The Finance module will be fully functional, bug-free, and visually optimized, improving the overall user experience significantly.
