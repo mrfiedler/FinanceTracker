@@ -442,7 +442,9 @@ const Settings = () => {
         if (response.ok) {
           queryClient.invalidateQueries(['user']);
           toast({
-            description: "Logo updated successfully",
+            title: "Success",
+            description: "Logo updated successfully. It may take a moment to be displayed.",
+            variant: "default",
           });
         } else {
           toast({
@@ -483,7 +485,9 @@ const Settings = () => {
           const data = await response.json();
           queryClient.invalidateQueries(['user']);
           toast({
-            description: "Avatar updated successfully",
+            title: "Success",
+            description: "Avatar updated successfully. It may take a moment to be displayed.",
+            variant: "default",
           });
         } else {
           toast({
@@ -960,7 +964,7 @@ const Settings = () => {
                             className="border-gray-300 focus:border-primary"
                           />
                         ) : (
-                          <div className="py-2 px-3 bg-muted/30 roundedmd text-foreground font-medium min-h-9">
+                          <div className="py-2 px-3 bg-muted/30 roundedmd text-foreground fontmedium min-h-9">
                             {companyRegNumber || 'No registration number set'}
                           </div>
                         )}
