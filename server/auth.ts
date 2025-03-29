@@ -336,13 +336,22 @@ export function setupAuth(app: Express) {
       const userId = (req.user as SelectUser).id;
       console.log(`Processing company logo upload for user ${userId}`);
       
-      // In a real app, this would handle file upload and save the logo
-      // For now, we'll just simulate a successful upload
+      // Get the actual image URL from the request body
+      const { imageUrl } = req.body;
+      
+      if (!imageUrl) {
+        return res.status(400).json({ message: "No image URL provided" });
+      }
+      
+      console.log(`Using provided company logo URL: ${imageUrl}`);
+      
+      // Here you would update the company info with the logo URL
+      // For now, we'll just return the provided URL
       console.log("Company logo uploaded successfully");
       res.json({ 
         success: true,
         message: "Company logo uploaded successfully",
-        logoUrl: "https://api.dicebear.com/7.x/identicon/svg?seed=Company" 
+        logoUrl: imageUrl
       });
     } catch (error) {
       console.error("Error uploading company logo:", error);
@@ -361,18 +370,23 @@ export function setupAuth(app: Express) {
       const userId = (req.user as SelectUser).id;
       console.log(`Processing avatar upload for user ${userId}`);
       
-      // In a real app, this would handle file upload and save the avatar
-      // For now, we'll just simulate a successful upload with a random avatar
-      const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}-${Date.now()}`;
+      // Get the actual image URL from the request body
+      const { imageUrl } = req.body;
       
-      // Update user with new avatar URL
-      await storage.updateUser(userId, { avatar: avatarUrl });
+      if (!imageUrl) {
+        return res.status(400).json({ message: "No image URL provided" });
+      }
+      
+      console.log(`Using provided image URL: ${imageUrl}`);
+      
+      // Update user with the provided avatar URL
+      await storage.updateUser(userId, { avatar: imageUrl });
       
       console.log(`Avatar successfully updated for user ${userId}`);
       res.json({ 
         success: true,
         message: "Avatar uploaded successfully",
-        avatarUrl 
+        avatarUrl: imageUrl
       });
     } catch (error) {
       console.error("Error uploading avatar:", error);

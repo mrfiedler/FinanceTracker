@@ -128,20 +128,38 @@ const Settings = () => {
   // Upload profile photo mutation
   const uploadProfilePhotoMutation = useMutation({
     mutationFn: async (photoFile: File) => {
-      const formData = new FormData();
-      formData.append('avatar', photoFile);
+      // Convert file to base64 data URL
+      return new Promise<any>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(photoFile);
+        reader.onload = async () => {
+          try {
+            const imageUrl = reader.result as string;
+            console.log("Converting image to data URL");
+            
+            // Send the image URL to the server
+            const response = await fetch('/api/users/avatar', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ imageUrl }),
+              credentials: 'include'
+            });
 
-      const response = await fetch('/api/users/avatar', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include'
+            if (!response.ok) {
+              throw new Error('Failed to upload profile photo');
+            }
+
+            resolve(await response.json());
+          } catch (error) {
+            reject(error);
+          }
+        };
+        reader.onerror = (error) => {
+          reject(error);
+        };
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to upload profile photo');
-      }
-
-      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -151,7 +169,8 @@ const Settings = () => {
       setProfilePhoto(null);
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Error uploading profile photo:", error);
       toast({
         title: "Failed to update profile photo",
         description: "There was an error uploading your profile photo. Please try again.",
@@ -222,20 +241,38 @@ const Settings = () => {
   // Upload company logo mutation
   const uploadCompanyLogoMutation = useMutation({
     mutationFn: async (logoFile: File) => {
-      const formData = new FormData();
-      formData.append('logo', logoFile);
+      // Convert file to base64 data URL
+      return new Promise<any>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(logoFile);
+        reader.onload = async () => {
+          try {
+            const imageUrl = reader.result as string;
+            console.log("Converting company logo to data URL");
+            
+            // Send the image URL to the server
+            const response = await fetch('/api/company/logo', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ imageUrl }),
+              credentials: 'include'
+            });
 
-      const response = await fetch('/api/company/logo', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include'
+            if (!response.ok) {
+              throw new Error('Failed to upload company logo');
+            }
+
+            resolve(await response.json());
+          } catch (error) {
+            reject(error);
+          }
+        };
+        reader.onerror = (error) => {
+          reject(error);
+        };
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to upload logo');
-      }
-
-      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -243,8 +280,10 @@ const Settings = () => {
         description: "Your company logo has been uploaded successfully.",
       });
       setCompanyLogo(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Error uploading company logo:", error);
       toast({
         title: "Failed to upload logo",
         description: "There was an error uploading your company logo. Please try again.",
