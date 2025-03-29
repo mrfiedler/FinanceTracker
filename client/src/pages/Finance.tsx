@@ -767,14 +767,13 @@ const renderTransactionsTable = (
       <table className="w-full">
         <thead className="bg-muted/50">
           <tr className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            <th className="px-6 py-3 font-medium">Creation Date</th>
+            <th className="px-6 py-3 font-medium">Status</th>
             <th className="px-6 py-3 font-medium">Due Date</th>
             <th className="px-6 py-3 font-medium">Description</th>
             <th className="px-6 py-3 font-medium">Category</th>
             <th className="px-6 py-3 font-medium">Account</th>
             <th className="px-6 py-3 font-medium">Amount</th>
             <th className="px-6 py-3 font-medium">Type</th>
-            <th className="px-6 py-3 font-medium">Status</th>
             <th className="px-6 py-3 font-medium">Actions</th>
           </tr>
         </thead>
@@ -788,8 +787,42 @@ const renderTransactionsTable = (
                   : ''
               }`}
             >
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                {formatDate(transaction.date)}
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-center justify-center">
+                  {(() => {
+                    const transactionKey = `${transaction.type}-${transaction.id}`;
+                    // Get the current display status (from optimistic updates if available)
+                    const isPaid = optimisticUpdates[transactionKey] !== undefined 
+                      ? optimisticUpdates[transactionKey] 
+                      : transaction.isPaid;
+
+                    return (
+                      <div className="flex gap-2 items-center">
+                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                          isPaid 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' 
+                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                        }`}>
+                          {isPaid ? 'Paid' : 'Unpaid'}
+                        </span>
+                        <div 
+                          className={`w-10 h-5 rounded-full flex items-center p-0.5 cursor-pointer transition-colors ${
+                            isPaid 
+                              ? 'bg-green-500' 
+                              : 'bg-muted-foreground/30'
+                          }`}
+                          onClick={() => updateTransactionStatus(transaction)}
+                        >
+                          <div 
+                            className={`w-4 h-4 rounded-full bg-white transform transition-transform duration-200 shadow-sm ${
+                              isPaid ? 'translate-x-5' : 'translate-x-0'
+                            }`}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
               </td>
               <td className={`px-6 py-4 whitespace-nowrap text-sm ${
                 transaction.dueDate && new Date(transaction.dueDate) < new Date() && !transaction.isPaid
@@ -832,35 +865,6 @@ const renderTransactionsTable = (
                 }`}>
                   {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
                 </span>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="flex items-center justify-center">
-                  {/* Get the transaction key for optimistic updates */}
-                  {(() => {
-                    const transactionKey = `${transaction.type}-${transaction.id}`;
-                    // Get the current display status (from optimistic updates if available)
-                    const isPaid = optimisticUpdates[transactionKey] !== undefined 
-                      ? optimisticUpdates[transactionKey] 
-                      : transaction.isPaid;
-
-                    return (
-                      <div 
-                        className={`w-10 h-5 rounded-full flex items-center p-0.5 cursor-pointer transition-colors ${
-                          isPaid 
-                            ? 'bg-green-500' 
-                            : 'bg-muted-foreground/30'
-                        }`}
-                        onClick={() => updateTransactionStatus(transaction)}
-                      >
-                        <div 
-                          className={`w-4 h-4 rounded-full bg-white transform transition-transform duration-200 shadow-sm ${
-                            isPaid ? 'translate-x-5' : 'translate-x-0'
-                          }`}
-                        />
-                      </div>
-                    );
-                  })()}
-                </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center space-x-2 justify-center">
