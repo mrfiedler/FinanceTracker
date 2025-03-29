@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTheme } from "@/context/ThemeContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { 
   Menu, Search, Bell, Sun, Moon, X, 
-  Check, Clock, CheckCheck, Info, AlertTriangle
+  Check, Clock, CheckCheck, Info, AlertTriangle,
+  FileText, User, DollarSign, File, CalendarClock
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -21,13 +22,50 @@ import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
 import { Notification } from "@shared/schema";
 import { format, formatDistanceToNow } from "date-fns";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { debounce } from "@/lib/utils";
 
 declare global {
   interface Window {
     toggleSidebar?: () => void;
   }
+}
+
+// Define search result types
+interface SearchResult {
+  clients: Array<{
+    id: number;
+    name: string;
+    email?: string;
+    phone?: string;
+  }>;
+  contracts: Array<{
+    id: number;
+    title: string;
+    description?: string;
+    status: string;
+  }>;
+  quotes: Array<{
+    id: number;
+    title: string;
+    description?: string;
+    status: string;
+  }>;
+  transactions: Array<{
+    id: number;
+    description?: string;
+    category?: string;
+    type: string;
+    amount?: number;
+  }>;
+  subscriptions: Array<{
+    id: number;
+    name?: string;
+    description?: string;
+    status?: string;
+    amount?: number;
+  }>;
 }
 
 const Header = () => {
@@ -37,6 +75,12 @@ const Header = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showSearch, setShowSearch] = useState(false);
   const [location, setLocation] = useLocation();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const searchResultsRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch notifications
   const { data: notifications = [], isLoading: isLoadingNotifications, refetch: refetchNotifications } = 
@@ -134,6 +178,73 @@ const Header = () => {
     }
   };
 
+  // Search functionality
+  const performSearch = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults(null);
+      setShowResults(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+      if (!response.ok) {
+        throw new Error('Search request failed');
+      }
+      const data = await response.json();
+      setSearchResults(data);
+      setShowResults(true);
+    } catch (error) {
+      console.error('Search error:', error);
+      toast({
+        title: "Search failed",
+        description: "Unable to complete your search. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Create debounced search function
+  const debouncedSearch = debounce((query: string) => {
+    performSearch(query);
+  }, 300);
+
+  // Handle search input changes
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    debouncedSearch(query);
+  };
+
+  // Handle clicking on a search result
+  const handleResultClick = (path: string) => {
+    setLocation(path);
+    setShowResults(false);
+    setSearchQuery("");
+  };
+
+  // Close search results when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchResultsRef.current && 
+        !searchResultsRef.current.contains(event.target as Node) &&
+        searchInputRef.current && 
+        !searchInputRef.current.contains(event.target as Node)
+      ) {
+        setShowResults(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   // Monitor screen size changes
   useEffect(() => {
     const handleResize = () => {
@@ -148,6 +259,38 @@ const Header = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [showSearch]);
+
+  // Handle escape key to close search results
+  useEffect(() => {
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowResults(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscapeKey);
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, []);
+
+  // Get appropriate icon for search result type
+  const getSearchResultIcon = (type: string) => {
+    switch(type) {
+      case 'client':
+        return <User className="h-4 w-4" />;
+      case 'contract':
+        return <File className="h-4 w-4" />;
+      case 'quote':
+        return <FileText className="h-4 w-4" />;
+      case 'transaction':
+        return <DollarSign className="h-4 w-4" />;
+      case 'subscription':
+        return <CalendarClock className="h-4 w-4" />;
+      default:
+        return <Search className="h-4 w-4" />;
+    }
+  };
 
   const toggleSidebar = () => {
     if (window.toggleSidebar) {
@@ -196,13 +339,184 @@ const Header = () => {
             
             <div className={`relative w-full ${isMobile && showSearch ? 'pl-10' : ''} max-w-md mx-auto`}>
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-gray-400 dark:text-[#b3b3b3]" />
+                {isSearching ? (
+                  <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Search className="h-4 w-4 text-gray-400 dark:text-[#b3b3b3]" />
+                )}
               </div>
               <input 
+                ref={searchInputRef}
                 type="text" 
-                placeholder="Search..." 
+                value={searchQuery}
+                onChange={handleSearchChange}
+                placeholder="Search clients, contracts, quotes..." 
                 className="pl-10 pr-4 py-2 w-full rounded-lg text-sm bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary"
               />
+
+              {/* Search results dropdown */}
+              {showResults && searchResults && (
+                <div 
+                  ref={searchResultsRef}
+                  className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 max-h-[70vh] overflow-auto"
+                >
+                  {/* No results message */}
+                  {Object.values(searchResults).every(arr => arr.length === 0) && (
+                    <div className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                      No results found for "{searchQuery}"
+                    </div>
+                  )}
+                  
+                  {/* Clients section */}
+                  {searchResults.clients.length > 0 && (
+                    <div>
+                      <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                        Clients
+                      </div>
+                      <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                        {searchResults.clients.map(client => (
+                          <div 
+                            key={`client-${client.id}`}
+                            className="p-3 flex items-center gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                            onClick={() => handleResultClick(`/clients/${client.id}`)}
+                          >
+                            <div className="h-8 w-8 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 rounded-full flex items-center justify-center flex-shrink-0">
+                              {getSearchResultIcon('client')}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{client.name}</p>
+                              {client.email && (
+                                <p className="text-xs text-gray-500 dark:text-gray-400">{client.email}</p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Contracts section */}
+                  {searchResults.contracts.length > 0 && (
+                    <div>
+                      <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                        Contracts
+                      </div>
+                      <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                        {searchResults.contracts.map(contract => (
+                          <div 
+                            key={`contract-${contract.id}`}
+                            className="p-3 flex items-center gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                            onClick={() => handleResultClick(`/contracts/${contract.id}`)}
+                          >
+                            <div className="h-8 w-8 bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300 rounded-full flex items-center justify-center flex-shrink-0">
+                              {getSearchResultIcon('contract')}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{contract.title}</p>
+                              <div className="flex items-center mt-1">
+                                <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">
+                                  {contract.status}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Quotes section */}
+                  {searchResults.quotes.length > 0 && (
+                    <div>
+                      <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                        Quotes
+                      </div>
+                      <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                        {searchResults.quotes.map(quote => (
+                          <div 
+                            key={`quote-${quote.id}`}
+                            className="p-3 flex items-center gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                            onClick={() => handleResultClick(`/quotes/${quote.id}`)}
+                          >
+                            <div className="h-8 w-8 bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300 rounded-full flex items-center justify-center flex-shrink-0">
+                              {getSearchResultIcon('quote')}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{quote.title}</p>
+                              <div className="flex items-center mt-1">
+                                <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">
+                                  {quote.status}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Transactions section */}
+                  {searchResults.transactions.length > 0 && (
+                    <div>
+                      <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                        Transactions
+                      </div>
+                      <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                        {searchResults.transactions.map(transaction => (
+                          <div 
+                            key={`transaction-${transaction.id}`}
+                            className="p-3 flex items-center gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                            onClick={() => handleResultClick(`/finance`)}
+                          >
+                            <div className="h-8 w-8 bg-amber-100 dark:bg-amber-900 text-amber-600 dark:text-amber-300 rounded-full flex items-center justify-center flex-shrink-0">
+                              {getSearchResultIcon('transaction')}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{transaction.description || `Transaction #${transaction.id}`}</p>
+                              <div className="flex items-center mt-1">
+                                <Badge variant="outline" className={`text-xs px-1.5 py-0 h-5 ${transaction.type === 'income' ? 'text-green-600 dark:text-green-400 border-green-300 dark:border-green-700' : 'text-red-600 dark:text-red-400 border-red-300 dark:border-red-700'}`}>
+                                  {transaction.type}
+                                </Badge>
+                                {transaction.category && (
+                                  <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">{transaction.category}</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Subscriptions section */}
+                  {searchResults.subscriptions.length > 0 && (
+                    <div>
+                      <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                        Subscriptions
+                      </div>
+                      <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                        {searchResults.subscriptions.map(subscription => (
+                          <div 
+                            key={`subscription-${subscription.id}`}
+                            className="p-3 flex items-center gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                            onClick={() => handleResultClick(`/subscriptions`)}
+                          >
+                            <div className="h-8 w-8 bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 rounded-full flex items-center justify-center flex-shrink-0">
+                              {getSearchResultIcon('subscription')}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{subscription.name || `Subscription #${subscription.id}`}</p>
+                              {subscription.description && (
+                                <p className="text-xs text-gray-500 dark:text-gray-400">{subscription.description}</p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           

@@ -1004,6 +1004,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Global search endpoint
+  app.get("/api/search", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const query = req.query.q as string;
+      
+      if (!query || query.trim().length === 0) {
+        return res.json({
+          clients: [],
+          contracts: [],
+          quotes: [],
+          transactions: [],
+          subscriptions: []
+        });
+      }
+      
+      const lowercaseQuery = query.toLowerCase();
+      
+      // Search clients
+      const clients = await storage.getClients();
+      const matchedClients = clients.filter(client => 
+        client.name.toLowerCase().includes(lowercaseQuery) || 
+        (client.email && client.email.toLowerCase().includes(lowercaseQuery)) ||
+        (client.phone && client.phone.toLowerCase().includes(lowercaseQuery))
+      );
+      
+      // Search contracts
+      const contracts = await storage.getContracts();
+      const matchedContracts = contracts.filter(contract => 
+        contract.title.toLowerCase().includes(lowercaseQuery) || 
+        (contract.description && contract.description.toLowerCase().includes(lowercaseQuery)) ||
+        contract.status.toLowerCase().includes(lowercaseQuery)
+      );
+      
+      // Search quotes
+      const quotes = await storage.getQuotes();
+      const matchedQuotes = quotes.filter(quote => 
+        quote.title.toLowerCase().includes(lowercaseQuery) || 
+        (quote.description && quote.description.toLowerCase().includes(lowercaseQuery)) ||
+        quote.status.toLowerCase().includes(lowercaseQuery)
+      );
+      
+      // Search transactions
+      const transactions = await storage.getTransactions();
+      const matchedTransactions = transactions.filter(transaction => 
+        (transaction.description && transaction.description.toLowerCase().includes(lowercaseQuery)) || 
+        (transaction.category && transaction.category.toLowerCase().includes(lowercaseQuery)) ||
+        transaction.type.toLowerCase().includes(lowercaseQuery)
+      );
+
+      // Search subscriptions
+      const subscriptions = await storage.getSubscriptions();
+      const matchedSubscriptions = subscriptions.filter(subscription => 
+        (subscription.name && subscription.name.toLowerCase().includes(lowercaseQuery)) || 
+        (subscription.description && subscription.description.toLowerCase().includes(lowercaseQuery)) ||
+        (subscription.status && subscription.status.toLowerCase().includes(lowercaseQuery))
+      );
+      
+      res.json({
+        clients: matchedClients.slice(0, 5),
+        contracts: matchedContracts.slice(0, 5),
+        quotes: matchedQuotes.slice(0, 5),
+        transactions: matchedTransactions.slice(0, 5),
+        subscriptions: matchedSubscriptions.slice(0, 5)
+      });
+    } catch (error) {
+      console.error("Error in global search:", error);
+      res.status(500).json({ message: "Error performing search" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

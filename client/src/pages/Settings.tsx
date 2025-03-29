@@ -50,7 +50,7 @@ import {
   Check,
   AlertCircle,
   ArrowUpDown,
-  Reload as ReloadIcon
+  RefreshCw
 } from "lucide-react";
 
 const Settings = () => {
@@ -580,7 +580,7 @@ const Settings = () => {
                         <Avatar className="h-24 w-24 border-4 border-background shadow-md relative">
                           {isAvatarLoading && (
                             <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-full">
-                              <ReloadIcon className="h-4 w-4 animate-spin" />
+                              <RefreshCw className="h-4 w-4 animate-spin" />
                             </div>
                           )}
                           <AvatarImage
@@ -874,7 +874,7 @@ const Settings = () => {
                       <div className="w-24 h-24 bg-muted/60 rounded-lg flex items-center justify-center overflow-hidden border border-border/60 shadow-sm relative">
                         {isLogoLoading && (
                           <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-lg">
-                            <ReloadIcon className="h-6 w-6 animate-spin" />
+                            <RefreshCw className="h-6 w-6 animate-spin" />
                           </div>
                         )}
                         {user?.companyLogo ? (

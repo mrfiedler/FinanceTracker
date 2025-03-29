@@ -48,6 +48,9 @@ export interface IStorage {
   // Revenues
   getRevenue(id: number): Promise<Revenue | undefined>;
   getRevenues(filters?: { dateRange?: string }): Promise<Revenue[]>;
+  
+  // Transactions (combined revenues and expenses)
+  getTransactions(): Promise<(Revenue | Expense)[]>;
   createRevenue(revenue: InsertRevenue): Promise<Revenue>;
   updateRevenue(id: number, revenue: Partial<Revenue>): Promise<Revenue>;
   deleteRevenue(id: number): Promise<boolean>;
@@ -391,6 +394,27 @@ export class MemStorage implements IStorage {
   
   async deleteRevenue(id: number): Promise<boolean> {
     return this.revenues.delete(id);
+  }
+  
+  // Transactions (combined revenues and expenses)
+  async getTransactions(): Promise<(Revenue | Expense)[]> {
+    const revenues = Array.from(this.revenues.values()).map(revenue => ({
+      ...revenue,
+      type: 'income',
+      description: revenue.description || 'Revenue'
+    }));
+    
+    const expenses = Array.from(this.expenses.values()).map(expense => ({
+      ...expense,
+      type: 'expense',
+      description: expense.description || 'Expense'
+    }));
+    
+    const transactions = [...revenues, ...expenses];
+    
+    return transactions.sort((a, b) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
   }
   
   // Quotes
@@ -1449,6 +1473,32 @@ export class DatabaseStorage implements IStorage {
       .returning({ id: revenues.id });
     
     return result.length > 0;
+  }
+  
+  // Transactions (combined revenues and expenses)
+  async getTransactions(): Promise<(Revenue | Expense)[]> {
+    // Get all expenses and add type property
+    const expensesData = await db.select().from(expenses);
+    const expenseResults = expensesData.map(expense => ({
+      ...expense,
+      type: 'expense',
+      description: expense.description || 'Expense'
+    }));
+    
+    // Get all revenues and add type property
+    const revenuesData = await db.select().from(revenues);
+    const revenueResults = revenuesData.map(revenue => ({
+      ...revenue,
+      type: 'income',
+      description: revenue.description || 'Revenue'
+    }));
+    
+    // Combine and sort by date descending
+    const transactions = [...expenseResults, ...revenueResults];
+    
+    return transactions.sort((a, b) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
   }
   
   // Quotes
