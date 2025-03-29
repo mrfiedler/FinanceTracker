@@ -1193,16 +1193,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Fetching gamification data for user ${userId}`);
       
       // In a real implementation, this would fetch from a database
-      // For now, we'll use defaults that match what's in the screenshot
+      // For now, we'll use defaults for a new user at level 1
       const gamificationData = {
-        level: 9,
-        points: 1600,
-        badges: [
-          "Client Acquisition Level 1",
-          "Quote Master Level 1",
-          "Deal Closer Level 1",
-          "Revenue Milestones Level 1"
-        ]
+        level: 1,
+        points: 0,
+        badges: []
       };
       
       res.json(gamificationData);
