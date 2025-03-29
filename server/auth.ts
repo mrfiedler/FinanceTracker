@@ -337,7 +337,6 @@ export function setupAuth(app: Express) {
       console.log(`Processing company logo upload for user ${userId}`);
 
       // Get the actual image URL from the request body
-      const userId = (req.user as SelectUser).id;
       const { imageUrl } = req.body;
 
       if (!imageUrl) {
