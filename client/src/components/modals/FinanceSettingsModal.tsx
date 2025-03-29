@@ -369,14 +369,22 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
   const handleDeleteConfirm = () => {
     if (!itemToDelete) return;
     
-    if (itemToDelete.type === 'category') {
-      deleteCategoryMutation.mutate(itemToDelete.id);
-    } else {
-      deleteAccountMutation.mutate(itemToDelete.id);
-    }
+    setIsProcessing(true); // Set processing state to true during deletion
     
-    setDeleteDialogOpen(false);
-    setItemToDelete(null);
+    try {
+      if (itemToDelete.type === 'category') {
+        deleteCategoryMutation.mutate(itemToDelete.id);
+      } else {
+        deleteAccountMutation.mutate(itemToDelete.id);
+      }
+    } finally {
+      // Close dialog and clean up, but keep the main modal open
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
+      
+      // We don't need to set isProcessing to false here because 
+      // the mutation's finally block will handle that
+    }
   };
 
   // Reset form functions
@@ -420,9 +428,8 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
       resetCategoryForm();
       resetAccountForm();
       setSearchQuery("");
+      onClose(); // Only call onClose when actually closing the dialog
     }
-    
-    onClose();
   };
 
   return (
