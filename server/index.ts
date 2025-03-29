@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import { registerRoutes } from "./routes";
 import { storage } from "./storage";
+import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 
