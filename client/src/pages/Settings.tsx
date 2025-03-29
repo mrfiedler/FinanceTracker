@@ -438,14 +438,14 @@ const Settings = () => {
 
   return (
     <main className="w-full h-full overflow-y-auto bg-background pb-20">
-      <div className="page-header mb-6">
-        <h1 className="page-title">Account Settings</h1>
-        <p className="page-description">
+      <div className="page-header mb-14 pt-8">
+        <h1 className="page-title text-3xl font-bold mb-3">Account Settings</h1>
+        <p className="page-description text-muted-foreground text-lg">
           Manage your profile, company information, and payment settings
         </p>
       </div>
 
-      <Tabs defaultValue="profile" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs defaultValue="profile" value={activeTab} onValueChange={setActiveTab} className="space-y-8">
         <div className="flex justify-center w-full border-b border-border/40 mb-2">
           <TabsList className="h-12 bg-transparent p-0 w-full max-w-3xl grid grid-cols-3 gap-0">
             <TabsTrigger 
