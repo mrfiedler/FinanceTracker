@@ -11,7 +11,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { 
   Card,
   CardContent, 
@@ -24,17 +23,11 @@ import {
   Settings, 
   Edit, 
   Trash2, 
-  Plus, 
   Wallet, 
-  BanknoteIcon, 
-  Landmark, 
   ArrowUpCircle, 
   ArrowDownCircle, 
   DollarSign,
-  SearchIcon,
   CheckCircle,
-  AlertCircle,
-  X,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -71,7 +64,6 @@ interface FinanceSettingsModalProps {
 
 const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) => {
   const [activeTab, setActiveTab] = useState("categories");
-  const [searchQuery, setSearchQuery] = useState("");
   
   // Category state
   const [categoryName, setCategoryName] = useState("");
@@ -122,18 +114,9 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     }
   });
 
-  // Filter data based on search
-  const filteredCategories = categories.filter(
-    category => category.label.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  
-  const filteredAccounts = accounts.filter(
-    account => account.label.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   // Organize categories by type
-  const expenseCategories = filteredCategories.filter(cat => cat.type === 'expense');
-  const revenueCategories = filteredCategories.filter(cat => cat.type === 'revenue');
+  const expenseCategories = categories.filter(cat => cat.type === 'expense');
+  const revenueCategories = categories.filter(cat => cat.type === 'revenue');
 
   // Mutations for categories
   const createCategoryMutation = useMutation({
@@ -200,9 +183,8 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
         setIsProcessing(false);
       }
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/categories'] });
-      // Also invalidate transactions to update UI in case deleted categories were used
       queryClient.invalidateQueries({ queryKey: ['/api/finance/transactions'] });
       showSuccessNotification("Category deleted successfully");
       resetCategoryForm();
@@ -223,7 +205,7 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
       try {
         const res = await apiRequest('POST', '/api/finance/accounts', {
           name: data.name,
-          type: 'default' // Simple accounts only need a name
+          type: 'default'
         });
         return await res.json();
       } finally {
@@ -250,7 +232,7 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
       try {
         const res = await apiRequest('PUT', `/api/finance/accounts/${data.id}`, {
           name: data.name,
-          type: 'default' // Simple accounts only need a name
+          type: 'default'
         });
         return await res.json();
       } finally {
@@ -283,7 +265,6 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/accounts'] });
-      // Also invalidate transactions to update UI in case deleted accounts were used
       queryClient.invalidateQueries({ queryKey: ['/api/finance/transactions'] });
       showSuccessNotification("Account deleted successfully");
       resetAccountForm();
@@ -292,6 +273,34 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
       toast({
         title: "Error",
         description: `Failed to delete account: ${error.message}`,
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Delete all accounts mutation
+  const deleteAllAccountsMutation = useMutation({
+    mutationFn: async () => {
+      setIsProcessing(true);
+      try {
+        // Delete each account one by one
+        for (const account of accounts) {
+          await apiRequest('DELETE', `/api/finance/accounts/${account.id}`);
+        }
+        return { success: true };
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/finance/accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/finance/transactions'] });
+      showSuccessNotification("All accounts have been deleted");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: `Failed to delete all accounts: ${error.message}`,
         variant: "destructive"
       });
     }
@@ -369,7 +378,7 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
   const handleDeleteConfirm = () => {
     if (!itemToDelete) return;
     
-    setIsProcessing(true); // Set processing state to true during deletion
+    setIsProcessing(true);
     
     try {
       if (itemToDelete.type === 'category') {
@@ -378,12 +387,23 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
         deleteAccountMutation.mutate(itemToDelete.id);
       }
     } finally {
-      // Close dialog and clean up, but keep the main modal open
       setDeleteDialogOpen(false);
       setItemToDelete(null);
-      
-      // We don't need to set isProcessing to false here because 
-      // the mutation's finally block will handle that
+    }
+  };
+
+  // Delete all accounts handler
+  const handleDeleteAllAccounts = () => {
+    if (accounts.length === 0) {
+      toast({
+        title: "Info",
+        description: "There are no accounts to delete",
+      });
+      return;
+    }
+
+    if (confirm("Are you sure you want to delete all accounts? This action cannot be undone.")) {
+      deleteAllAccountsMutation.mutate();
     }
   };
 
@@ -427,15 +447,14 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     if (!open) {
       resetCategoryForm();
       resetAccountForm();
-      setSearchQuery("");
-      onClose(); // Only call onClose when actually closing the dialog
+      onClose();
     }
   };
 
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           {/* Success animation overlay */}
           <AnimatePresence>
             {showSuccess && (
@@ -466,17 +485,6 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
               Manage your categories and accounts for better financial tracking
             </DialogDescription>
           </DialogHeader>
-
-          {/* Search Bar */}
-          <div className="relative mb-3">
-            <SearchIcon className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 h-3.5 w-3.5" />
-            <Input
-              placeholder="Search..."
-              className="pl-8 h-9 text-sm bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-700"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-            />
-          </div>
 
           <Tabs defaultValue="categories" value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-4 h-10">
@@ -548,7 +556,7 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
               </Card>
 
               {/* Categories Lists */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 {/* Expense Categories */}
                 <Card>
                   <CardHeader className="pb-2">
@@ -562,7 +570,7 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
                       <div className="p-4 text-center text-sm text-gray-500">Loading...</div>
                     ) : expenseCategories.length === 0 ? (
                       <div className="p-4 text-center text-sm text-gray-500">
-                        {searchQuery ? "No matching expense categories" : "No expense categories created yet"}
+                        No expense categories created yet
                       </div>
                     ) : (
                       <div className="space-y-1">
@@ -613,7 +621,7 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
                       <div className="p-4 text-center text-sm text-gray-500">Loading...</div>
                     ) : revenueCategories.length === 0 ? (
                       <div className="p-4 text-center text-sm text-gray-500">
-                        {searchQuery ? "No matching revenue categories" : "No revenue categories created yet"}
+                        No revenue categories created yet
                       </div>
                     ) : (
                       <div className="space-y-1">
@@ -664,19 +672,28 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
                 </CardHeader>
                 <CardContent className="pb-2">
                   <div className="space-y-2">
-                    <Label htmlFor="accountName">Account Name</Label>
+                    <Label htmlFor="accountName">Bank Account Name</Label>
                     <Input
                       id="accountName"
-                      placeholder="Enter account name"
+                      placeholder="Enter bank account name"
                       value={accountName}
                       onChange={e => setAccountName(e.target.value)}
                     />
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-between">
-                  {editingAccountId !== null && (
+                  {editingAccountId !== null ? (
                     <Button variant="outline" onClick={resetAccountForm}>
                       Cancel
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="outline" 
+                      onClick={handleDeleteAllAccounts}
+                      className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-1" />
+                      Delete All Accounts
                     </Button>
                   )}
                   <Button className="ml-auto" onClick={handleSaveAccount}>
@@ -690,19 +707,19 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center">
                     <Wallet className="h-4 w-4 mr-1 text-primary" />
-                    Your Accounts
+                    Your Bank Accounts
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-2">
                   {accountsLoading ? (
                     <div className="p-4 text-center text-sm text-gray-500">Loading...</div>
-                  ) : filteredAccounts.length === 0 ? (
+                  ) : accounts.length === 0 ? (
                     <div className="p-4 text-center text-sm text-gray-500">
-                      {searchQuery ? "No matching accounts" : "No accounts created yet"}
+                      No bank accounts created yet
                     </div>
                   ) : (
                     <div className="space-y-1">
-                      {filteredAccounts.map(account => (
+                      {accounts.map(account => (
                         <motion.div
                           key={account.id}
                           className="flex items-center justify-between p-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800"
