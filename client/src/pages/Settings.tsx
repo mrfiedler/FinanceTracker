@@ -134,9 +134,43 @@ const Settings = () => {
         reader.readAsDataURL(photoFile);
         reader.onload = async () => {
           try {
-            const imageUrl = reader.result as string;
+            // Create an image element to compress
+            const img = new Image();
+            img.src = reader.result as string;
+            await new Promise(resolve => img.onload = resolve);
+
+            // Create canvas for compression
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Set max dimensions
+            const maxWidth = 800;
+            const maxHeight = 800;
+            let width = img.width;
+            let height = img.height;
+
+            // Calculate new dimensions
+            if (width > height) {
+              if (width > maxWidth) {
+                height *= maxWidth / width;
+                width = maxWidth;
+              }
+            } else {
+              if (height > maxHeight) {
+                width *= maxHeight / height;
+                height = maxHeight;
+              }
+            }
+
+            // Set canvas dimensions and draw image
+            canvas.width = width;
+            canvas.height = height;
+            ctx?.drawImage(img, 0, 0, width, height);
+
+            // Get compressed image URL
+            const imageUrl = canvas.toDataURL('image/jpeg', 0.7);
             console.log("Converting image to data URL");
-            
+
             // Send the image URL to the server
             const response = await fetch('/api/users/avatar', {
               method: 'POST',
@@ -249,7 +283,7 @@ const Settings = () => {
           try {
             const imageUrl = reader.result as string;
             console.log("Converting company logo to data URL");
-            
+
             // Send the image URL to the server
             const response = await fetch('/api/company/logo', {
               method: 'POST',
