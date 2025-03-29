@@ -19,6 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTheme } from "@/context/ThemeContext";
 import { useGamification } from "@/context/GamificationContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { Separator } from "@/components/ui/separator";
 import { useQuery } from "@tanstack/react-query";
 
@@ -37,14 +38,7 @@ interface UserType {
   role?: string;
 }
 
-const navItems = [
-  { href: "/", label: "Dashboard", icon: <Home className="h-5 w-5 mr-3" /> },
-  { href: "/finance", label: "Finance", icon: <DollarSign className="h-5 w-5 mr-3" /> },
-  { href: "/clients", label: "Clients", icon: <Users className="h-5 w-5 mr-3" /> },
-  { href: "/quotes", label: "Quotes", icon: <FileText className="h-5 w-5 mr-3" /> },
-  { href: "/subscriptions", label: "Subscriptions", icon: <Bell className="h-5 w-5 mr-3" /> },
-  { href: "/contracts", label: "Contracts", icon: <FileSignature className="h-5 w-5 mr-3" /> },
-];
+// We'll define navItems inside the Sidebar component to use the t function
 
 // UserProfileSection component to display user information
 interface UserProfileSectionProps {
@@ -132,10 +126,21 @@ const Sidebar = () => {
   const [location] = useLocation();
   const { theme } = useTheme();
   const { level, points } = useGamification();
+  const { t } = useLanguage();
   const [showLevelUpAnimation, setShowLevelUpAnimation] = useState(false);
   const prevLevelRef = useRef(level);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isOpen, setIsOpen] = useState(!isMobile);
+  
+  // Define navItems with translations
+  const navItems: Array<{ href: string; label: string; icon: React.ReactNode }> = [
+    { href: "/", label: t('nav.dashboard'), icon: <Home className="h-5 w-5 mr-3" /> },
+    { href: "/finance", label: t('nav.finance'), icon: <DollarSign className="h-5 w-5 mr-3" /> },
+    { href: "/clients", label: t('nav.clients'), icon: <Users className="h-5 w-5 mr-3" /> },
+    { href: "/quotes", label: t('nav.quotes'), icon: <FileText className="h-5 w-5 mr-3" /> },
+    { href: "/subscriptions", label: t('nav.subscriptions'), icon: <Bell className="h-5 w-5 mr-3" /> },
+    { href: "/contracts", label: t('nav.contracts'), icon: <FileSignature className="h-5 w-5 mr-3" /> },
+  ];
   
   // Check for level change and trigger animation
   useEffect(() => {
@@ -244,7 +249,7 @@ const Sidebar = () => {
           aria-label="Main navigation"
         >
           <div className="space-y-1">
-            {navItems.map((item, index) => (
+            {navItems.map((item: { href: string; label: string; icon: React.ReactNode }, index: number) => (
               <motion.div
                 key={item.href}
                 initial={{ opacity: 0, x: -20 }}
@@ -288,7 +293,7 @@ const Sidebar = () => {
 
           <div className="mt-2">
             <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide px-4 mb-3">
-              ARCADE
+              {t('nav.arcade')}
             </h3>
 
             <div className="mb-3 px-4 relative">
@@ -305,7 +310,7 @@ const Sidebar = () => {
                   >
                     <Sparkles className="h-4 w-4 text-[#F0CE8D] mr-1" />
                   </motion.div>
-                  <span className="text-xs font-medium">Level {level}</span>
+                  <span className="text-xs font-medium">{t('achievements.level')} {level}</span>
                 </div>
                 <motion.span 
                   className="text-xs font-medium bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-yellow-300"
@@ -317,7 +322,7 @@ const Sidebar = () => {
                     duration: 1.5 
                   }}
                 >
-                  {points} pts
+                  {points} {t('achievements.points')}
                 </motion.span>
               </div>
               <div className="h-1.5 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
@@ -357,7 +362,7 @@ const Sidebar = () => {
                   >
                     <div className="flex items-center gap-1">
                       <Zap className="h-3 w-3" />
-                      Level Up!
+                      {t('achievements.levelUp')}
                     </div>
                   </motion.div>
                 )}
@@ -383,7 +388,7 @@ const Sidebar = () => {
               >
                 <Trophy className="h-5 w-5 mr-3 text-[#F0CE8D]" />
                 <span className="relative">
-                  Achievements
+                  {t('nav.achievements')}
                   {location !== "/achievements" && (
                     <motion.span
                       className="absolute -top-1 -right-1 flex h-3 w-3"

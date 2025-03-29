@@ -129,6 +129,10 @@ export const translations: TranslationMap = {
     "en": "Logout",
     "pt-BR": "Sair"
   },
+  "nav.arcade": {
+    "en": "ARCADE",
+    "pt-BR": "ARCADE"
+  },
   
   // Dashboard
   "dashboard.title": {
