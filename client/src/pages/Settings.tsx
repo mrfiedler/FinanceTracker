@@ -462,13 +462,14 @@ const Settings = () => {
     const reader = new FileReader();
     reader.onloadend = async () => {
       const imageUrl = reader.result as string;
+      const base64Data = imageUrl.split(',')[1];
 
       const response = await fetch("/api/company/logo", {
         method: "POST",
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ imageUrl }),
+        body: JSON.stringify({ imageUrl: base64Data }),
         credentials: 'include'
       });
 
@@ -481,6 +482,41 @@ const Settings = () => {
         }));
         toast({
           description: "Logo updated successfully",
+        });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Handle avatar selection
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    console.log("Converting avatar to data URL");
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const imageUrl = reader.result as string;
+      const base64Data = imageUrl.split(',')[1];
+
+      const response = await fetch("/api/users/avatar", {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ imageUrl: base64Data }),
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Update local user state with new avatar
+        queryClient.setQueryData(['user'], (oldData: any) => ({
+          ...oldData,
+          avatar: data.avatarUrl
+        }));
+        toast({
+          description: "Avatar updated successfully",
         });
       }
     };

@@ -333,24 +333,26 @@ export function setupAuth(app: Express) {
     }
 
     try {
-      const userId = (req.user as SelectUser).id;
+      const userId = (req.user as Express.User).id;
       console.log(`Processing company logo upload for user ${userId}`);
 
-      // Get the actual image URL from the request body
+      // Get the actual image data from the request body
       const { imageUrl } = req.body;
 
       if (!imageUrl) {
-        return res.status(400).json({ message: "No image URL provided" });
+        return res.status(400).json({ message: "No image data provided" });
       }
 
+      const fullImageUrl = `data:image/jpeg;base64,${imageUrl}`;
+
       // Update user with company logo
-      await storage.updateUser(userId, { companyLogo: imageUrl });
+      await storage.updateUser(userId, { companyLogo: fullImageUrl });
 
       console.log("Company logo uploaded successfully");
       res.json({ 
         success: true,
         message: "Company logo uploaded successfully",
-        logoUrl: imageUrl
+        logoUrl: fullImageUrl
       });
     } catch (error) {
       console.error("Error uploading company logo:", error);
@@ -366,7 +368,7 @@ export function setupAuth(app: Express) {
     }
 
     try {
-      const userId = (req.user as SelectUser).id;
+      const userId = (req.user as Express.User).id;
       console.log(`Processing avatar upload for user ${userId}`);
 
       // Get the actual image data from the request body
@@ -376,17 +378,16 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "No image data provided" });
       }
 
-      // Create a proper data URL
       const fullImageUrl = `data:image/jpeg;base64,${imageUrl}`;
 
-      // Update user with the actual image data
-      await storage.updateUser(userId, { companyLogo: fullImageUrl });
+      // Update user with the avatar
+      await storage.updateUser(userId, { avatar: fullImageUrl });
 
-      console.log(`Avatar successfully updated for user ${userId}`);
+      console.log("Avatar successfully updated for user", userId);
       res.json({ 
         success: true,
         message: "Avatar uploaded successfully",
-        avatarUrl: imageUrl
+        avatarUrl: fullImageUrl
       });
     } catch (error) {
       console.error("Error uploading avatar:", error);
