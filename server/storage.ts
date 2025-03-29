@@ -362,23 +362,38 @@ export class MemStorage implements IStorage {
   }
 
   async createRevenue(insertRevenue: InsertRevenue): Promise<Revenue> {
-    const id = this.revenueId++;
-    const revenue: Revenue = {
-      ...insertRevenue,
-      id,
-      createdAt: new Date()
-    };
-    this.revenues.set(id, revenue);
+    try {
+      const id = this.revenueId++;
+      const revenue: Revenue = {
+        id,
+        description: insertRevenue.description,
+        amount: insertRevenue.amount,
+        clientId: insertRevenue.clientId,
+        category: insertRevenue.category,
+        date: insertRevenue.date,
+        dueDate: insertRevenue.dueDate,
+        notes: insertRevenue.notes || null,
+        currency: insertRevenue.currency || 'USD',
+        account: insertRevenue.account || 'default',
+        isPaid: insertRevenue.isPaid || false,
+        createdAt: new Date()
+      };
+      
+      this.revenues.set(id, revenue);
 
-    // Update client's last purchase date if needed
-    const client = await this.getClient(revenue.clientId);
-    if (client) {
-      this.updateClient(client.id, {
-        lastPurchaseDate: new Date(revenue.date)
-      });
+      // Update client's last purchase date if needed
+      const client = await this.getClient(revenue.clientId);
+      if (client) {
+        await this.updateClient(client.id, {
+          lastPurchaseDate: new Date(revenue.date)
+        });
+      }
+
+      return revenue;
+    } catch (error) {
+      console.error('Error creating revenue:', error);
+      throw error;
     }
-
-    return revenue;
   }
 
   async updateRevenue(id: number, revenueUpdate: Partial<Revenue>): Promise<Revenue> {
