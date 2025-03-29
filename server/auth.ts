@@ -350,7 +350,7 @@ export function setupAuth(app: Express) {
       res.json({ 
         success: true,
         message: "Company logo uploaded successfully",
-        logoUrl: fullImageUrl
+        logoUrl: imageUrl
       });
     } catch (error) {
       console.error("Error uploading company logo:", error);
@@ -383,7 +383,7 @@ export function setupAuth(app: Express) {
       res.json({ 
         success: true,
         message: "Avatar uploaded successfully",
-        avatarUrl: fullImageUrl
+        avatarUrl: imageUrl
       });
     } catch (error) {
       console.error("Error uploading avatar:", error);

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { User as UserType } from "@shared/schema";
 import {
   Card,
   CardContent,
@@ -32,7 +33,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import {
-  User,
+  User as UserIcon,
   Building2,
   CreditCard,
   Receipt,
@@ -68,7 +69,7 @@ const Settings = () => {
   const [companyRegNumber, setCompanyRegNumber] = useState('');
 
   // Profile photo
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [profilePhoto, setProfilePhoto] = useState<string | undefined>('');
   const profilePhotoInputRef = useRef<HTMLInputElement>(null);
 
   // Form refs for profile data
@@ -85,7 +86,7 @@ const Settings = () => {
   const companyPhoneRef = useRef<HTMLInputElement>(null);
   const companyAddressRef = useRef<HTMLInputElement>(null);
   const companyLogoInputRef = useRef<HTMLInputElement>(null);
-  const [companyLogo, setCompanyLogo] = useState<string | null>(null);
+  const [companyLogo, setCompanyLogo] = useState<string | undefined>(undefined);
 
   // Password change state
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
@@ -99,15 +100,18 @@ const Settings = () => {
   const [isLogoLoading, setLogoLoading] = useState(false);
 
   // Get current user data
-  const { data: user, isLoading: isLoadingUser } = useQuery({
+  const { data: userData, isLoading: isLoadingUser } = useQuery({
     queryKey: ['/api/user'],
     retry: false
   });
+  
+  // Type assertion for user data
+  const user = userData as UserType;
 
   // Initialize profile photo based on user avatar
   useEffect(() => {
     if (user?.avatar) {
-      setProfilePhoto(null);
+      setProfilePhoto('');
     }
   }, [user?.avatar]);
 
@@ -164,7 +168,7 @@ const Settings = () => {
         title: "Profile photo updated",
         description: "Your profile photo has been updated successfully.",
       });
-      setProfilePhoto(null); 
+      setProfilePhoto(''); 
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
     },
     onError: (error) => {
@@ -261,7 +265,7 @@ const Settings = () => {
         title: "Logo uploaded",
         description: "Your company logo has been uploaded successfully.",
       });
-      setCompanyLogo(null);
+      setCompanyLogo('');
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
       if (data.logoUrl) {
         queryClient.setQueryData(['/api/user'], (oldData: any) => ({
@@ -448,7 +452,7 @@ const Settings = () => {
       <Tabs defaultValue="profile" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid grid-cols-1 md:grid-cols-3 w-full max-w-4xl">
           <TabsTrigger value="profile" className="flex items-center">
-            <User className="mr-2 h-4 w-4" />
+            <UserIcon className="mr-2 h-4 w-4" />
             Profile
           </TabsTrigger>
           <TabsTrigger value="company" className="flex items-center">
@@ -508,7 +512,7 @@ const Settings = () => {
                             </div>
                           )}
                           <AvatarImage
-                            src={profilePhoto || user?.avatar}
+                            src={profilePhoto || (user?.avatar || '')}
                             alt={user?.name || "User Profile"}
                           />
                           <AvatarFallback className="text-lg font-semibold bg-primary/10 text-primary">
@@ -807,7 +811,7 @@ const Settings = () => {
                             alt="Company Logo"
                             className="w-full h-full object-contain"
                           />
-                        ) : companyLogo ? (
+                        ) : companyLogo && companyLogo.length > 0 ? (
                           <img
                             src={companyLogo}
                             alt="Company Logo Preview"
@@ -985,7 +989,7 @@ const Settings = () => {
                             <td className="px-4 py-3 font-medium">
                               <div className="flex items-center space-x-3">
                                 <Avatar className="h-8 w-8">
-                                  <AvatarImage src={user?.avatar} />
+                                  <AvatarImage src={user?.avatar || ''} />
                                   <AvatarFallback className="text-xs">
                                     {getUserInitials()}
                                   </AvatarFallback>
