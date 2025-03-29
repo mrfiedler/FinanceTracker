@@ -170,7 +170,7 @@ export const statusIndicators = {
 // ----- Page Layouts -----
 export const pageLayouts = {
   // Main page container
-  main: "w-full h-full overflow-y-auto bg-background p-4 md:p-6 pb-20",
+  main: "w-full h-full overflow-y-auto bg-background/95 p-4 md:p-6 pb-20",
 
   // Page header wrapper
   header: "mb-6 md:mb-8",

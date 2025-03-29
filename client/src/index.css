@@ -1,3 +1,11 @@
+
+@layer base {
+  :root {
+    --background: 220 10% 16%;
+    --foreground: 210 20% 98%;
+  }
+}
+
 @layer base {
   :root {
     /* Enhanced light mode colors with better contrast */
