@@ -125,12 +125,29 @@ const Achievements = () => {
   
   // Progress for the quests based on actual user data
   const [questProgress, setQuestProgress] = useState<Record<string, number>>({
-    "new-client": 3,
-    "send-quotes": 7,
-    "convert-quotes": 2,
-    "revenue-milestone": 8500,
+    "new-client": 0,
+    "send-quotes": 0,
+    "convert-quotes": 0,
+    "revenue-milestone": 0,
     "subscriptions": 0
   });
+  
+  // Fetch real achievement stats from API
+  useEffect(() => {
+    const fetchAchievementStats = async () => {
+      try {
+        const response = await fetch('/api/achievements/stats');
+        if (response.ok) {
+          const statsData = await response.json();
+          setQuestProgress(statsData);
+        }
+      } catch (error) {
+        console.error('Failed to fetch achievement stats:', error);
+      }
+    };
+    
+    fetchAchievementStats();
+  }, []);
   
   // useEffect to automatically check and update quest progress based on user activity
   useEffect(() => {

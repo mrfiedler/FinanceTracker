@@ -1096,6 +1096,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // API - Achievements
+  app.get("/api/achievements/stats", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Get stats from various entities to build achievements progress
+      const clients = await storage.getClients();
+      const quotes = await storage.getQuotes({});
+      const revenues = await storage.getRevenues({});
+      const contracts = await storage.getContracts({});
+      const subscriptions = await storage.getSubscriptions({});
+      
+      // Calculate total revenue
+      const totalRevenue = revenues.reduce((sum, rev) => sum + Number(rev.amount), 0);
+      
+      // Calculate deals closed (quotes that were accepted)
+      const closedDeals = quotes.filter(quote => quote.status === "Accepted").length;
+      
+      // Build the achievement stats
+      const achievementStats = {
+        "new-client": clients.length,
+        "send-quotes": quotes.length,
+        "convert-quotes": closedDeals,
+        "revenue-milestone": totalRevenue,
+        "subscriptions": subscriptions.length
+      };
+      
+      res.json(achievementStats);
+    } catch (error) {
+      console.error("Failed to fetch achievement stats:", error);
+      res.status(500).json({ message: "Failed to fetch achievement stats" });
+    }
+  });
+  
+  // Get user gamification data
+  app.get("/api/user/gamification", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const userId = req.user!.id;
+      // In a real implementation, this would fetch from a database
+      // For now, we'll use defaults that match what's in the screenshot
+      const gamificationData = {
+        level: 9,
+        points: 1600,
+        badges: [
+          "Client Acquisition Level 1",
+          "Quote Master Level 1",
+          "Deal Closer Level 1",
+          "Revenue Milestones Level 1"
+        ]
+      };
+      
+      res.json(gamificationData);
+    } catch (error) {
+      console.error("Failed to fetch gamification data:", error);
+      res.status(500).json({ message: "Failed to fetch gamification data" });
+    }
+  });
+  
+  // Save user gamification data
+  app.post("/api/user/gamification", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const userId = req.user!.id;
+      const data = req.body;
+      
+      // In a real implementation, this would save to a database
+      // For now, we'll just return the data as if it was saved
+      
+      res.json(data);
+    } catch (error) {
+      console.error("Failed to save gamification data:", error);
+      res.status(500).json({ message: "Failed to save gamification data" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

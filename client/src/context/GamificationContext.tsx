@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import Confetti from '@/components/gamification/Confetti';
 import Achievement from '@/components/gamification/Achievement';
 import LevelUpAnimation from '@/components/gamification/LevelUpAnimation';
+import { apiRequest } from '@/lib/queryClient';
 
 type AchievementType = 'success' | 'milestone' | 'streak';
 
@@ -13,6 +14,7 @@ interface GamificationContextType {
   points: number;
   level: number;
   badges: string[];
+  isLoading: boolean;
 }
 
 interface GamificationProviderProps {
@@ -35,6 +37,7 @@ export const GamificationProvider: React.FC<GamificationProviderProps> = ({ chil
   const [points, setPoints] = useState(0);
   const [badges, setBadges] = useState<string[]>([]);
   const [showLevelUpAnimation, setShowLevelUpAnimation] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Calculate level based on points with the new progression system
   const calculateLevel = (points: number): number => {
@@ -61,6 +64,59 @@ export const GamificationProvider: React.FC<GamificationProviderProps> = ({ chil
     
     return level === 0 ? 1 : level;
   };
+  
+  // Load user's gamification data from the API
+  useEffect(() => {
+    const fetchGamificationData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/user/gamification');
+        
+        if (response.ok) {
+          const data = await response.json();
+          setPoints(data.points);
+          setBadges(data.badges);
+        }
+      } catch (error) {
+        console.error('Failed to load gamification data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchGamificationData();
+  }, []);
+  
+  // Save gamification data to API when points or badges change
+  useEffect(() => {
+    // Skip initial load
+    if (isLoading) return;
+    
+    const saveGamificationData = async () => {
+      try {
+        await fetch('/api/user/gamification', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            level: calculateLevel(points),
+            points,
+            badges
+          })
+        });
+      } catch (error) {
+        console.error('Failed to save gamification data:', error);
+      }
+    };
+    
+    // Debounce to prevent too many API calls
+    const debounceTimer = setTimeout(() => {
+      saveGamificationData();
+    }, 500);
+    
+    return () => clearTimeout(debounceTimer);
+  }, [points, badges, isLoading]);
   
   const level = calculateLevel(points);
   
@@ -143,6 +199,7 @@ export const GamificationProvider: React.FC<GamificationProviderProps> = ({ chil
     points,
     level,
     badges,
+    isLoading,
   };
   
   return (
