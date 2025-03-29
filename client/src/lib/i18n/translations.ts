@@ -345,6 +345,18 @@ export const translations: TranslationMap = {
     "en": "(paid transactions only)",
     "pt-BR": "(apenas transações pagas)"
   },
+  "finance.paid": {
+    "en": "Paid",
+    "pt-BR": "Pago"
+  },
+  "finance.unpaid": {
+    "en": "Unpaid",
+    "pt-BR": "Não Pago"
+  },
+  "finance.overdue": {
+    "en": "Overdue",
+    "pt-BR": "Atrasado"
+  },
   "finance.addExpense": {
     "en": "Add Expense",
     "pt-BR": "Adicionar Despesa"

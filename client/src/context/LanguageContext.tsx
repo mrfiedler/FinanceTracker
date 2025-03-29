@@ -64,12 +64,12 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
 };
 
 // Custom hook to use the language context
-export const useLanguage = () => {
+export function useLanguage() {
   const context = useContext(LanguageContext);
   if (!context) {
     throw new Error("useLanguage must be used within a LanguageProvider");
   }
   return context;
-};
+}
 
 // We don't need to export the context directly as we use the hook
