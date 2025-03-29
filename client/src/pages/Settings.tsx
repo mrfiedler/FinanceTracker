@@ -58,6 +58,13 @@ const Settings = () => {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Company info state
+  const [companyName, setCompanyName] = useState('');
+  const [companyEmail, setCompanyEmail] = useState('');
+  const [companyPhone, setCompanyPhone] = useState('');
+  const [companyAddress, setCompanyAddress] = useState('');
+  const [companyRegNumber, setCompanyRegNumber] = useState('');
 
   // Profile photo
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
@@ -430,6 +437,12 @@ const Settings = () => {
       address: companyAddressRef.current?.value,
       registrationNumber: companyRegNumberRef.current?.value
     };
+
+    setCompanyName(companyData.name || '');
+    setCompanyEmail(companyData.email || '');
+    setCompanyPhone(companyData.phone || '');
+    setCompanyAddress(companyData.address || '');
+    setCompanyRegNumber(companyData.registrationNumber || '');
 
     saveCompanyInfoMutation.mutate(companyData);
   };
@@ -859,12 +872,13 @@ const Settings = () => {
                           <Input 
                             id="company-name" 
                             ref={companyNameRef}
+                            defaultValue={companyName}
                             placeholder="Enter company name" 
                             className="border-gray-300 focus:border-primary"
                           />
                         ) : (
                           <div className="py-2 px-3 bg-muted/30 rounded-md text-foreground font-medium min-h-9">
-                            ACME Corporation
+                            {companyName || 'No company name set'}
                           </div>
                         )}
                       </div>
