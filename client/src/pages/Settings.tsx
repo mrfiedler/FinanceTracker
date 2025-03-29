@@ -315,13 +315,19 @@ const Settings = () => {
         };
       });
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Logo uploaded",
         description: "Your company logo has been uploaded successfully.",
       });
       setCompanyLogo(null);
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      if (data.logoUrl) {
+        queryClient.setQueryData(['/api/user'], (oldData: any) => ({
+          ...oldData,
+          companyLogo: data.logoUrl
+        }));
+      }
     },
     onError: (error) => {
       console.error("Error uploading company logo:", error);
@@ -820,7 +826,13 @@ const Settings = () => {
                     {/* Company Logo */}
                     <div className="relative">
                       <div className="w-24 h-24 bg-muted/60 rounded-lg flex items-center justify-center overflow-hidden border border-border/60 shadow-sm">
-                        {companyLogo ? (
+                        {user?.companyLogo ? (
+                          <img
+                            src={user.companyLogo}
+                            alt="Company Logo"
+                            className="w-full h-full object-contain"
+                          />
+                        ) : companyLogo ? (
                           <img
                             src={URL.createObjectURL(companyLogo)}
                             alt="Company Logo Preview"
