@@ -686,7 +686,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create account in storage
-      const userId = req.session.userId!;
+      const userId = (req.user as Express.User).id;
       const value = name.toLowerCase().replace(/\s+/g, '_'); // Convert spaces to underscores
       
       const newAccount = await storage.createFinanceAccount({
@@ -1014,7 +1014,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/users/profile", authenticate, async (req, res) => {
     try {
 
-      const userId = req.session.userId!;
+      const userId = (req.user as Express.User).id;
       const { name, email, phone, location } = req.body;
 
       // Update user profile
@@ -1032,7 +1032,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Upload company logo endpoint
   app.post("/api/company/logo", authenticate, async (req, res) => {
     try {
-      const userId = req.session.userId!;
+      const userId = (req.user as Express.User).id;
       console.log(`Processing company logo upload for user ${userId}`);
 
       // Get the actual image URL from the request body
@@ -1058,7 +1058,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Upload user avatar endpoint
   app.post("/api/users/avatar", authenticate, async (req, res) => {
     try {
-      const userId = req.session.userId!;
+      const userId = (req.user as Express.User).id;
       console.log(`Processing avatar upload for user ${userId}`);
 
       // Get the actual image URL from the request body
@@ -1124,16 +1124,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       // Search transactions
-      const userId = req.session.userId!;
-      const transactions = await storage.getTransactions(userId, "all", {});
+      const transactions = await storage.getTransactions();
       const matchedTransactions = transactions.filter(transaction => 
         (transaction.description && transaction.description.toLowerCase().includes(lowercaseQuery)) || 
         (transaction.category && transaction.category.toLowerCase().includes(lowercaseQuery)) ||
-        (transaction.type && transaction.type.toLowerCase().includes(lowercaseQuery))
+        transaction.type.toLowerCase().includes(lowercaseQuery)
       );
 
       // Search subscriptions
-      const subscriptions = await storage.getSubscriptions({});
+      const subscriptions = await storage.getSubscriptions();
       const matchedSubscriptions = subscriptions.filter(subscription => 
         (subscription.name && subscription.name.toLowerCase().includes(lowercaseQuery)) || 
         (subscription.description && subscription.description.toLowerCase().includes(lowercaseQuery)) ||
