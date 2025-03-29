@@ -1047,7 +1047,7 @@ export const translations: TranslationMap = {
     "en": "Accepted",
     "pt-BR": "Aceito"
   },
-  "quotes.rejected": {
+"quotes.rejected": {
     "en": "Rejected",
     "pt-BR": "Rejeitado"
   },
@@ -1570,6 +1570,10 @@ export const translations: TranslationMap = {
   "auth.signUp": {
     "en": "Sign Up",
     "pt-BR": "Cadastrar"
+  },
+  "auth.success": {
+    "en": "Welcome back to Eluvie!",
+    "pt-BR": "Bem-vindo de volta!"
   },
 
   // Errors and messages
