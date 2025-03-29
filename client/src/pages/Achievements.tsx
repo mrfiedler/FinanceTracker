@@ -14,9 +14,11 @@ const quests = [
     name: "Client Acquisition",
     description: "Add new clients to grow your business",
     levels: [
-      { level: 1, target: 1, reward: 20, description: "Add your first client" },
-      { level: 2, target: 5, reward: 50, description: "Add 5 clients" },
-      { level: 3, target: 10, reward: 100, description: "Add 10 clients" },
+      { level: 1, target: 1, reward: 50, description: "Add your first client" },
+      { level: 2, target: 20, reward: 200, description: "Acquire 20 clients total" },
+      { level: 3, target: 50, reward: 200, description: "Acquire 50 clients total" },
+      { level: 4, target: 100, reward: 200, description: "Acquire 100 clients total" },
+      { level: 5, target: 200, reward: 200, description: "Acquire 200 clients total" },
     ],
     icon: <Users className="h-5 w-5" />,
     color: "bg-blue-500"
@@ -24,11 +26,13 @@ const quests = [
   {
     id: "send-quotes",
     name: "Quote Master",
-    description: "Create and send quotes to potential clients",
+    description: "Create quotes for potential clients",
     levels: [
-      { level: 1, target: 1, reward: 10, description: "Send your first quote" },
-      { level: 2, target: 5, reward: 30, description: "Send 5 quotes" },
-      { level: 3, target: 20, reward: 80, description: "Send 20 quotes" },
+      { level: 1, target: 1, reward: 50, description: "Create your first quote" },
+      { level: 2, target: 20, reward: 200, description: "Create 20 quotes total" },
+      { level: 3, target: 50, reward: 200, description: "Create 50 quotes total" },
+      { level: 4, target: 100, reward: 200, description: "Create 100 quotes total" },
+      { level: 5, target: 500, reward: 200, description: "Create 500 quotes total" },
     ],
     icon: <FileCheck className="h-5 w-5" />,
     color: "bg-purple-500"
@@ -36,11 +40,13 @@ const quests = [
   {
     id: "convert-quotes",
     name: "Deal Closer",
-    description: "Convert quotes into revenue",
+    description: "Close deals to increase revenue",
     levels: [
-      { level: 1, target: 1, reward: 15, description: "Close your first deal" },
-      { level: 2, target: 3, reward: 40, description: "Close 3 deals" },
-      { level: 3, target: 10, reward: 90, description: "Close 10 deals" },
+      { level: 1, target: 1, reward: 50, description: "Close your first deal" },
+      { level: 2, target: 20, reward: 200, description: "Close 20 deals total" },
+      { level: 3, target: 50, reward: 200, description: "Close 50 deals total" },
+      { level: 4, target: 100, reward: 200, description: "Close 100 deals total" },
+      { level: 5, target: 500, reward: 200, description: "Close 500 deals total" },
     ],
     icon: <TrendingUp className="h-5 w-5" />,
     color: "bg-green-500"
@@ -50,33 +56,25 @@ const quests = [
     name: "Revenue Milestones",
     description: "Achieve revenue targets",
     levels: [
-      { level: 1, target: 1000, reward: 20, description: "Reach $1,000 in revenue" },
-      { level: 2, target: 10000, reward: 50, description: "Reach $10,000 in revenue" },
-      { level: 3, target: 50000, reward: 150, description: "Reach $50,000 in revenue" },
+      { level: 1, target: 1000, reward: 50, description: "Reach $1,000 in total revenue" },
+      { level: 2, target: 10000, reward: 200, description: "Reach $10,000 in total revenue" },
+      { level: 3, target: 50000, reward: 200, description: "Reach $50,000 in total revenue" },
+      { level: 4, target: 500000, reward: 200, description: "Reach $500,000 in total revenue" },
+      { level: 5, target: 1000000, reward: 200, description: "Reach $1,000,000 in total revenue" },
     ],
     icon: <DollarSign className="h-5 w-5" />,
     color: "bg-emerald-500"
-  },
-  {
-    id: "contracts-signed",
-    name: "Contract Pro",
-    description: "Sign contracts with clients",
-    levels: [
-      { level: 1, target: 1, reward: 15, description: "Sign your first contract" },
-      { level: 2, target: 3, reward: 35, description: "Sign 3 contracts" },
-      { level: 3, target: 10, reward: 85, description: "Sign 10 contracts" },
-    ],
-    icon: <FileCheck className="h-5 w-5" />,
-    color: "bg-amber-500"
   },
   {
     id: "subscriptions",
     name: "Recurring Revenue",
     description: "Set up subscription services",
     levels: [
-      { level: 1, target: 1, reward: 25, description: "Create your first subscription" },
-      { level: 2, target: 3, reward: 50, description: "Create 3 subscriptions" },
-      { level: 3, target: 10, reward: 120, description: "Create 10 subscriptions" },
+      { level: 1, target: 1, reward: 50, description: "Set up your first subscription" },
+      { level: 2, target: 5, reward: 200, description: "Set up 5 subscriptions total" },
+      { level: 3, target: 15, reward: 200, description: "Set up 15 subscriptions total" },
+      { level: 4, target: 45, reward: 200, description: "Set up 45 subscriptions total" },
+      { level: 5, target: 100, reward: 200, description: "Set up 100 subscriptions total" },
     ],
     icon: <CreditCard className="h-5 w-5" />,
     color: "bg-blue-600"
@@ -131,7 +129,6 @@ const Achievements = () => {
     "send-quotes": 7,
     "convert-quotes": 2,
     "revenue-milestone": 8500,
-    "contracts-signed": 1,
     "subscriptions": 0
   });
   
@@ -201,9 +198,44 @@ const Achievements = () => {
     }
   };
   
-  // Calculate progress for next level
-  const nextLevelProgress = ((points % 100) / 100) * 100;
-  const pointsToNextLevel = 100 - (points % 100);
+  // Calculate progress for next level based on the new level system
+  const calculatePointsForNextLevel = (currentLevel: number): number => {
+    // Level thresholds array (same as in GamificationContext)
+    const levelThresholds = [
+      0,     // Level 1 (starting level)
+      50,    // Level 2 requires 50 points
+      150,   // Level 3 requires 150 points
+      250,   // Level 4 requires 250 points
+      400,   // Level 5 requires 400 points
+      600,   // Level 6 requires 600 points
+      800    // Level 7 requires 800 points
+    ];
+    
+    // For levels beyond 7
+    if (currentLevel >= levelThresholds.length) {
+      // Each level after 7 requires 200 more points
+      return levelThresholds[levelThresholds.length - 1] + (currentLevel - levelThresholds.length + 1) * 200;
+    }
+    
+    return levelThresholds[currentLevel - 1];
+  };
+  
+  const calculatePointsNeeded = (currentLevel: number, currentPoints: number): number => {
+    const nextLevelPoints = calculatePointsForNextLevel(currentLevel + 1);
+    return nextLevelPoints - currentPoints;
+  };
+  
+  const calculateProgressPercent = (currentLevel: number, currentPoints: number): number => {
+    const currentLevelPoints = calculatePointsForNextLevel(currentLevel);
+    const nextLevelPoints = calculatePointsForNextLevel(currentLevel + 1);
+    const levelRange = nextLevelPoints - currentLevelPoints;
+    const pointsIntoLevel = currentPoints - currentLevelPoints;
+    
+    return (pointsIntoLevel / levelRange) * 100;
+  };
+  
+  const nextLevelProgress = calculateProgressPercent(level, points);
+  const pointsToNextLevel = calculatePointsNeeded(level, points);
   
   return (
     <main className="w-full h-full overflow-y-auto bg-background p-4 md:p-6 pb-20">

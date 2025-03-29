@@ -36,8 +36,33 @@ export const GamificationProvider: React.FC<GamificationProviderProps> = ({ chil
   const [badges, setBadges] = useState<string[]>([]);
   const [showLevelUpAnimation, setShowLevelUpAnimation] = useState(false);
   
-  // Calculate level based on points (1 level per 100 points)
-  const level = Math.floor(points / 100) + 1;
+  // Calculate level based on points with the new progression system
+  const calculateLevel = (points: number): number => {
+    // Level thresholds array: index is level-1, value is points required to reach that level
+    const levelThresholds = [
+      0,     // Level 1 (starting level)
+      50,    // Level 2 requires 50 points
+      150,   // Level 3 requires 150 points
+      250,   // Level 4 requires 250 points
+      400,   // Level 5 requires 400 points
+      600,   // Level 6 requires 600 points
+      800    // Level 7 requires 800 points
+    ];
+    
+    // For levels beyond 7, each level requires 200 more points than the previous
+    const level = levelThresholds.findIndex(threshold => points < threshold);
+    
+    if (level === -1) {
+      // Calculate levels above 7
+      const pointsAboveLevel7 = points - levelThresholds[levelThresholds.length - 1];
+      const additionalLevels = Math.floor(pointsAboveLevel7 / 200) + 1;
+      return levelThresholds.length + additionalLevels;
+    }
+    
+    return level === 0 ? 1 : level;
+  };
+  
+  const level = calculateLevel(points);
   
   const triggerConfetti = useCallback((duration = 2000, count = 100) => {
     setConfettiConfig({ duration, count });
@@ -60,9 +85,9 @@ export const GamificationProvider: React.FC<GamificationProviderProps> = ({ chil
     setPoints(prevPoints => {
       const newPoints = prevPoints + pointsToAdd;
       
-      // Check if user leveled up
-      const prevLevel = Math.floor(prevPoints / 100) + 1;
-      const newLevel = Math.floor(newPoints / 100) + 1;
+      // Check if user leveled up using our new level calculation
+      const prevLevel = calculateLevel(prevPoints);
+      const newLevel = calculateLevel(newPoints);
       
       if (newLevel > prevLevel) {
         // Show achievement notification
@@ -89,16 +114,22 @@ export const GamificationProvider: React.FC<GamificationProviderProps> = ({ chil
     setBadges(prev => {
       if (prev.includes(badgeId)) return prev;
       
+      // Award 200 points for earning a new badge level
+      // This is done with a slight delay to ensure the UI updates in sequence
+      setTimeout(() => {
+        addPoints(200);
+      }, 500);
+      
       // Show achievement for new badge
       showAchievement(
         'New Badge Earned!', 
-        `You've earned the ${badgeId} badge`, 
+        `You've earned the ${badgeId} badge and gained 200 points!`, 
         'success'
       );
       
       return [...prev, badgeId];
     });
-  }, [showAchievement]);
+  }, [showAchievement, addPoints]);
   
   const closeAchievement = useCallback(() => {
     setAchievement(prev => ({ ...prev, show: false }));
