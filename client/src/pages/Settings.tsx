@@ -947,7 +947,7 @@ const Settings = () => {
                     </div>
 
                     {/* Company Address */}
-                    <<div className="space-y-2">
+                    <div className="space-y-2">
                       <Label htmlFor="company-address" className="flex items-center text-sm font-medium">
                         <MapPin className="mr-2 h-4 w-4 text-gray-500" />
                         Company Address
