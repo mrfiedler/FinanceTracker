@@ -58,17 +58,17 @@ const Settings = () => {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   // Profile photo
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
   const profilePhotoInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Form refs for profile data
   const nameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
   const locationRef = useRef<HTMLInputElement>(null);
-  
+
   // Company details
   const [companyEditMode, setCompanyEditMode] = useState(false);
   const companyNameRef = useRef<HTMLInputElement>(null);
@@ -78,20 +78,20 @@ const Settings = () => {
   const companyAddressRef = useRef<HTMLInputElement>(null);
   const companyLogoInputRef = useRef<HTMLInputElement>(null);
   const [companyLogo, setCompanyLogo] = useState<File | null>(null);
-  
+
   // Password change state
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  
+
   // Get current user data
   const { data: user, isLoading: isLoadingUser } = useQuery({
     queryKey: ['/api/user'],
     retry: false
   });
-  
+
   // Initialize profile photo based on user avatar
   useEffect(() => {
     if (user?.avatar) {
@@ -100,7 +100,7 @@ const Settings = () => {
       setProfilePhoto(null);
     }
   }, [user?.avatar]);
-  
+
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (profileData: any) => {
@@ -124,23 +124,23 @@ const Settings = () => {
       console.error("Error updating profile:", error);
     }
   });
-  
+
   // Upload profile photo mutation
   const uploadProfilePhotoMutation = useMutation({
     mutationFn: async (photoFile: File) => {
       const formData = new FormData();
       formData.append('avatar', photoFile);
-      
+
       const response = await fetch('/api/users/avatar', {
         method: 'POST',
         body: formData,
         credentials: 'include'
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to upload profile photo');
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -159,7 +159,7 @@ const Settings = () => {
       });
     }
   });
-  
+
   // Change password mutation
   const changePasswordMutation = useMutation({
     mutationFn: async (passwordData: any) => {
@@ -191,7 +191,7 @@ const Settings = () => {
       }
     }
   });
-  
+
   // Save company info mutation
   const saveCompanyInfoMutation = useMutation({
     mutationFn: async (companyData: any) => {
@@ -204,7 +204,7 @@ const Settings = () => {
         description: "Your company information has been saved successfully.",
       });
       setCompanyEditMode(false);
-      
+
       // If there's a logo file, upload it separately
       if (companyLogo) {
         uploadCompanyLogoMutation.mutate(companyLogo);
@@ -218,23 +218,23 @@ const Settings = () => {
       });
     }
   });
-  
+
   // Upload company logo mutation
   const uploadCompanyLogoMutation = useMutation({
     mutationFn: async (logoFile: File) => {
       const formData = new FormData();
       formData.append('logo', logoFile);
-      
+
       const response = await fetch('/api/company/logo', {
         method: 'POST',
         body: formData,
         credentials: 'include'
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to upload logo');
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -252,7 +252,7 @@ const Settings = () => {
       });
     }
   });
-  
+
   // Logout function
   const handleLogout = async () => {
     try {
@@ -260,13 +260,13 @@ const Settings = () => {
         method: 'POST',
         credentials: 'include'
       });
-      
+
       // Clear React Query cache
       queryClient.clear();
-      
+
       // Redirect to login page
       setLocation('/');
-      
+
       toast({
         title: "Logged out",
         description: "You have been logged out successfully."
@@ -294,60 +294,60 @@ const Settings = () => {
       phone: phoneRef.current?.value,
       location: locationRef.current?.value
     };
-    
+
     updateProfileMutation.mutate(profileData);
-    
+
     // If there's a profile photo, upload it
     if (profilePhoto) {
       uploadProfilePhotoMutation.mutate(profilePhoto);
     }
   };
-  
+
   // Handle profile photo selection
   const handleProfilePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       setProfilePhoto(event.target.files[0]);
     }
   };
-  
+
   // Handle triggering profile photo upload dialog
   const handleProfilePhotoUploadClick = () => {
     profilePhotoInputRef.current?.click();
   };
-  
+
   // Handle password change
   const handleChangePassword = () => {
     // Reset error
     setPasswordError("");
-    
+
     // Validate passwords
     if (!currentPassword || !newPassword || !confirmPassword) {
       setPasswordError("All fields are required");
       return;
     }
-    
+
     if (newPassword.length < 6) {
       setPasswordError("New password must be at least 6 characters");
       return;
     }
-    
+
     if (newPassword !== confirmPassword) {
       setPasswordError("New passwords do not match");
       return;
     }
-    
+
     // Submit password change
     changePasswordMutation.mutate({
       currentPassword,
       newPassword
     });
   };
-  
+
   // Toggle company edit mode
   const toggleCompanyEditMode = () => {
     setCompanyEditMode(!companyEditMode);
   };
-  
+
   // Handle saving company info
   const handleSaveCompanyInfo = () => {
     const companyData = {
@@ -357,22 +357,22 @@ const Settings = () => {
       address: companyAddressRef.current?.value,
       registrationNumber: companyRegNumberRef.current?.value
     };
-    
+
     saveCompanyInfoMutation.mutate(companyData);
   };
-  
+
   // Handle company logo selection
   const handleCompanyLogoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       setCompanyLogo(event.target.files[0]);
     }
   };
-  
+
   // Handle triggering company logo upload dialog
   const handleCompanyLogoUploadClick = () => {
     companyLogoInputRef.current?.click();
   };
-  
+
   // Generate user initials for avatar fallback
   const getUserInitials = () => {
     if (!user?.name) return 'U';
@@ -434,7 +434,7 @@ const Settings = () => {
                 </Button>
               </div>
             </CardHeader>
-            
+
             <CardContent className="pt-6">
               <div className="space-y-6">
                 {/* Profile Photo Section */}
@@ -507,7 +507,7 @@ const Settings = () => {
                           </div>
                         )}
                       </div>
-                      
+
                       {/* Email */}
                       <div className="space-y-2">
                         <Label htmlFor="email" className="flex items-center text-sm font-medium">
@@ -530,7 +530,7 @@ const Settings = () => {
                         )}
                       </div>
                     </div>
-                    
+
                     {/* Contact Info Row */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Phone */}
@@ -553,7 +553,7 @@ const Settings = () => {
                           </div>
                         )}
                       </div>
-                      
+
                       {/* Location */}
                       <div className="space-y-2">
                         <Label htmlFor="location" className="flex items-center text-sm font-medium">
@@ -577,13 +577,13 @@ const Settings = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <Separator className="my-4" />
-                
+
                 {/* Account Security Section */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Account Security</h3>
-                  
+
                   {/* Password Section */}
                   <div className="grid grid-cols-1 gap-4">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-muted/30 rounded-lg">
@@ -611,7 +611,7 @@ const Settings = () => {
                         Change Password
                       </Button>
                     </div>
-                    
+
                     {/* Sign Out Section */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-muted/30 rounded-lg">
                       <div>
@@ -634,7 +634,7 @@ const Settings = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           {/* Password Change Dialog */}
           <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
             <DialogContent className="sm:max-w-[425px]">
@@ -725,7 +725,7 @@ const Settings = () => {
                 </Button>
               </div>
             </CardHeader>
-            
+
             <CardContent className="pt-6">
               <div className="space-y-6">
                 {/* Company Logo & Info Section */}
@@ -795,7 +795,7 @@ const Settings = () => {
                           </div>
                         )}
                       </div>
-                      
+
                       {/* Registration Number */}
                       <div className="space-y-2">
                         <Label htmlFor="reg-number" className="flex items-center text-sm font-medium">
@@ -816,7 +816,7 @@ const Settings = () => {
                         )}
                       </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Company Email */}
                       <div className="space-y-2">
@@ -837,7 +837,7 @@ const Settings = () => {
                           </div>
                         )}
                       </div>
-                      
+
                       {/* Company Phone */}
                       <div className="space-y-2">
                         <Label htmlFor="company-phone" className="flex items-center text-sm font-medium">
@@ -858,7 +858,7 @@ const Settings = () => {
                         )}
                       </div>
                     </div>
-                    
+
                     {/* Company Address */}
                     <div className="space-y-2">
                       <Label htmlFor="company-address" className="flex items-center text-sm font-medium">
@@ -880,13 +880,13 @@ const Settings = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <Separator className="my-4" />
-                
+
                 {/* Team Members Section */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Team Members</h3>
-                  
+
                   <div className="grid grid-cols-1 gap-4">
                     <div className="relative overflow-x-auto rounded-lg border border-border/60 shadow-sm">
                       <table className="w-full text-sm text-left">
@@ -934,7 +934,7 @@ const Settings = () => {
                         </tbody>
                       </table>
                     </div>
-                    
+
                     <div className="p-4 bg-muted/30 rounded-lg">
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                         <div>
@@ -970,7 +970,7 @@ const Settings = () => {
                 {/* Payment Methods Section */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Payment Methods</h3>
-                  
+
                   <div className="p-4 bg-muted/30 rounded-lg flex flex-col md:flex-row md:items-center justify-between">
                     <div className="flex items-center">
                       <div className="h-10 w-14 rounded-md bg-muted/80 flex items-center justify-center mr-4">
@@ -983,8 +983,8 @@ const Settings = () => {
                         </p>
                       </div>
                     </div>
-                    <Button variant="outline" className="mt-3 md:mt-0">
-                      Add Method
+                    <Button variant="outline" className="mt-3 md:mt-0" disabled>
+                      Coming Soon
                     </Button>
                   </div>
 
@@ -1063,7 +1063,7 @@ const Settings = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           {/* Payment Coming Soon Overlay */}
           <div className="absolute inset-0 bg-background/90 backdrop-blur-sm flex items-center justify-center z-10 rounded-lg">
             <div className="text-center p-6 max-w-md">
