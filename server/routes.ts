@@ -746,15 +746,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }))
       ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-      // Calculate totals
+      // Calculate totals for all transactions
       const totalExpenses = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
       const totalRevenue = revenues.reduce((sum, revenue) => sum + Number(revenue.amount), 0);
+      
+      // Calculate totals for only PAID transactions (for Current Balance)
+      const paidExpenses = expenses
+        .filter(expense => expense.isPaid)
+        .reduce((sum, expense) => sum + Number(expense.amount), 0);
+      
+      const paidRevenue = revenues
+        .filter(revenue => revenue.isPaid)
+        .reduce((sum, revenue) => sum + Number(revenue.amount), 0);
+      
+      // Outstanding (unpaid) amounts
+      const outstandingExpenses = totalExpenses - paidExpenses;
+      const outstandingRevenue = totalRevenue - paidRevenue;
 
       res.json({
         transactions,
         totalExpenses,
         totalRevenue,
-        netProfit: totalRevenue - totalExpenses
+        paidExpenses,
+        paidRevenue,
+        outstandingExpenses,
+        outstandingRevenue,
+        // Use paid amounts for Current Balance calculation
+        netProfit: paidRevenue - paidExpenses
       });
     } catch (error) {
       console.error("Error fetching transactions:", error);

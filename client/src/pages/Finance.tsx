@@ -350,6 +350,7 @@ const Finance = () => {
                   ) : (
                     <>
                       {formatCurrency(financeData?.netProfit || 0, currency)}
+                      <span className="text-xs ml-2 text-muted-foreground">(paid transactions only)</span>
                     </>
                   )}
                 </CardTitle>
@@ -393,7 +394,8 @@ const Finance = () => {
                     <Skeleton className="h-8 w-28" />
                   ) : (
                     <>
-                      {formatCurrency((financeData?.totalRevenue || 0) - (financeData?.totalExpenses || 0), currency)}
+                      {formatCurrency((financeData?.paidRevenue || 0) - (financeData?.paidExpenses || 0), currency)}
+                      <span className="text-xs ml-2 text-muted-foreground">(paid transactions only)</span>
                     </>
                   )}
                 </CardTitle>
@@ -427,7 +429,7 @@ const Finance = () => {
                     <Skeleton className="h-8 w-28" />
                   ) : (
                     <>
-                      {formatCurrency((financeData?.totalExpenses || 0) - (financeData?.outstandingExpenses || 0), currency)}
+                      {formatCurrency(financeData?.paidExpenses || 0, currency)}
                     </>
                   )}
                 </CardTitle>
@@ -476,7 +478,7 @@ const Finance = () => {
                     <Skeleton className="h-8 w-28" />
                   ) : (
                     <>
-                      {formatCurrency((financeData?.totalRevenue || 0) - (financeData?.outstandingRevenue || 0), currency)}
+                      {formatCurrency(financeData?.paidRevenue || 0, currency)}
                     </>
                   )}
                 </CardTitle>
