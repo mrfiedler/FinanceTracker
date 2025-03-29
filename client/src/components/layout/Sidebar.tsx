@@ -140,6 +140,7 @@ const Sidebar = () => {
     { href: "/quotes", label: t('nav.quotes'), icon: <FileText className="h-5 w-5 mr-3" /> },
     { href: "/subscriptions", label: t('nav.subscriptions'), icon: <Bell className="h-5 w-5 mr-3" /> },
     { href: "/contracts", label: t('nav.contracts'), icon: <FileSignature className="h-5 w-5 mr-3" /> },
+    { href: "/settings", label: t('nav.settings'), icon: <Settings className="h-5 w-5 mr-3" /> },
   ];
   
   // Check for level change and trigger animation
@@ -245,7 +246,7 @@ const Sidebar = () => {
         </div>
 
         <nav 
-          className="flex flex-col h-[calc(100vh-16rem)] mt-5 px-4 overflow-y-auto"
+          className="flex flex-col h-[calc(100vh-18rem)] mt-5 px-4 overflow-y-auto"
           aria-label="Main navigation"
         >
           <div className="space-y-1">
@@ -418,7 +419,7 @@ const Sidebar = () => {
           </div>
         </nav>
 
-        <div className="absolute bottom-0 w-full border-t border-gray-200 dark:border-[#3d3d3d] px-4 py-4">
+        <div className="absolute bottom-0 w-full border-t border-gray-200 dark:border-[#3d3d3d] px-4 py-4 bg-white dark:bg-[#2e2e2e]">
           <UserProfileSection closeMobileSidebar={closeMobileSidebar} />
         </div>
       </aside>
