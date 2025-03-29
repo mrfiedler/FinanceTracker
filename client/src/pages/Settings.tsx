@@ -504,7 +504,7 @@ const Settings = () => {
         });
 
         const data = await response.json();
-        
+
         if (response.ok) {
           queryClient.invalidateQueries(['user']);
           toast({
@@ -615,7 +615,7 @@ const Settings = () => {
                             </div>
                           )}
                           <AvatarImage
-                            src={profilePhoto ? URL.createObjectURL(profilePhoto) : user?.avatar}
+                            src={profilePhoto || user?.avatar}
                             alt={user?.name || "User Profile"}
                           />
                           <AvatarFallback className="text-lg font-semibold bg-primary/10 text-primary">
