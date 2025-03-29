@@ -10,6 +10,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
   setupAuth(app);
 
+  // Authentication middleware
+  const authenticate = (req: Request, res: Response, next: NextFunction) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    next();
+  };
+
   // All API routes
 
   // API - Notifications
@@ -533,7 +541,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API - Finance summary
-  app.get("/api/finance/summary", async (req, res) => {
+  app.get("/api/finance/summary", authenticate, async (req, res) => {
     try {
       const dateRange = req.query.dateRange as string || "30";
       const summary = await storage.getFinanceSummary(dateRange);
@@ -543,7 +551,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/finance/trends", async (req, res) => {
+  app.get("/api/finance/trends", authenticate, async (req, res) => {
     try {
       const periodicity = req.query.periodicity as string || "monthly";
       const trends = await storage.getFinanceTrends(periodicity);
@@ -554,13 +562,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API - Finance Categories
-  app.get("/api/finance/categories", async (req, res) => {
+  app.get("/api/finance/categories", authenticate, async (req, res) => {
     try {
-      if (!req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
       // Get categories from storage - will be empty for new users
-      const userId = req.session.userId;
+      const userId = (req.user as Express.User).id;
       const categories = await storage.getFinanceCategories(userId);
       
       // Map to the expected format
@@ -577,11 +582,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/finance/categories", async (req, res) => {
+  app.post("/api/finance/categories", authenticate, async (req, res) => {
     try {
-      if (!req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
       
       const { name, type } = req.body;
 
@@ -591,7 +593,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Create category in storage
-      const userId = req.session.userId;
+      const userId = (req.user as Express.User).id;
       const value = name.toLowerCase().replace(/\s+/g, '_'); // Convert spaces to underscores
       
       const newCategory = await storage.createFinanceCategory({
@@ -607,11 +609,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/finance/categories/:id", async (req, res) => {
+  app.put("/api/finance/categories/:id", authenticate, async (req, res) => {
     try {
-      if (!req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
       
       const id = parseInt(req.params.id);
       const { name, type } = req.body;
@@ -637,11 +636,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/finance/categories/:id", async (req, res) => {
+  app.delete("/api/finance/categories/:id", authenticate, async (req, res) => {
     try {
-      if (!req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
       
       const id = parseInt(req.params.id);
       
@@ -659,14 +655,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API - Finance Accounts
-  app.get("/api/finance/accounts", async (req, res) => {
+  app.get("/api/finance/accounts", authenticate, async (req, res) => {
     try {
-      if (!req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
       
       // Get accounts from storage - will be empty for new users
-      const userId = req.session.userId;
+      const userId = (req.user as Express.User).id;
       const accounts = await storage.getFinanceAccounts(userId);
       
       // Map to the expected format
@@ -683,11 +676,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/finance/accounts", async (req, res) => {
+  app.post("/api/finance/accounts", authenticate, async (req, res) => {
     try {
-      if (!req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
       
       const { name, type } = req.body;
 
@@ -697,7 +687,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create account in storage
-      const userId = req.session.userId;
+      const userId = (req.user as Express.User).id;
       const value = name.toLowerCase().replace(/\s+/g, '_'); // Convert spaces to underscores
       
       const newAccount = await storage.createFinanceAccount({
@@ -713,11 +703,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/finance/accounts/:id", async (req, res) => {
+  app.put("/api/finance/accounts/:id", authenticate, async (req, res) => {
     try {
-      if (!req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
       
       const id = parseInt(req.params.id);
       const { name, type } = req.body;
@@ -743,11 +730,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/finance/accounts/:id", async (req, res) => {
+  app.delete("/api/finance/accounts/:id", authenticate, async (req, res) => {
     try {
-      if (!req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
       
       const id = parseInt(req.params.id);
 
@@ -764,7 +748,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/finance/transactions", async (req, res) => {
+  app.get("/api/finance/transactions", authenticate, async (req, res) => {
     try {
       const dateRange = req.query.dateRange as string || "30";
       const transactionType = req.query.transactionType as string || "all";
@@ -998,11 +982,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API - Company Info
-  app.post("/api/company/info", async (req, res) => {
+  app.post("/api/company/info", authenticate, async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
 
       // Validate the required fields
       const { name, email, phone, address, registrationNumber } = req.body;
@@ -1026,11 +1007,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API - Profile Update
-  app.patch("/api/users/profile", async (req, res) => {
+  app.patch("/api/users/profile", authenticate, async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
 
       const userId = (req.user as Express.User).id;
       const { name, email, phone, location } = req.body;
@@ -1048,11 +1026,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Upload company logo endpoint
-  app.post("/api/company/logo", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      console.log("Company logo upload failed: Not authenticated");
-      return res.status(401).json({ message: "Not authenticated" });
-    }
+  app.post("/api/company/logo", authenticate, async (req, res) => {
 
     try {
       const userId = (req.user as Express.User).id;
@@ -1079,11 +1053,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Global search endpoint
-  app.get("/api/search", async (req, res) => {
+  app.get("/api/search", authenticate, async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
 
       const query = req.query.q as string;
       
@@ -1153,11 +1124,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API - Achievements
-  app.get("/api/achievements/stats", async (req, res) => {
+  app.get("/api/achievements/stats", authenticate, async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
       
       // Get stats from various entities to build achievements progress
       const clients = await storage.getClients();
@@ -1189,11 +1157,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get user gamification data
-  app.get("/api/user/gamification", async (req, res) => {
+  app.get("/api/user/gamification", authenticate, async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
       
       const userId = req.user!.id;
       // In a real implementation, this would fetch from a database
@@ -1217,11 +1182,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Save user gamification data
-  app.post("/api/user/gamification", async (req, res) => {
+  app.post("/api/user/gamification", authenticate, async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
       
       const userId = req.user!.id;
       const data = req.body;
