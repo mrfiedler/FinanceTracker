@@ -1048,7 +1048,7 @@ export const translations: TranslationMap = {
     "pt-BR": "Aceito"
   },
   "quotes.rejected": {
-    ""en": "Rejected",
+    "en": "Rejected",
     "pt-BR": "Rejeitado"
   },
   "quotes.issued": {
