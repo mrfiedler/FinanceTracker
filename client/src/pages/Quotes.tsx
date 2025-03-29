@@ -120,7 +120,7 @@ const Quotes = () => {
   };
 
   return (
-    <main className="w-full h-full overflow-y-auto p-4 md:p-6 pb-20">
+    <main className="w-full h-full overflow-y-auto bg-background/95 p-4 md:p-6 pb-20">
       {/* Page header with standardized styling */}
       <div className="page-header">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">

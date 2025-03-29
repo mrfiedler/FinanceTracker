@@ -169,7 +169,7 @@ export const statusIndicators = {
 
 // ----- Page Layouts -----
 export const pageLayouts = {
-  // Main page container
+  // Main page container with standardized opacity
   main: "w-full h-full overflow-y-auto bg-background/95 p-4 md:p-6 pb-20",
 
   // Page header wrapper

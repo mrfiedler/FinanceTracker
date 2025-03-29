@@ -437,7 +437,7 @@ const Settings = () => {
   };
 
   return (
-    <main className="w-full h-full overflow-y-auto bg-background pb-20">
+    <main className="w-full h-full overflow-y-auto bg-background/95 pb-20">
       <div className="page-header mb-14 pt-8">
         {/*Removed header text here*/}
       </div>
