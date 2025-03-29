@@ -15,18 +15,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Debug session information for troubleshooting
     console.log(`Authenticating request to ${req.method} ${req.path}`);
     console.log("Session ID:", req.sessionID);
-    console.log("Is authenticated:", req.isAuthenticated());
     
     if (req.session) {
-      console.log("Session cookie:", req.session.cookie);
+      console.log("Session data:", {
+        userId: req.session.userId,
+        authenticated: req.session.authenticated,
+        cookie: req.session.cookie
+      });
     }
     
-    if (!req.isAuthenticated()) {
+    if (!req.session || !req.session.authenticated || !req.session.userId) {
       console.log(`Authentication failed for ${req.method} ${req.path}`);
       return res.status(401).json({ message: "Not authenticated" });
     }
     
-    console.log(`Authentication successful for user ${(req.user as Express.User).id}`);
+    console.log(`Authentication successful for user ${req.session.userId}`);
     next();
   };
 
@@ -35,7 +38,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API - Notifications
   app.get("/api/notifications", authenticate, async (req, res) => {
     try {
-      const userId = (req.user as Express.User).id;
+      const userId = req.session.userId!;
       const notifications = await storage.getNotifications(userId);
       res.json(notifications);
     } catch (error) {
@@ -45,7 +48,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/notifications/unread-count", authenticate, async (req, res) => {
     try {
-      const userId = (req.user as Express.User).id;
+      const userId = req.session.userId!;
       const count = await storage.getUnreadNotificationsCount(userId);
       res.json({ count });
     } catch (error) {
@@ -70,7 +73,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/notifications/mark-all-read", authenticate, async (req, res) => {
     try {
-      const userId = (req.user as Express.User).id;
+      const userId = req.session.userId!;
       const success = await storage.markAllNotificationsAsRead(userId);
       res.json({ success });
     } catch (error) {
@@ -1180,8 +1183,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user gamification data
   app.get("/api/user/gamification", authenticate, async (req, res) => {
     try {
+      const userId = req.session.userId!;
+      console.log(`Fetching gamification data for user ${userId}`);
       
-      const userId = req.user!.id;
       // In a real implementation, this would fetch from a database
       // For now, we'll use defaults that match what's in the screenshot
       const gamificationData = {
@@ -1205,8 +1209,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Save user gamification data
   app.post("/api/user/gamification", authenticate, async (req, res) => {
     try {
+      const userId = req.session.userId!;
+      console.log(`Saving gamification data for user ${userId}`, req.body);
       
-      const userId = req.user!.id;
       const data = req.body;
       
       // In a real implementation, this would save to a database
@@ -1222,7 +1227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API - User profile
   app.patch("/api/users/profile", authenticate, async (req, res) => {
     try {
-      const userId = (req.user as Express.User).id;
+      const userId = req.session.userId!;
       console.log(`Processing profile update for user ${userId}`, req.body);
       const { name, email, phone, location } = req.body;
 
@@ -1250,12 +1255,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update user profile
       const updatedUser = await storage.updateUser(userId, { name, email, phone, location });
 
-      // Update session user object
-      const user = req.user as Express.User;
-      if (name) user.name = name;
-      if (email) user.email = email;
-      if (phone) user.phone = phone;
-      if (location) user.location = location;
+      // Update session user info
+      if (req.session.user) {
+        if (name) req.session.user.name = name;
+        if (email) req.session.user.email = email;
+        if (phone) req.session.user.phone = phone;
+        if (location) req.session.user.location = location;
+      }
 
       console.log(`Profile successfully updated for user ${userId}`);
 
@@ -1271,7 +1277,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API - Upload profile avatar
   app.post("/api/users/avatar", authenticate, async (req, res) => {
     try {
-      const userId = (req.user as Express.User).id;
+      const userId = req.session.userId!;
       console.log(`Processing avatar upload for user ${userId}`);
 
       // Get the actual image data from the request body
@@ -1283,6 +1289,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Update user with the avatar  
       await storage.updateUser(userId, { avatar: imageUrl });
+
+      // Update session if user data is stored there
+      if (req.session.user) {
+        req.session.user.avatar = imageUrl;
+      }
 
       console.log("Avatar successfully updated for user", userId);
       res.json({ 
@@ -1299,7 +1310,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API - Company logo upload
   app.post("/api/company/logo", authenticate, async (req, res) => {
     try {
-      const userId = (req.user as Express.User).id;
+      const userId = req.session.userId!;
       console.log(`Processing company logo upload for user ${userId}`);
 
       // Get the actual image data from the request body
@@ -1311,6 +1322,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Update user with company logo
       await storage.updateUser(userId, { companyLogo: imageUrl });
+
+      // Update session if user data is stored there
+      if (req.session.user) {
+        req.session.user.companyLogo = imageUrl;
+      }
 
       console.log("Company logo uploaded successfully");
       res.json({ 
@@ -1327,7 +1343,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API - Company info
   app.post("/api/company/info", authenticate, async (req, res) => {
     try {
-      const userId = (req.user as Express.User).id;
+      const userId = req.session.userId!;
       console.log(`Processing company info save for user ${userId}`, req.body);
 
       // In a real app, this would save to a company table in the database
@@ -1346,7 +1362,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API - Change password
   app.patch("/api/users/password", authenticate, async (req, res) => {
     try {
-      const userId = (req.user as Express.User).id;
+      const userId = req.session.userId!;
       console.log(`Processing password change for user ${userId}`);
       const { currentPassword, newPassword } = req.body;
 
@@ -1385,6 +1401,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Update user with new password
       await storage.updateUser(userId, { password: hashedPassword });
+
+      // Update session if user data is stored there
+      if (req.session.user) {
+        req.session.user.password = hashedPassword;
+      }
 
       console.log(`Password successfully updated for user ${userId}`);
       res.json({ message: "Password updated successfully" });
