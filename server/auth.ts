@@ -46,12 +46,13 @@ export function setupAuth(app: Express) {
   // Set up session
   const sessionSettings: session.SessionOptions = {
     secret: SESSION_SECRET,
-    resave: true,
-    saveUninitialized: true,
+    resave: true, // Changed to true to make sure session is saved on every request
+    saveUninitialized: true, // Changed to true to create a session regardless of changes
     store: storage.sessionStore,
+    name: 'finance_tracker.sid', // Custom cookie name for better isolation
     cookie: {
       secure: false, // Set to false for development (even in production for this demo)
-      httpOnly: false, // Allow JavaScript access to cookies
+      httpOnly: false, // Set to false for debugging
       maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
       sameSite: 'lax' // Less restrictive SameSite setting
     }
@@ -123,7 +124,7 @@ export function setupAuth(app: Express) {
 
   // Login endpoint
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err: Error | null, user: Express.User | false, info: { message: string }) => {
+    passport.authenticate("local", (err: Error | null, user: Express.User | false, info: any) => {
       if (err) return next(err);
       if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
@@ -132,38 +133,52 @@ export function setupAuth(app: Express) {
 
         console.log("User successfully logged in:", (user as SelectUser).id);
 
-        // Add custom properties to the session
+        // Add custom properties to the session and ensure it's saved
         if (req.session) {
           req.session.userId = (user as SelectUser).id;
           req.session.authenticated = true;
+          
+          // Force session save before sending response
           req.session.save((err) => {
             if (err) {
               console.error("Error saving session:", err);
-            } else {
-              console.log("Session successfully saved");
+              return res.status(500).json({ message: "Failed to create session" });
             }
+            
+            console.log("Session successfully saved");
+            
+            // Remove password from response
+            const { password, ...userWithoutPassword } = user;
+            return res.status(200).json(userWithoutPassword);
           });
         } else {
           console.error("Session object not available");
+          return res.status(500).json({ message: "Session not available" });
         }
-
-        // Remove password from response
-        const { password, ...userWithoutPassword } = user;
-        res.status(200).json(userWithoutPassword);
       });
     })(req, res, next);
   });
 
   // Logout endpoint
   app.post("/api/logout", (req, res, next) => {
+    console.log("Logging out user:", req.user ? (req.user as SelectUser).id : 'Not authenticated');
+    
     req.logout((err) => {
-      if (err) return next(err);
+      if (err) {
+        console.error("Error during logout:", err);
+        return next(err);
+      }
+      
       req.session.destroy((err) => {
         if (err) {
           console.error("Error destroying session:", err);
           return res.status(500).json({ message: "Failed to destroy session" });
         }
-        res.clearCookie('connect.sid');
+        
+        // Clear the cookie with the same name used in session settings
+        res.clearCookie('finance_tracker.sid');
+        
+        console.log("User successfully logged out");
         res.json({ message: "Logged out successfully" });
       });
     });

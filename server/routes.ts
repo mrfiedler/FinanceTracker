@@ -12,9 +12,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Authentication middleware
   const authenticate = (req: Request, res: Response, next: NextFunction) => {
+    // Debug session information for troubleshooting
+    console.log(`Authenticating request to ${req.method} ${req.path}`);
+    console.log("Session ID:", req.sessionID);
+    console.log("Is authenticated:", req.isAuthenticated());
+    
+    if (req.session) {
+      console.log("Session cookie:", req.session.cookie);
+    }
+    
     if (!req.isAuthenticated()) {
+      console.log(`Authentication failed for ${req.method} ${req.path}`);
       return res.status(401).json({ message: "Not authenticated" });
     }
+    
+    console.log(`Authentication successful for user ${(req.user as Express.User).id}`);
     next();
   };
 
