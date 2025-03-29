@@ -1273,8 +1273,33 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteUser(id: number): Promise<boolean> {
-    const result = await db.delete(users).where(eq(users.id, id));
-    return result.rowCount > 0;
+    try {
+      // Using a transaction to ensure all operations complete or roll back
+      return await db.transaction(async (tx) => {
+        console.log(`Attempting to delete user with ID: ${id}`);
+        
+        // Delete notifications associated with this user
+        await tx.delete(notifications).where(eq(notifications.userId, id));
+        console.log(`Deleted notifications for user ${id}`);
+        
+        // Delete finance categories associated with this user
+        await tx.delete(financeCategories).where(eq(financeCategories.userId, id));
+        console.log(`Deleted finance categories for user ${id}`);
+        
+        // Delete finance accounts associated with this user
+        await tx.delete(financeAccounts).where(eq(financeAccounts.userId, id));
+        console.log(`Deleted finance accounts for user ${id}`);
+        
+        // Finally delete the user
+        const result = await tx.delete(users).where(eq(users.id, id));
+        console.log(`User ${id} deletion result:`, result);
+        
+        return result.rowCount > 0;
+      });
+    } catch (error) {
+      console.error(`Error deleting user ${id}:`, error);
+      return false;
+    }
   }
 
   // Clients
