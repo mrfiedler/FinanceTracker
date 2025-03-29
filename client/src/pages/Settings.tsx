@@ -272,11 +272,6 @@ const Settings = () => {
     },
     onError: (error) => {
       console.error("Error uploading company logo:", error);
-      toast({
-        title: "Failed to upload logo",
-        description: "There was an error uploading your company logo. Please try again.",
-        variant: "destructive"
-      });
     }
   });
 
