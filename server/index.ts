@@ -1,8 +1,25 @@
 import express, { type Request, Response, NextFunction } from "express";
+import session from "express-session";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { storage } from "./storage";
 
 const app = express();
+
+// Configure session middleware
+app.use(session({
+  store: storage.sessionStore,
+  secret: process.env.SESSION_SECRET || 'your-secure-session-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.urlencoded({ extended: false }));
