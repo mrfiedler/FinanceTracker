@@ -13,7 +13,6 @@ export const users = pgTable("users", {
   location: text("location"),
   lastPasswordChange: text("last_password_change"),
   avatar: text("avatar"),
-  companyLogo: text("company_logo"),
   isAdmin: boolean("is_admin").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -26,7 +25,6 @@ export const insertUserSchema = createInsertSchema(users).pick({
   phone: true,
   location: true,
   avatar: true,
-  companyLogo: true,
   lastPasswordChange: true,
   isAdmin: true,
 });
