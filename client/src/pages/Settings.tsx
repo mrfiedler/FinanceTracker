@@ -68,7 +68,7 @@ const Settings = () => {
   const [companyRegNumber, setCompanyRegNumber] = useState('');
 
   // Profile photo
-  const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const profilePhotoInputRef = useRef<HTMLInputElement>(null);
 
   // Form refs for profile data
@@ -85,7 +85,7 @@ const Settings = () => {
   const companyPhoneRef = useRef<HTMLInputElement>(null);
   const companyAddressRef = useRef<HTMLInputElement>(null);
   const companyLogoInputRef = useRef<HTMLInputElement>(null);
-  const [companyLogo, setCompanyLogo] = useState<File | null>(null);
+  const [companyLogo, setCompanyLogo] = useState<string | null>(null);
 
   // Password change state
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
@@ -137,72 +137,34 @@ const Settings = () => {
 
   // Upload profile photo mutation
   const uploadProfilePhotoMutation = useMutation({
-    mutationFn: async (photoFile: File) => {
-      return new Promise<any>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(photoFile);
-        reader.onload = async () => {
-          try {
-            const img = new Image();
-            img.src = reader.result as string;
-            await new Promise(resolve => img.onload = resolve);
+    mutationFn: async (dataUrl: string) => {
+      try {
+        console.log("Sending avatar data to server");
+        const response = await fetch('/api/users/avatar', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ imageUrl: dataUrl }),
+          credentials: 'include'
+        });
 
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
+        if (!response.ok) {
+          throw new Error('Failed to upload profile photo');
+        }
 
-            const maxWidth = 800;
-            const maxHeight = 800;
-            let width = img.width;
-            let height = img.height;
-
-            if (width > height) {
-              if (width > maxWidth) {
-                height *= maxWidth / width;
-                width = maxWidth;
-              }
-            } else {
-              if (height > maxHeight) {
-                width *= maxHeight / height;
-                height = maxHeight;
-              }
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-            ctx?.drawImage(img, 0, 0, width, height);
-
-            const imageUrl = canvas.toDataURL('image/jpeg', 0.7);
-            console.log("Converting image to data URL");
-
-            const response = await fetch('/api/users/avatar', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ imageUrl }),
-              credentials: 'include'
-            });
-
-            if (!response.ok) {
-              throw new Error('Failed to upload profile photo');
-            }
-
-            resolve(await response.json());
-          } catch (error) {
-            reject(error);
-          }
-        };
-        reader.onerror = (error) => {
-          reject(error);
-        };
-      });
+        return await response.json();
+      } catch (error) {
+        console.error("Error in uploadProfilePhotoMutation:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       toast({
         title: "Profile photo updated",
         description: "Your profile photo has been updated successfully.",
       });
-      setProfilePhoto(null);
+      setProfilePhoto(null); 
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
     },
     onError: (error) => {
@@ -272,37 +234,27 @@ const Settings = () => {
 
   // Upload company logo mutation
   const uploadCompanyLogoMutation = useMutation({
-    mutationFn: async (logoFile: File) => {
-      return new Promise<any>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(logoFile);
-        reader.onload = async () => {
-          try {
-            const imageUrl = reader.result as string;
-            console.log("Converting company logo to data URL");
+    mutationFn: async (imageUrl: string) => {
+      try {
+        console.log("Sending company logo data to server");
+        const response = await fetch('/api/company/logo', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ imageUrl }),
+          credentials: 'include'
+        });
 
-            const response = await fetch('/api/company/logo', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ imageUrl }),
-              credentials: 'include'
-            });
+        if (!response.ok) {
+          throw new Error('Failed to upload company logo');
+        }
 
-            if (!response.ok) {
-              throw new Error('Failed to upload company logo');
-            }
-
-            resolve(await response.json());
-          } catch (error) {
-            reject(error);
-          }
-        };
-        reader.onerror = (error) => {
-          reject(error);
-        };
-      });
+        return await response.json();
+      } catch (error) {
+        console.error("Error in uploadCompanyLogoMutation:", error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
       toast({
@@ -371,7 +323,12 @@ const Settings = () => {
 
   const handleProfilePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
-      setProfilePhoto(event.target.files[0]);
+      const file = event.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePhoto(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -430,52 +387,20 @@ const Settings = () => {
     // Show preview immediately
     const reader = new FileReader();
     reader.onloadend = () => {
-      setCompanyLogo(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-
-    // Upload to server
-    const uploadReader = new FileReader();
-    uploadReader.onloadend = async () => {
+      const dataUrl = reader.result as string;
+      setCompanyLogo(dataUrl);
+      
+      // Upload to server
       try {
-        const response = await fetch("/api/company/logo", {
-          method: "POST",
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ imageUrl: uploadReader.result }),
-          credentials: 'include'
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          queryClient.invalidateQueries(['user']);
-          toast({
-            title: "Success", 
-            description: "Logo updated successfully",
-            variant: "default",
-          });
-        } else {
-          toast({
-            description: data.message || "Failed to update logo",
-            variant: "destructive"
-          });
-          // Revert preview on error
-          setCompanyLogo(user?.companyLogo || null);
-        }
+        uploadCompanyLogoMutation.mutate(dataUrl);
       } catch (error) {
-        toast({
-          description: "Failed to update logo",
-          variant: "destructive"
-        });
-        // Revert preview on error
-        setCompanyLogo(user?.companyLogo || null);
+        console.error("Error uploading logo:", error);
+        // Error handling is already in the mutation
       } finally {
         setLogoLoading(false);
       }
     };
-    uploadReader.readAsDataURL(file);
+    reader.readAsDataURL(file);
   };
 
   const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -486,52 +411,20 @@ const Settings = () => {
     // Show preview immediately
     const reader = new FileReader();
     reader.onloadend = () => {
-      setProfilePhoto(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-
-    // Upload to server
-    const uploadReader = new FileReader();
-    uploadReader.onloadend = async () => {
+      const dataUrl = reader.result as string;
+      setProfilePhoto(dataUrl);
+      
+      // Upload to server
       try {
-        const response = await fetch("/api/users/avatar", {
-          method: "POST",
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ imageUrl: uploadReader.result }),
-          credentials: 'include'
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          queryClient.invalidateQueries(['user']);
-          toast({
-            title: "Success",
-            description: "Avatar updated successfully",
-            variant: "default",
-          });
-        } else {
-          toast({
-            description: data.message || "Failed to update avatar",
-            variant: "destructive"
-          });
-          // Revert preview on error
-          setProfilePhoto(user?.avatar || null);
-        }
+        uploadProfilePhotoMutation.mutate(dataUrl);
       } catch (error) {
-        toast({
-          description: "Failed to update avatar",
-          variant: "destructive"
-        });
-        // Revert preview on error
-        setProfilePhoto(user?.avatar || null);
+        console.error("Error uploading avatar:", error);
+        // Error handling is already in the mutation
       } finally {
         setAvatarLoading(false);
       }
     };
-    uploadReader.readAsDataURL(file);
+    reader.readAsDataURL(file);
   };
 
   const handleCompanyLogoUploadClick = () => {
