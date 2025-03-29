@@ -916,7 +916,7 @@ const Settings = () => {
                           />
                         ) : companyLogo ? (
                           <img
-                            src={URL.createObjectURL(companyLogo)}
+                            src={companyLogo}
                             alt="Company Logo Preview"
                             className="w-full h-full object-contain"
                           />
@@ -971,7 +971,7 @@ const Settings = () => {
                             className="border-gray-300 focus:border-primary"
                           />
                         ) : (
-                          <div className="py-2 px-3 bg-muted/30 rounded-md text-foreground font-medium min-h-9">
+                          <div className="py-2 px-3 bgmuted/30 rounded-md text-foreground font-medium min-h-9">
                             {companyName || 'No company name set'}
                           </div>
                         )}
