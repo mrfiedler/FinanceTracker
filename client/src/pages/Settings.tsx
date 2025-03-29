@@ -426,85 +426,112 @@ const Settings = () => {
     const file = event.target.files?.[0];
     if (!file) return;
     setLogoLoading(true);
+
+    // Show preview immediately
     const reader = new FileReader();
-    reader.onloadend = async () => {
-      const imageUrl = reader.result as string;
+    reader.onloadend = () => {
+      setCompanyLogo(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload to server
+    const uploadReader = new FileReader();
+    uploadReader.onloadend = async () => {
       try {
         const response = await fetch("/api/company/logo", {
           method: "POST",
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ imageUrl }),
+          body: JSON.stringify({ imageUrl: uploadReader.result }),
           credentials: 'include'
         });
+
+        const data = await response.json();
 
         if (response.ok) {
           queryClient.invalidateQueries(['user']);
           toast({
-            title: "Success",
-            description: "Logo updated successfully. It may take a moment to be displayed.",
+            title: "Success", 
+            description: "Logo updated successfully",
             variant: "default",
           });
         } else {
           toast({
-            description: "Failed to update logo",
+            description: data.message || "Failed to update logo",
             variant: "destructive"
           });
+          // Revert preview on error
+          setCompanyLogo(user?.companyLogo || null);
         }
       } catch (error) {
-          toast({
-            description: "Failed to update logo",
-            variant: "destructive"
-          });
+        toast({
+          description: "Failed to update logo",
+          variant: "destructive"
+        });
+        // Revert preview on error
+        setCompanyLogo(user?.companyLogo || null);
       } finally {
         setLogoLoading(false);
       }
     };
-    reader.readAsDataURL(file);
+    uploadReader.readAsDataURL(file);
   };
 
   const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     setAvatarLoading(true);
+
+    // Show preview immediately
     const reader = new FileReader();
-    reader.onloadend = async () => {
-      const imageUrl = reader.result as string;
+    reader.onloadend = () => {
+      setProfilePhoto(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload to server
+    const uploadReader = new FileReader();
+    uploadReader.onloadend = async () => {
       try {
         const response = await fetch("/api/users/avatar", {
           method: "POST",
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ imageUrl }),
+          body: JSON.stringify({ imageUrl: uploadReader.result }),
           credentials: 'include'
         });
 
+        const data = await response.json();
+        
         if (response.ok) {
-          const data = await response.json();
           queryClient.invalidateQueries(['user']);
           toast({
             title: "Success",
-            description: "Avatar updated successfully. It may take a moment to be displayed.",
+            description: "Avatar updated successfully",
             variant: "default",
           });
         } else {
           toast({
-            description: "Failed to update avatar",
+            description: data.message || "Failed to update avatar",
             variant: "destructive"
           });
+          // Revert preview on error
+          setProfilePhoto(user?.avatar || null);
         }
       } catch (error) {
         toast({
           description: "Failed to update avatar",
           variant: "destructive"
         });
+        // Revert preview on error
+        setProfilePhoto(user?.avatar || null);
       } finally {
         setAvatarLoading(false);
       }
     };
-    reader.readAsDataURL(file);
+    uploadReader.readAsDataURL(file);
   };
 
   const handleCompanyLogoUploadClick = () => {
