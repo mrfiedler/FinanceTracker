@@ -211,6 +211,46 @@ export const translations: TranslationMap = {
     "en": "Recent Quotes",
     "pt-BR": "Orçamentos Recentes"
   },
+  "dashboard.noQuotes": {
+    "en": "No recent quotes",
+    "pt-BR": "Nenhum orçamento recente"
+  },
+  "dashboard.welcomeBack": {
+    "en": "Welcome back",
+    "pt-BR": "Bem-vindo(a) de volta"
+  },
+  "dashboard.overviewTitle": {
+    "en": "Here's an overview of your business",
+    "pt-BR": "Aqui está uma visão geral do seu negócio"
+  },
+  "dashboard.today": {
+    "en": "Today",
+    "pt-BR": "Hoje"
+  },
+  "dashboard.thisWeek": {
+    "en": "This Week",
+    "pt-BR": "Esta Semana"
+  },
+  "dashboard.thisMonth": {
+    "en": "This Month",
+    "pt-BR": "Este Mês"
+  },
+  "dashboard.lastMonth": {
+    "en": "Last Month",
+    "pt-BR": "Mês Passado"
+  },
+  "dashboard.thisYear": {
+    "en": "This Year",
+    "pt-BR": "Este Ano"
+  },
+  "dashboard.lastYear": {
+    "en": "Last Year",
+    "pt-BR": "Ano Passado"
+  },
+  "dashboard.noTopClients": {
+    "en": "No top clients data",
+    "pt-BR": "Sem dados de principais clientes"
+  },
   "dashboard.topClients": {
     "en": "Top Clients",
     "pt-BR": "Principais Clientes"
@@ -218,6 +258,46 @@ export const translations: TranslationMap = {
   "dashboard.financialTrends": {
     "en": "Financial Trends",
     "pt-BR": "Tendências Financeiras"
+  },
+  "dashboard.revenueExpenseTrends": {
+    "en": "Revenue & Expense Trends",
+    "pt-BR": "Tendências de Receita e Despesa"
+  },
+  "dashboard.quoteConversionRate": {
+    "en": "Quote Conversion Rate",
+    "pt-BR": "Taxa de Conversão de Orçamentos"
+  },
+  "dashboard.allTime": {
+    "en": "All time",
+    "pt-BR": "Todo período"
+  },
+  "dashboard.conversionRate": {
+    "en": "Conversion Rate",
+    "pt-BR": "Taxa de Conversão"
+  },
+  "dashboard.acceptedQuotes": {
+    "en": "Accepted",
+    "pt-BR": "Aceitos"
+  },
+  "dashboard.declinedQuotes": {
+    "en": "Declined",
+    "pt-BR": "Recusados"
+  },
+  "dashboard.pendingQuotes": {
+    "en": "Pending",
+    "pt-BR": "Pendentes"
+  },
+  "dashboard.quotes": {
+    "en": "quotes",
+    "pt-BR": "orçamentos"
+  },
+  "dashboard.topClientsByRevenue": {
+    "en": "Top Clients by Revenue",
+    "pt-BR": "Principais Clientes por Receita"
+  },
+  "dashboard.viewAllClients": {
+    "en": "View All Clients",
+    "pt-BR": "Ver Todos os Clientes"
   },
   "dashboard.add": {
     "en": "Add",
@@ -481,6 +561,122 @@ export const translations: TranslationMap = {
     "en": "New Account Name",
     "pt-BR": "Nome da Nova Conta"
   },
+  "finance.deleteCategory": {
+    "en": "Delete Category",
+    "pt-BR": "Excluir Categoria"
+  },
+  "finance.deleteAccount": {
+    "en": "Delete Account",
+    "pt-BR": "Excluir Conta"
+  },
+  "finance.confirmDelete": {
+    "en": "Are you sure you want to delete this item?",
+    "pt-BR": "Tem certeza que deseja excluir este item?"
+  },
+  "finance.confirmDeleteCategory": {
+    "en": "Are you sure you want to delete this category?",
+    "pt-BR": "Tem certeza que deseja excluir esta categoria?"
+  },
+  "finance.confirmDeleteAccount": {
+    "en": "Are you sure you want to delete this account?",
+    "pt-BR": "Tem certeza que deseja excluir esta conta?"
+  },
+  "finance.delete": {
+    "en": "Delete",
+    "pt-BR": "Excluir"
+  },
+  "finance.cancel": {
+    "en": "Cancel",
+    "pt-BR": "Cancelar"
+  },
+  "finance.save": {
+    "en": "Save",
+    "pt-BR": "Salvar"
+  },
+  "finance.add": {
+    "en": "Add",
+    "pt-BR": "Adicionar"
+  },
+  "finance.edit": {
+    "en": "Edit",
+    "pt-BR": "Editar"
+  },
+  "finance.noTransactions": {
+    "en": "No transactions found",
+    "pt-BR": "Nenhuma transação encontrada"
+  },
+  "finance.noCategories": {
+    "en": "No categories found",
+    "pt-BR": "Nenhuma categoria encontrada"
+  },
+  "finance.noAccounts": {
+    "en": "No accounts found",
+    "pt-BR": "Nenhuma conta encontrada"
+  },
+  "finance.january": {
+    "en": "January",
+    "pt-BR": "Janeiro"
+  },
+  "finance.february": {
+    "en": "February",
+    "pt-BR": "Fevereiro"
+  },
+  "finance.march": {
+    "en": "March",
+    "pt-BR": "Março"
+  },
+  "finance.april": {
+    "en": "April",
+    "pt-BR": "Abril"
+  },
+  "finance.may": {
+    "en": "May", 
+    "pt-BR": "Maio"
+  },
+  "finance.june": {
+    "en": "June",
+    "pt-BR": "Junho"
+  },
+  "finance.july": {
+    "en": "July",
+    "pt-BR": "Julho"
+  },
+  "finance.august": {
+    "en": "August",
+    "pt-BR": "Agosto"
+  },
+  "finance.september": {
+    "en": "September",
+    "pt-BR": "Setembro"
+  },
+  "finance.october": {
+    "en": "October",
+    "pt-BR": "Outubro"
+  },
+  "finance.november": {
+    "en": "November",
+    "pt-BR": "Novembro"
+  },
+  "finance.december": {
+    "en": "December",
+    "pt-BR": "Dezembro"
+  },
+  "finance.isPaid": {
+    "en": "Is Paid",
+    "pt-BR": "Está Pago"
+  },
+  "finance.yes": {
+    "en": "Yes",
+    "pt-BR": "Sim"
+  },
+  "finance.no": {
+    "en": "No",
+    "pt-BR": "Não"
+  },
+  "finance.addNewClient": {
+    "en": "Add New Client",
+    "pt-BR": "Adicionar Novo Cliente"
+  },
   
   // Clients
   "clients.title": {
@@ -510,6 +706,66 @@ export const translations: TranslationMap = {
   "clients.details": {
     "en": "Client Details",
     "pt-BR": "Detalhes do Cliente"
+  },
+  "clients.searchClients": {
+    "en": "Search clients...",
+    "pt-BR": "Buscar clientes..."
+  },
+  "clients.noClients": {
+    "en": "No clients found",
+    "pt-BR": "Nenhum cliente encontrado"
+  },
+  "clients.totalClients": {
+    "en": "Total Clients",
+    "pt-BR": "Total de Clientes"
+  },
+  "clients.recentActivity": {
+    "en": "Recent Activity",
+    "pt-BR": "Atividade Recente"
+  },
+  "clients.status": {
+    "en": "Status",
+    "pt-BR": "Status"
+  },
+  "clients.active": {
+    "en": "Active",
+    "pt-BR": "Ativo"
+  },
+  "clients.inactive": {
+    "en": "Inactive",
+    "pt-BR": "Inativo"
+  },
+  "clients.company": {
+    "en": "Company",
+    "pt-BR": "Empresa"
+  },
+  "clients.website": {
+    "en": "Website",
+    "pt-BR": "Site"
+  },
+  "clients.industry": {
+    "en": "Industry",
+    "pt-BR": "Indústria"
+  },
+  "clients.notes": {
+    "en": "Notes",
+    "pt-BR": "Observações"
+  },
+  "clients.save": {
+    "en": "Save Client",
+    "pt-BR": "Salvar Cliente"
+  },
+  "clients.edit": {
+    "en": "Edit Client",
+    "pt-BR": "Editar Cliente"
+  },
+  "clients.delete": {
+    "en": "Delete Client",
+    "pt-BR": "Excluir Cliente"
+  },
+  "clients.confirmDelete": {
+    "en": "Are you sure you want to delete this client?",
+    "pt-BR": "Tem certeza que deseja excluir este cliente?"
   },
   
   // Quotes
@@ -553,6 +809,94 @@ export const translations: TranslationMap = {
     "en": "Expired",
     "pt-BR": "Expirado"
   },
+  "quotes.searchQuotes": {
+    "en": "Search quotes...",
+    "pt-BR": "Buscar orçamentos..."
+  },
+  "quotes.noQuotes": {
+    "en": "No quotes found",
+    "pt-BR": "Nenhum orçamento encontrado"
+  },
+  "quotes.totalQuotes": {
+    "en": "Total Quotes",
+    "pt-BR": "Total de Orçamentos"
+  },
+  "quotes.recentQuotes": {
+    "en": "Recent Quotes",
+    "pt-BR": "Orçamentos Recentes"
+  },
+  "quotes.client": {
+    "en": "Client",
+    "pt-BR": "Cliente"
+  },
+  "quotes.amount": {
+    "en": "Amount",
+    "pt-BR": "Valor"
+  },
+  "quotes.date": {
+    "en": "Date",
+    "pt-BR": "Data"
+  },
+  "quotes.expirationDate": {
+    "en": "Expiration Date",
+    "pt-BR": "Data de Expiração"
+  },
+  "quotes.items": {
+    "en": "Items",
+    "pt-BR": "Itens"
+  },
+  "quotes.addItem": {
+    "en": "Add Item",
+    "pt-BR": "Adicionar Item"
+  },
+  "quotes.itemName": {
+    "en": "Item Name",
+    "pt-BR": "Nome do Item"
+  },
+  "quotes.quantity": {
+    "en": "Quantity",
+    "pt-BR": "Quantidade"
+  },
+  "quotes.unitPrice": {
+    "en": "Unit Price",
+    "pt-BR": "Preço Unitário"
+  },
+  "quotes.subtotal": {
+    "en": "Subtotal",
+    "pt-BR": "Subtotal"
+  },
+  "quotes.total": {
+    "en": "Total",
+    "pt-BR": "Total"
+  },
+  "quotes.notes": {
+    "en": "Notes",
+    "pt-BR": "Observações"
+  },
+  "quotes.termsAndConditions": {
+    "en": "Terms and Conditions",
+    "pt-BR": "Termos e Condições"
+  },
+  "quotes.save": {
+    "en": "Save Quote",
+    "pt-BR": "Salvar Orçamento"
+  },
+  "quotes.send": {
+    "en": "Send Quote",
+    "pt-BR": "Enviar Orçamento"
+  },
+  "quotes.edit": {
+    "en": "Edit Quote",
+    "pt-BR": "Editar Orçamento"
+  },
+  "quotes.delete": {
+    "en": "Delete Quote",
+    "pt-BR": "Excluir Orçamento"
+  },
+  "quotes.confirmDelete": {
+    "en": "Are you sure you want to delete this quote?",
+    "pt-BR": "Tem certeza que deseja excluir este orçamento?"
+  },
   
   // Contracts
   "contracts.title": {
@@ -590,6 +934,58 @@ export const translations: TranslationMap = {
   "contracts.completed": {
     "en": "Completed",
     "pt-BR": "Concluído"
+  },
+  "contracts.searchContracts": {
+    "en": "Search contracts...",
+    "pt-BR": "Buscar contratos..."
+  },
+  "contracts.noContracts": {
+    "en": "No contracts found",
+    "pt-BR": "Nenhum contrato encontrado"
+  },
+  "contracts.totalContracts": {
+    "en": "Total Contracts",
+    "pt-BR": "Total de Contratos"
+  },
+  "contracts.client": {
+    "en": "Client",
+    "pt-BR": "Cliente"
+  },
+  "contracts.date": {
+    "en": "Date",
+    "pt-BR": "Data"
+  },
+  "contracts.amount": {
+    "en": "Amount",
+    "pt-BR": "Valor"
+  },
+  "contracts.startDate": {
+    "en": "Start Date",
+    "pt-BR": "Data de Início"
+  },
+  "contracts.endDate": {
+    "en": "End Date",
+    "pt-BR": "Data de Término"
+  },
+  "contracts.terms": {
+    "en": "Terms",
+    "pt-BR": "Termos"
+  },
+  "contracts.save": {
+    "en": "Save Contract",
+    "pt-BR": "Salvar Contrato"
+  },
+  "contracts.edit": {
+    "en": "Edit Contract",
+    "pt-BR": "Editar Contrato"
+  },
+  "contracts.delete": {
+    "en": "Delete Contract",
+    "pt-BR": "Excluir Contrato"
+  },
+  "contracts.confirmDelete": {
+    "en": "Are you sure you want to delete this contract?",
+    "pt-BR": "Tem certeza que deseja excluir este contrato?"
   },
   
   // Subscriptions
@@ -652,6 +1048,46 @@ export const translations: TranslationMap = {
   "subscriptions.suspended": {
     "en": "Suspended",
     "pt-BR": "Suspensa"
+  },
+  "subscriptions.searchSubscriptions": {
+    "en": "Search subscriptions...",
+    "pt-BR": "Buscar assinaturas..."
+  },
+  "subscriptions.noSubscriptions": {
+    "en": "No subscriptions found",
+    "pt-BR": "Nenhuma assinatura encontrada"
+  }, 
+  "subscriptions.totalSubscriptions": {
+    "en": "Total Subscriptions",
+    "pt-BR": "Total de Assinaturas"
+  },
+  "subscriptions.client": {
+    "en": "Client",
+    "pt-BR": "Cliente"
+  },
+  "subscriptions.recurringRevenue": {
+    "en": "Recurring Revenue",
+    "pt-BR": "Receita Recorrente"
+  },
+  "subscriptions.startDate": {
+    "en": "Start Date",
+    "pt-BR": "Data de Início"
+  },
+  "subscriptions.save": {
+    "en": "Save Subscription",
+    "pt-BR": "Salvar Assinatura"
+  },
+  "subscriptions.edit": {
+    "en": "Edit Subscription",
+    "pt-BR": "Editar Assinatura"
+  },
+  "subscriptions.delete": {
+    "en": "Delete Subscription",
+    "pt-BR": "Excluir Assinatura"
+  },
+  "subscriptions.confirmDelete": {
+    "en": "Are you sure you want to delete this subscription?",
+    "pt-BR": "Tem certeza que deseja excluir esta assinatura?"
   },
   
   // Achievements
