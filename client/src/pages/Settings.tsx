@@ -446,23 +446,34 @@ const Settings = () => {
       </div>
 
       <Tabs defaultValue="profile" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid grid-cols-1 md:grid-cols-3 w-full max-w-4xl">
-          <TabsTrigger value="profile" className="flex items-center">
-            <User className="mr-2 h-4 w-4" />
-            Profile
-          </TabsTrigger>
-          <TabsTrigger value="company" className="flex items-center">
-            <Building2 className="mr-2 h-4 w-4" />
-            Company
-          </TabsTrigger>
-          <TabsTrigger value="payment" className="flex items-center">
-            <CreditCard className="mr-2 h-4 w-4" />
-            Payment
-          </TabsTrigger>
-        </TabsList>
+        <div className="flex justify-center w-full border-b border-border/40 mb-2">
+          <TabsList className="h-12 bg-transparent p-0 w-full max-w-3xl grid grid-cols-3 gap-0">
+            <TabsTrigger 
+              value="profile" 
+              className="flex items-center justify-center data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-12 px-4"
+            >
+              <User className="mr-2 h-4 w-4" />
+              Profile
+            </TabsTrigger>
+            <TabsTrigger 
+              value="company" 
+              className="flex items-center justify-center data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-12 px-4"
+            >
+              <Building2 className="mr-2 h-4 w-4" />
+              Company
+            </TabsTrigger>
+            <TabsTrigger 
+              value="payment" 
+              className="flex items-center justify-center data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-12 px-4"
+            >
+              <CreditCard className="mr-2 h-4 w-4" />
+              Payment
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Profile Tab */}
-        <TabsContent value="profile" className="space-y-8 max-w-2xl">
+        <TabsContent value="profile" className="space-y-8 max-w-4xl mx-auto">
           <Card className="border-border/60 shadow-sm">
             <CardHeader className="pb-8 border-b border-border/40">
               <div className="flex justify-between items-center">
@@ -758,7 +769,7 @@ const Settings = () => {
         </TabsContent>
 
         {/* Company Tab */}
-        <TabsContent value="company" className="space-y-6 max-w-4xl">
+        <TabsContent value="company" className="space-y-6 max-w-4xl mx-auto">
           <Card className="border-border/60 shadow-sm">
             <CardHeader className="pb-8 border-b border-border/40">
               <div className="flex justify-between items-center">
@@ -1036,7 +1047,7 @@ const Settings = () => {
         </TabsContent>
 
         {/* Payment Tab */}
-        <TabsContent value="payment" className="space-y-6 max-w-4xl relative">
+        <TabsContent value="payment" className="space-y-6 max-w-4xl mx-auto relative">
           <Card className="border-border/60 shadow-sm">
             <CardHeader className="pb-8 border-b border-border/40">
               <CardTitle>Payment Settings</CardTitle>
