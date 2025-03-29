@@ -64,26 +64,26 @@ interface FinanceSettingsModalProps {
 
 const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) => {
   const [activeTab, setActiveTab] = useState("categories");
-  
+
   // Category state
   const [categoryName, setCategoryName] = useState("");
   const [categoryType, setCategoryType] = useState<"expense" | "revenue">("expense");
   const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
-  
+
   // Account state
   const [accountName, setAccountName] = useState("");
   const [editingAccountId, setEditingAccountId] = useState<number | null>(null);
-  
+
   // Delete confirmation dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ id: number, type: "category" | "account", name: string } | null>(null);
-  
+
   // Processing state to prevent premature modal closing
   const [isProcessing, setIsProcessing] = useState(false);
-  
+
   // Success animation state
   const [showSuccess, setShowSuccess] = useState(false);
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -177,17 +177,16 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     mutationFn: async (id: number) => {
       setIsProcessing(true);
       try {
-        const res = await apiRequest('DELETE', `/api/finance/categories/${id}`);
-        return await res.json();
+        await apiRequest('DELETE', `/api/finance/categories/${id}`);
+        return { success: true };
       } finally {
         setIsProcessing(false);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/categories'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/finance/transactions'] });
       showSuccessNotification("Category deleted successfully");
-      resetCategoryForm();
+      window.location.reload();
     },
     onError: (error: Error) => {
       toast({
@@ -257,17 +256,16 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     mutationFn: async (id: number) => {
       setIsProcessing(true);
       try {
-        const res = await apiRequest('DELETE', `/api/finance/accounts/${id}`);
-        return await res.json();
+        await apiRequest('DELETE', `/api/finance/accounts/${id}`);
+        return { success: true };
       } finally {
         setIsProcessing(false);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/finance/transactions'] });
       showSuccessNotification("Account deleted successfully");
-      resetAccountForm();
+      window.location.reload();
     },
     onError: (error: Error) => {
       toast({
@@ -386,9 +384,9 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
 
   const handleDeleteConfirm = () => {
     if (!itemToDelete) return;
-    
+
     setIsProcessing(true);
-    
+
     try {
       if (itemToDelete.type === 'category') {
         deleteCategoryMutation.mutate(itemToDelete.id);
@@ -432,7 +430,7 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
   const showSuccessNotification = (message: string) => {
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 1500);
-    
+
     toast({
       title: "Success",
       description: message,
@@ -451,7 +449,7 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
       });
       return;
     }
-    
+
     // Reset forms when closing
     if (!open) {
       resetCategoryForm();
