@@ -871,7 +871,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete user (admin only)
-  app.delete("/api/admin/users/:id", isAdmin, async (req, res) => {
+  app.delete("/apiadmin/users/:id", isAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
 
@@ -970,6 +970,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating profile:", error);
       res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  // Upload company logo endpoint
+  app.post("/api/company/logo", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log("Company logo upload failed: Not authenticated");
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    try {
+      const userId = (req.user as Express.User).id;
+      console.log(`Processing company logo upload for user ${userId}`);
+
+      // Get the actual image URL from the request body
+      const { imageUrl } = req.body;
+
+      if (!imageUrl) {
+        return res.status(400).json({ message: "No image URL provided" });
+      }
+
+      // Store the logo URL in the user record
+      await storage.updateUser(userId, {
+        companyLogo: imageUrl
+      });
+
+      console.log(`Company logo saved for user ${userId}`);
+      res.json({ success: true, message: "Company logo uploaded successfully" });
+    } catch (error) {
+      console.error("Company logo upload failed:", error);
+      res.status(500).json({ message: "Failed to upload company logo" });
     }
   });
 
