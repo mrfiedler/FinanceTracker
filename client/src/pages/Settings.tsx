@@ -927,7 +927,7 @@ const Settings = () => {
                         ) : (
                           <div className="py-2 px-3 bg-muted/30 rounded-md text-foreground font-medium min-h-9">
                             {companyPhone || 'No phone number set'}
-                          </</div>
+                          </div>
                         )}
                       </div>
                     </div>
