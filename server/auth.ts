@@ -191,59 +191,7 @@ export function setupAuth(app: Express) {
     res.json(userWithoutPassword);
   });
 
-  // Update user profile endpoint
-  app.patch("/api/users/profile", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      console.log("Profile update failed: Not authenticated");
-      return res.status(401).json({ message: "Not authenticated" });
-    }
-
-    try {
-      const userId = (req.user as SelectUser).id;
-      console.log(`Processing profile update for user ${userId}`, req.body);
-      const { name, email, phone, location } = req.body;
-
-      // Validate input
-      if (name && typeof name !== 'string') {
-        console.log("Invalid name format:", name);
-        return res.status(400).json({ message: "Invalid name format" });
-      }
-
-      if (email && typeof email !== 'string') {
-        console.log("Invalid email format:", email);
-        return res.status(400).json({ message: "Invalid email format" });
-      }
-
-      if (phone && typeof phone !== 'string') {
-        console.log("Invalid phone format:", phone);
-        return res.status(400).json({ message: "Invalid phone format" });
-      }
-
-      if (location && typeof location !== 'string') {
-        console.log("Invalid location format:", location);
-        return res.status(400).json({ message: "Invalid location format" });
-      }
-
-      // Update user profile
-      const updatedUser = await storage.updateUser(userId, { name, email, phone, location });
-
-      // Update session user object
-      const user = req.user as SelectUser;
-      if (name) user.name = name;
-      if (email) user.email = email;
-      if (phone) user.phone = phone;
-      if (location) user.location = location;
-
-      console.log(`Profile successfully updated for user ${userId}`);
-
-      // Remove password from response
-      const { password, ...userWithoutPassword } = updatedUser;
-      res.json(userWithoutPassword);
-    } catch (error) {
-      console.error("Error updating user profile:", error);
-      res.status(500).json({ message: "Failed to update profile" });
-    }
-  });
+  // The user profile routes have been moved to server/routes.ts to use the standardized authentication middleware
 
   // Change user password endpoint
   app.patch("/api/users/password", async (req, res) => {
@@ -325,69 +273,5 @@ export function setupAuth(app: Express) {
     }
   });
 
-  // Upload company logo endpoint
-  app.post("/api/company/logo", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      console.log("Company logo upload failed: Not authenticated");
-      return res.status(401).json({ message: "Not authenticated" });
-    }
-
-    try {
-      const userId = (req.user as Express.User).id;
-      console.log(`Processing company logo upload for user ${userId}`);
-
-      // Get the actual image data from the request body
-      const { imageUrl } = req.body;
-
-      if (!imageUrl) {
-        return res.status(400).json({ message: "No image data provided" });
-      }
-
-      // Update user with company logo
-      await storage.updateUser(userId, { companyLogo: imageUrl });
-
-      console.log("Company logo uploaded successfully");
-      res.json({ 
-        success: true,
-        message: "Company logo uploaded successfully",
-        logoUrl: fullImageUrl
-      });
-    } catch (error) {
-      console.error("Error uploading company logo:", error);
-      res.status(500).json({ message: "Failed to upload company logo" });
-    }
-  });
-
-  // Upload profile avatar endpoint
-  app.post("/api/users/avatar", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      console.log("Avatar upload failed: Not authenticated");
-      return res.status(401).json({ message: "Not authenticated" });
-    }
-
-    try {
-      const userId = (req.user as Express.User).id;
-      console.log(`Processing avatar upload for user ${userId}`);
-
-      // Get the actual image data from the request body
-      const { imageUrl } = req.body;
-
-      if (!imageUrl) {
-        return res.status(400).json({ message: "No image data provided" });
-      }
-
-      // Update user with the avatar  
-      await storage.updateUser(userId, { avatar: imageUrl });
-
-      console.log("Avatar successfully updated for user", userId);
-      res.json({ 
-        success: true,
-        message: "Avatar uploaded successfully",
-        avatarUrl: fullImageUrl
-      });
-    } catch (error) {
-      console.error("Error uploading avatar:", error);
-      res.status(500).json({ message: "Failed to upload avatar" });
-    }
-  });
+  // The user avatar and company logo upload routes have been moved to server/routes.ts to use the standardized authentication middleware
 }

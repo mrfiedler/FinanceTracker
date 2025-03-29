@@ -21,13 +21,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // All API routes
 
   // API - Notifications
-  app.get("/api/notifications", async (req, res) => {
+  app.get("/api/notifications", authenticate, async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const userId = req.user!.id;
+      const userId = (req.user as Express.User).id;
       const notifications = await storage.getNotifications(userId);
       res.json(notifications);
     } catch (error) {
@@ -35,13 +31,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/notifications/unread-count", async (req, res) => {
+  app.get("/api/notifications/unread-count", authenticate, async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const userId = req.user!.id;
+      const userId = (req.user as Express.User).id;
       const count = await storage.getUnreadNotificationsCount(userId);
       res.json({ count });
     } catch (error) {
@@ -49,12 +41,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/notifications/:id/mark-read", async (req, res) => {
+  app.patch("/api/notifications/:id/mark-read", authenticate, async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
       const id = parseInt(req.params.id);
       const success = await storage.markNotificationAsRead(id);
 
@@ -68,13 +56,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/notifications/mark-all-read", async (req, res) => {
+  app.patch("/api/notifications/mark-all-read", authenticate, async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const userId = req.user!.id;
+      const userId = (req.user as Express.User).id;
       const success = await storage.markAllNotificationsAsRead(userId);
       res.json({ success });
     } catch (error) {
@@ -83,7 +67,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API - Clients
-  app.get("/api/clients", async (req, res) => {
+  app.get("/api/clients", authenticate, async (req, res) => {
     try {
       const clients = await storage.getClients();
       res.json(clients);
@@ -92,7 +76,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/clients/top", async (req, res) => {
+  app.get("/api/clients/top", authenticate, async (req, res) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
       const topClients = await storage.getTopClients(limit);
@@ -102,7 +86,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/clients/:id", async (req, res) => {
+  app.get("/api/clients/:id", authenticate, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const client = await storage.getClient(id);
@@ -117,7 +101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/clients", async (req, res) => {
+  app.post("/api/clients", authenticate, async (req, res) => {
     try {
       const data = insertClientSchema.parse(req.body);
       const client = await storage.createClient(data);
@@ -130,7 +114,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/clients/:id", async (req, res) => {
+  app.patch("/api/clients/:id", authenticate, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const client = await storage.getClient(id);
@@ -148,7 +132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API - Expenses
-  app.get("/api/expenses", async (req, res) => {
+  app.get("/api/expenses", authenticate, async (req, res) => {
     try {
       const dateRange = req.query.dateRange as string;
       const startDate = req.query.startDate as string;
@@ -167,7 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/expenses", async (req, res) => {
+  app.post("/api/expenses", authenticate, async (req, res) => {
     try {
       const data = insertExpenseSchema.parse(req.body);
       const expense = await storage.createExpense(data);
@@ -180,7 +164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/expenses/:id", async (req, res) => {
+  app.patch("/api/expenses/:id", authenticate, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const expense = await storage.getExpense(id);
@@ -197,7 +181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/expenses/:id", async (req, res) => {
+  app.delete("/api/expenses/:id", authenticate, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteExpense(id);
@@ -213,7 +197,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API - Revenues
-  app.get("/api/revenues", async (req, res) => {
+  app.get("/api/revenues", authenticate, async (req, res) => {
     try {
       const dateRange = req.query.dateRange as string;
       const startDate = req.query.startDate as string;
@@ -232,7 +216,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/revenues", async (req, res) => {
+  app.post("/api/revenues", authenticate, async (req, res) => {
     try {
       const data = insertRevenueSchema.parse(req.body);
       const revenue = await storage.createRevenue(data);
@@ -245,7 +229,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/revenues/:id", async (req, res) => {
+  app.patch("/api/revenues/:id", authenticate, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const revenue = await storage.getRevenue(id);
@@ -262,7 +246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/revenues/:id", async (req, res) => {
+  app.delete("/api/revenues/:id", authenticate, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteRevenue(id);
@@ -278,7 +262,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API - Quotes
-  app.get("/api/quotes", async (req, res) => {
+  app.get("/api/quotes", authenticate, async (req, res) => {
     try {
       const dateRange = req.query.dateRange as string;
       const status = req.query.status as string;
@@ -289,7 +273,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/quotes/recent", async (req, res) => {
+  app.get("/api/quotes/recent", authenticate, async (req, res) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 4;
       const recentQuotes = await storage.getRecentQuotes(limit);
@@ -299,7 +283,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/quotes/conversion", async (req, res) => {
+  app.get("/api/quotes/conversion", authenticate, async (req, res) => {
     try {
       const conversionData = await storage.getQuoteConversionRate();
       res.json(conversionData);
@@ -308,7 +292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/quotes", async (req, res) => {
+  app.post("/api/quotes", authenticate, async (req, res) => {
     try {
       // Check if we need to create a new client first
       let clientId = req.body.clientId;
@@ -351,7 +335,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/quotes/:id", async (req, res) => {
+  app.patch("/api/quotes/:id", authenticate, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const quote = await storage.getQuote(id);
@@ -369,7 +353,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API - Subscriptions
-  app.get("/api/subscriptions", async (req, res) => {
+  app.get("/api/subscriptions", authenticate, async (req, res) => {
     try {
       const status = req.query.status as string;
       const subscriptions = await storage.getSubscriptions({ status });
@@ -379,7 +363,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/subscriptions", async (req, res) => {
+  app.post("/api/subscriptions", authenticate, async (req, res) => {
     try {
       const data = insertSubscriptionSchema.parse(req.body);
       const subscription = await storage.createSubscription(data);
@@ -392,7 +376,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/subscriptions/:id", async (req, res) => {
+  app.patch("/api/subscriptions/:id", authenticate, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const subscription = await storage.getSubscription(id);
@@ -410,7 +394,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API - Contracts
-  app.get("/api/contracts", async (req, res) => {
+  app.get("/api/contracts", authenticate, async (req, res) => {
     try {
       const dateRange = req.query.dateRange as string;
       const contracts = await storage.getContracts({ dateRange });
@@ -420,7 +404,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/contracts", async (req, res) => {
+  app.post("/api/contracts", authenticate, async (req, res) => {
     try {
       const data = insertContractSchema.parse(req.body);
       // quoteId is now handled by schema transform
@@ -437,7 +421,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update contract
-  app.patch("/api/contracts/:id", async (req, res) => {
+  app.patch("/api/contracts/:id", authenticate, async (req, res) => {
     try {
       const contractId = parseInt(req.params.id);
       const data = insertContractSchema.parse(req.body);
@@ -462,7 +446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete contract
-  app.delete("/api/contracts/:id", async (req, res) => {
+  app.delete("/api/contracts/:id", authenticate, async (req, res) => {
     try {
       const contractId = parseInt(req.params.id);
 
@@ -481,7 +465,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Download contract
-  app.get("/api/contracts/:id/download", async (req, res) => {
+  app.get("/api/contracts/:id/download", authenticate, async (req, res) => {
     try {
       const contractId = parseInt(req.params.id);
 
@@ -1027,7 +1011,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Upload company logo endpoint
   app.post("/api/company/logo", authenticate, async (req, res) => {
-
     try {
       const userId = (req.user as Express.User).id;
       console.log(`Processing company logo upload for user ${userId}`);
@@ -1049,6 +1032,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Company logo upload failed:", error);
       res.status(500).json({ message: "Failed to upload company logo" });
+    }
+  });
+
+  // Upload user avatar endpoint
+  app.post("/api/users/avatar", authenticate, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      console.log(`Processing avatar upload for user ${userId}`);
+
+      // Get the actual image URL from the request body
+      const { imageUrl } = req.body;
+
+      if (!imageUrl) {
+        return res.status(400).json({ message: "No image URL provided" });
+      }
+
+      // Store the avatar URL in the user record
+      await storage.updateUser(userId, {
+        avatar: imageUrl
+      });
+
+      console.log(`Avatar saved for user ${userId}`);
+      res.json({ success: true, message: "Avatar uploaded successfully" });
+    } catch (error) {
+      console.error("Avatar upload failed:", error);
+      res.status(500).json({ message: "Failed to upload avatar" });
     }
   });
 
@@ -1195,6 +1204,181 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to save gamification data:", error);
       res.status(500).json({ message: "Failed to save gamification data" });
+    }
+  });
+
+  // API - User profile
+  app.patch("/api/users/profile", authenticate, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      console.log(`Processing profile update for user ${userId}`, req.body);
+      const { name, email, phone, location } = req.body;
+
+      // Validate input
+      if (name && typeof name !== 'string') {
+        console.log("Invalid name format:", name);
+        return res.status(400).json({ message: "Invalid name format" });
+      }
+
+      if (email && typeof email !== 'string') {
+        console.log("Invalid email format:", email);
+        return res.status(400).json({ message: "Invalid email format" });
+      }
+
+      if (phone && typeof phone !== 'string') {
+        console.log("Invalid phone format:", phone);
+        return res.status(400).json({ message: "Invalid phone format" });
+      }
+
+      if (location && typeof location !== 'string') {
+        console.log("Invalid location format:", location);
+        return res.status(400).json({ message: "Invalid location format" });
+      }
+
+      // Update user profile
+      const updatedUser = await storage.updateUser(userId, { name, email, phone, location });
+
+      // Update session user object
+      const user = req.user as Express.User;
+      if (name) user.name = name;
+      if (email) user.email = email;
+      if (phone) user.phone = phone;
+      if (location) user.location = location;
+
+      console.log(`Profile successfully updated for user ${userId}`);
+
+      // Remove password from response
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  // API - Upload profile avatar
+  app.post("/api/users/avatar", authenticate, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      console.log(`Processing avatar upload for user ${userId}`);
+
+      // Get the actual image data from the request body
+      const { imageUrl } = req.body;
+
+      if (!imageUrl) {
+        return res.status(400).json({ message: "No image data provided" });
+      }
+
+      // Update user with the avatar  
+      await storage.updateUser(userId, { avatar: imageUrl });
+
+      console.log("Avatar successfully updated for user", userId);
+      res.json({ 
+        success: true,
+        message: "Avatar uploaded successfully",
+        avatarUrl: imageUrl
+      });
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      res.status(500).json({ message: "Failed to upload avatar" });
+    }
+  });
+
+  // API - Company logo upload
+  app.post("/api/company/logo", authenticate, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      console.log(`Processing company logo upload for user ${userId}`);
+
+      // Get the actual image data from the request body
+      const { imageUrl } = req.body;
+
+      if (!imageUrl) {
+        return res.status(400).json({ message: "No image data provided" });
+      }
+
+      // Update user with company logo
+      await storage.updateUser(userId, { companyLogo: imageUrl });
+
+      console.log("Company logo uploaded successfully");
+      res.json({ 
+        success: true,
+        message: "Company logo uploaded successfully",
+        logoUrl: imageUrl
+      });
+    } catch (error) {
+      console.error("Error uploading company logo:", error);
+      res.status(500).json({ message: "Failed to upload company logo" });
+    }
+  });
+
+  // API - Company info
+  app.post("/api/company/info", authenticate, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      console.log(`Processing company info save for user ${userId}`, req.body);
+
+      // In a real app, this would save to a company table in the database
+      // For now, we'll just simulate a successful save
+      console.log("Company info saved successfully");
+      res.json({ 
+        success: true,
+        message: "Company information saved successfully" 
+      });
+    } catch (error) {
+      console.error("Error saving company information:", error);
+      res.status(500).json({ message: "Failed to save company information" });
+    }
+  });
+
+  // API - Change password
+  app.patch("/api/users/password", authenticate, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      console.log(`Processing password change for user ${userId}`);
+      const { currentPassword, newPassword } = req.body;
+
+      // Validate input
+      if (!currentPassword || !newPassword) {
+        console.log("Password change failed: Missing required fields");
+        return res.status(400).json({ message: "Current password and new password are required" });
+      }
+
+      if (typeof currentPassword !== 'string' || typeof newPassword !== 'string') {
+        console.log("Password change failed: Invalid password format");
+        return res.status(400).json({ message: "Invalid password format" });
+      }
+
+      if (newPassword.length < 6) {
+        console.log("Password change failed: New password too short");
+        return res.status(400).json({ message: "New password must be at least 6 characters" });
+      }
+
+      // Get current user
+      const user = await storage.getUser(userId);
+      if (!user) {
+        console.log(`Password change failed: User ${userId} not found`);
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Verify current password
+      const isPasswordValid = await comparePasswords(currentPassword, user.password);
+      if (!isPasswordValid) {
+        console.log("Password change failed: Incorrect current password");
+        return res.status(401).json({ message: "Current password is incorrect" });
+      }
+
+      // Hash the new password
+      const hashedPassword = await hashPassword(newPassword);
+
+      // Update user with new password
+      await storage.updateUser(userId, { password: hashedPassword });
+
+      console.log(`Password successfully updated for user ${userId}`);
+      res.json({ message: "Password updated successfully" });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      res.status(500).json({ message: "Failed to change password" });
     }
   });
 
