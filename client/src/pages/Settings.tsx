@@ -31,15 +31,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { 
-  User, 
-  Building2, 
-  CreditCard, 
-  Receipt, 
-  Users, 
-  Lock, 
-  Edit, 
-  Upload, 
+import {
+  User,
+  Building2,
+  CreditCard,
+  Receipt,
+  Users,
+  Lock,
+  Edit,
+  Upload,
   LogOut,
   UserCircle,
   MapPin,
@@ -49,7 +49,8 @@ import {
   FileText,
   Check,
   AlertCircle,
-  ArrowUpDown
+  ArrowUpDown,
+  Reload as ReloadIcon
 } from "lucide-react";
 
 const Settings = () => {
@@ -93,6 +94,10 @@ const Settings = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
+  // Loading states for images
+  const [isAvatarLoading, setAvatarLoading] = useState(false);
+  const [isLogoLoading, setLogoLoading] = useState(false);
+
   // Get current user data
   const { data: user, isLoading: isLoadingUser } = useQuery({
     queryKey: ['/api/user'],
@@ -102,8 +107,6 @@ const Settings = () => {
   // Initialize profile photo based on user avatar
   useEffect(() => {
     if (user?.avatar) {
-      // This is just for UI display, we're not actually loading the file
-      // In a real implementation, you'd handle this differently
       setProfilePhoto(null);
     }
   }, [user?.avatar]);
@@ -135,28 +138,23 @@ const Settings = () => {
   // Upload profile photo mutation
   const uploadProfilePhotoMutation = useMutation({
     mutationFn: async (photoFile: File) => {
-      // Convert file to base64 data URL
       return new Promise<any>((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(photoFile);
         reader.onload = async () => {
           try {
-            // Create an image element to compress
             const img = new Image();
             img.src = reader.result as string;
             await new Promise(resolve => img.onload = resolve);
 
-            // Create canvas for compression
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            // Set max dimensions
             const maxWidth = 800;
             const maxHeight = 800;
             let width = img.width;
             let height = img.height;
 
-            // Calculate new dimensions
             if (width > height) {
               if (width > maxWidth) {
                 height *= maxWidth / width;
@@ -169,16 +167,13 @@ const Settings = () => {
               }
             }
 
-            // Set canvas dimensions and draw image
             canvas.width = width;
             canvas.height = height;
             ctx?.drawImage(img, 0, 0, width, height);
 
-            // Get compressed image URL
             const imageUrl = canvas.toDataURL('image/jpeg', 0.7);
             console.log("Converting image to data URL");
 
-            // Send the image URL to the server
             const response = await fetch('/api/users/avatar', {
               method: 'POST',
               headers: {
@@ -232,14 +227,12 @@ const Settings = () => {
         description: "Your password has been changed successfully.",
       });
       setPasswordDialogOpen(false);
-      // Reset password fields
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
       setPasswordError("");
     },
     onError: (error: any) => {
-      // Try to extract error message from the response
       if (error.response) {
         error.response.json().then((data: any) => {
           setPasswordError(data.message || "Failed to change password");
@@ -264,8 +257,6 @@ const Settings = () => {
         description: "Your company information has been saved successfully.",
       });
       setCompanyEditMode(false);
-
-      // If there's a logo file, upload it separately
       if (companyLogo) {
         uploadCompanyLogoMutation.mutate(companyLogo);
       }
@@ -282,7 +273,6 @@ const Settings = () => {
   // Upload company logo mutation
   const uploadCompanyLogoMutation = useMutation({
     mutationFn: async (logoFile: File) => {
-      // Convert file to base64 data URL
       return new Promise<any>((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(logoFile);
@@ -291,13 +281,12 @@ const Settings = () => {
             const imageUrl = reader.result as string;
             console.log("Converting company logo to data URL");
 
-            // Send the image URL to the server
             const response = await fetch('/api/company/logo', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify({ imageUrl }), // Send only base64 data
+              body: JSON.stringify({ imageUrl }),
               credentials: 'include'
             });
 
@@ -346,13 +335,8 @@ const Settings = () => {
         method: 'POST',
         credentials: 'include'
       });
-
-      // Clear React Query cache
       queryClient.clear();
-
-      // Redirect to login page
       setLocation('/');
-
       toast({
         title: "Logged out",
         description: "You have been logged out successfully."
@@ -367,12 +351,10 @@ const Settings = () => {
     }
   };
 
-  // Handle profile edit mode toggle
   const toggleEditMode = () => {
     setEditMode(!editMode);
   };
 
-  // Handle saving profile changes
   const handleSaveProfile = () => {
     const profileData = {
       name: nameRef.current?.value,
@@ -382,59 +364,45 @@ const Settings = () => {
     };
 
     updateProfileMutation.mutate(profileData);
-
-    // If there's a profile photo, upload it
     if (profilePhoto) {
       uploadProfilePhotoMutation.mutate(profilePhoto);
     }
   };
 
-  // Handle profile photo selection
   const handleProfilePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       setProfilePhoto(event.target.files[0]);
     }
   };
 
-  // Handle triggering profile photo upload dialog
   const handleProfilePhotoUploadClick = () => {
     profilePhotoInputRef.current?.click();
   };
 
-  // Handle password change
   const handleChangePassword = () => {
-    // Reset error
     setPasswordError("");
-
-    // Validate passwords
     if (!currentPassword || !newPassword || !confirmPassword) {
       setPasswordError("All fields are required");
       return;
     }
-
     if (newPassword.length < 6) {
       setPasswordError("New password must be at least 6 characters");
       return;
     }
-
     if (newPassword !== confirmPassword) {
       setPasswordError("New passwords do not match");
       return;
     }
-
-    // Submit password change
     changePasswordMutation.mutate({
       currentPassword,
       newPassword
     });
   };
 
-  // Toggle company edit mode
   const toggleCompanyEditMode = () => {
     setCompanyEditMode(!companyEditMode);
   };
 
-  // Handle saving company info
   const handleSaveCompanyInfo = () => {
     const companyData = {
       name: companyNameRef.current?.value,
@@ -453,71 +421,92 @@ const Settings = () => {
     saveCompanyInfoMutation.mutate(companyData);
   };
 
-  // Handle company logo selection
+
   const handleCompanyLogoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    console.log("Converting company logo to data URL");
+    setLogoLoading(true);
     const reader = new FileReader();
     reader.onloadend = async () => {
       const imageUrl = reader.result as string;
-
-      const response = await fetch("/api/company/logo", {
-        method: "POST",
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ imageUrl }),
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        queryClient.invalidateQueries(['user']);
-        toast({
-          description: "Logo updated successfully",
+      try {
+        const response = await fetch("/api/company/logo", {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ imageUrl }),
+          credentials: 'include'
         });
+
+        if (response.ok) {
+          queryClient.invalidateQueries(['user']);
+          toast({
+            description: "Logo updated successfully",
+          });
+        } else {
+          toast({
+            description: "Failed to update logo",
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+          toast({
+            description: "Failed to update logo",
+            variant: "destructive"
+          });
+      } finally {
+        setLogoLoading(false);
       }
     };
     reader.readAsDataURL(file);
   };
 
-  // Handle avatar selection
   const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    console.log("Converting image to data URL");
+    setAvatarLoading(true);
     const reader = new FileReader();
     reader.onloadend = async () => {
       const imageUrl = reader.result as string;
-
-      const response = await fetch("/api/users/avatar", {
-        method: "POST",
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ imageUrl }),
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        queryClient.invalidateQueries(['user']);
-        toast({
-          description: "Avatar updated successfully",
+      try {
+        const response = await fetch("/api/users/avatar", {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ imageUrl }),
+          credentials: 'include'
         });
+
+        if (response.ok) {
+          const data = await response.json();
+          queryClient.invalidateQueries(['user']);
+          toast({
+            description: "Avatar updated successfully",
+          });
+        } else {
+          toast({
+            description: "Failed to update avatar",
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        toast({
+          description: "Failed to update avatar",
+          variant: "destructive"
+        });
+      } finally {
+        setAvatarLoading(false);
       }
     };
     reader.readAsDataURL(file);
   };
 
-  // Handle triggering company logo upload dialog
   const handleCompanyLogoUploadClick = () => {
     companyLogoInputRef.current?.click();
   };
 
-  // Generate user initials for avatar fallback
   const getUserInitials = () => {
     if (!user?.name) return 'U';
     return user.name.split(' ').map(n => n[0]).join('').toUpperCase();
@@ -559,7 +548,7 @@ const Settings = () => {
                     Update your personal profile details and security settings
                   </CardDescription>
                 </div>
-                <Button 
+                <Button
                   variant={editMode ? "default" : "outline"}
                   onClick={editMode ? handleSaveProfile : toggleEditMode}
                   className="transition-all duration-300"
@@ -588,8 +577,13 @@ const Settings = () => {
                       <Skeleton className="h-24 w-24 rounded-full" />
                     ) : (
                       <div className="relative">
-                        <Avatar className="h-24 w-24 border-4 border-background shadow-md">
-                          <AvatarImage 
+                        <Avatar className="h-24 w-24 border-4 border-background shadow-md relative">
+                          {isAvatarLoading && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-full">
+                              <ReloadIcon className="h-4 w-4 animate-spin" />
+                            </div>
+                          )}
+                          <AvatarImage
                             src={profilePhoto ? URL.createObjectURL(profilePhoto) : user?.avatar}
                             alt={user?.name || "User Profile"}
                           />
@@ -598,7 +592,7 @@ const Settings = () => {
                           </AvatarFallback>
                         </Avatar>
                         {editMode && (
-                          <div 
+                          <div
                             className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-1.5 cursor-pointer shadow-md hover:bg-primary/80 transition-colors"
                             onClick={handleProfilePhotoUploadClick}
                             title="Change profile photo"
@@ -609,16 +603,16 @@ const Settings = () => {
                               ref={profilePhotoInputRef}
                               className="hidden"
                               accept="image/*"
-                              onChange={handleProfilePhotoChange}
+                              onChange={handleAvatarChange}
                             />
                           </div>
                         )}
                       </div>
                     )}
                     {editMode && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         className="text-xs"
                         onClick={handleProfilePhotoUploadClick}
                       >
@@ -638,11 +632,11 @@ const Settings = () => {
                           Full Name
                         </Label>
                         {editMode ? (
-                          <Input 
-                            id="name" 
+                          <Input
+                            id="name"
                             ref={nameRef}
-                            defaultValue={user?.name || ""} 
-                            placeholder="Enter your full name" 
+                            defaultValue={user?.name || ""}
+                            placeholder="Enter your full name"
                             className="border-gray-300 focus:border-primary"
                           />
                         ) : (
@@ -659,12 +653,12 @@ const Settings = () => {
                           Email Address
                         </Label>
                         {editMode ? (
-                          <Input 
+                          <Input
                             id="email"
                             ref={emailRef}
-                            type="email" 
-                            defaultValue={user?.email || ""} 
-                            placeholder="Enter your email" 
+                            type="email"
+                            defaultValue={user?.email || ""}
+                            placeholder="Enter your email"
                             className="border-gray-300 focus:border-primary"
                           />
                         ) : (
@@ -684,11 +678,11 @@ const Settings = () => {
                           Phone Number
                         </Label>
                         {editMode ? (
-                          <Input 
+                          <Input
                             id="phone"
                             ref={phoneRef}
-                            defaultValue={user?.phone || ""} 
-                            placeholder="Enter your phone number" 
+                            defaultValue={user?.phone || ""}
+                            placeholder="Enter your phone number"
                             className="border-gray-300 focus:border-primary"
                           />
                         ) : (
@@ -705,11 +699,11 @@ const Settings = () => {
                           Location
                         </Label>
                         {editMode ? (
-                          <Input 
+                          <Input
                             id="location"
                             ref={locationRef}
-                            defaultValue={user?.location || ""} 
-                            placeholder="City, Country" 
+                            defaultValue={user?.location || ""}
+                            placeholder="City, Country"
                             className="border-gray-300 focus:border-primary"
                           />
                         ) : (
@@ -741,13 +735,13 @@ const Settings = () => {
                           )}
                         </h4>
                         <p className="text-sm text-muted-foreground mt-1">
-                          {user?.lastPasswordChange 
+                          {user?.lastPasswordChange
                             ? `Last changed: ${user.lastPasswordChange}`
                             : "Secure your account with a strong password"}
                         </p>
                       </div>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         className="mt-3 sm:mt-0 shadow-sm hover:shadow-md transition-all duration-300"
                         onClick={() => setPasswordDialogOpen(true)}
                       >
@@ -764,8 +758,8 @@ const Settings = () => {
                           End your current session and log out
                         </p>
                       </div>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         className="mt-3 sm:mt-0 shadow-sm hover:shadow-md transition-all duration-300"
                         onClick={handleLogout}
                       >
@@ -800,36 +794,36 @@ const Settings = () => {
                 )}
                 <div className="grid gap-2">
                   <Label htmlFor="current-password">Current Password</Label>
-                  <Input 
-                    id="current-password" 
-                    type="password" 
+                  <Input
+                    id="current-password"
+                    type="password"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                   />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="new-password">New Password</Label>
-                  <Input 
-                    id="new-password" 
-                    type="password" 
+                  <Input
+                    id="new-password"
+                    type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                   />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="confirm-password">Confirm New Password</Label>
-                  <Input 
-                    id="confirm-password" 
-                    type="password" 
+                  <Input
+                    id="confirm-password"
+                    type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                   />
                 </div>
               </div>
               <DialogFooter>
-                <Button 
-                  type="submit" 
-                  onClick={handleChangePassword} 
+                <Button
+                  type="submit"
+                  onClick={handleChangePassword}
                   disabled={changePasswordMutation.isPending}
                 >
                   {changePasswordMutation.isPending ? "Changing..." : "Change Password"}
@@ -850,7 +844,7 @@ const Settings = () => {
                     Manage your company details and team members
                   </CardDescription>
                 </div>
-                <Button 
+                <Button
                   variant={companyEditMode ? "default" : "outline"}
                   onClick={companyEditMode ? handleSaveCompanyInfo : toggleCompanyEditMode}
                   className="transition-all duration-300"
@@ -877,7 +871,12 @@ const Settings = () => {
                   <div className="flex flex-col items-center space-y-3">
                     {/* Company Logo */}
                     <div className="relative">
-                      <div className="w-24 h-24 bg-muted/60 rounded-lg flex items-center justify-center overflow-hidden border border-border/60 shadow-sm">
+                      <div className="w-24 h-24 bg-muted/60 rounded-lg flex items-center justify-center overflow-hidden border border-border/60 shadow-sm relative">
+                        {isLogoLoading && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-lg">
+                            <ReloadIcon className="h-6 w-6 animate-spin" />
+                          </div>
+                        )}
                         {user?.companyLogo ? (
                           <img
                             src={user.companyLogo}
@@ -895,7 +894,7 @@ const Settings = () => {
                         )}
                       </div>
                       {companyEditMode && (
-                        <div 
+                        <div
                           className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-1.5 cursor-pointer shadow-md hover:bg-primary/80 transition-colors"
                           onClick={handleCompanyLogoUploadClick}
                           title="Change company logo"
@@ -912,9 +911,9 @@ const Settings = () => {
                       )}
                     </div>
                     {companyEditMode && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         className="text-xs"
                         onClick={handleCompanyLogoUploadClick}
                       >
@@ -933,11 +932,11 @@ const Settings = () => {
                           Company Name
                         </Label>
                         {companyEditMode ? (
-                          <Input 
-                            id="company-name" 
+                          <Input
+                            id="company-name"
                             ref={companyNameRef}
                             defaultValue={companyName}
-                            placeholder="Enter company name" 
+                            placeholder="Enter company name"
                             className="border-gray-300 focus:border-primary"
                           />
                         ) : (
@@ -954,10 +953,10 @@ const Settings = () => {
                           Registration Number
                         </Label>
                         {companyEditMode ? (
-                          <Input 
-                            id="reg-number" 
+                          <Input
+                            id="reg-number"
                             ref={companyRegNumberRef}
-                            placeholder="Enter company registration number" 
+                            placeholder="Enter company registration number"
                             className="border-gray-300 focus:border-primary"
                           />
                         ) : (
@@ -976,10 +975,10 @@ const Settings = () => {
                           Company Email
                         </Label>
                         {companyEditMode ? (
-                          <Input 
-                            id="company-email" 
+                          <Input
+                            id="company-email"
                             ref={companyEmailRef}
-                            placeholder="company@example.com" 
+                            placeholder="company@example.com"
                             className="border-gray-300 focus:border-primary"
                           />
                         ) : (
@@ -996,10 +995,10 @@ const Settings = () => {
                           Company Phone
                         </Label>
                         {companyEditMode ? (
-                          <Input 
-                            id="company-phone" 
+                          <Input
+                            id="company-phone"
                             ref={companyPhoneRef}
-                            placeholder="+1 (555) 000-0000" 
+                            placeholder="+1 (555) 000-0000"
                             className="border-gray-300 focus:border-primary"
                           />
                         ) : (
@@ -1017,10 +1016,10 @@ const Settings = () => {
                         Company Address
                       </Label>
                       {companyEditMode ? (
-                        <Input 
-                          id="company-address" 
+                        <Input
+                          id="company-address"
                           ref={companyAddressRef}
-                          placeholder="Enter company address" 
+                          placeholder="Enter company address"
                           className="border-gray-300 focus:border-primary"
                         />
                       ) : (
