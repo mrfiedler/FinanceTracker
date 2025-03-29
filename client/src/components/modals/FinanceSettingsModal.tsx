@@ -97,6 +97,9 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ id: number, type: string, name: string } | null>(null);
   
+  // Prevent modal from closing when running operations
+  const [isProcessing, setIsProcessing] = useState(false);
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -133,8 +136,13 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
   // Create mutations for CRUD operations
   const addCategoryMutation = useMutation({
     mutationFn: async (categoryData: { name: string; type: string }) => {
-      const res = await apiRequest('POST', '/api/finance/categories', categoryData);
-      return await res.json();
+      setIsProcessing(true);
+      try {
+        const res = await apiRequest('POST', '/api/finance/categories', categoryData);
+        return await res.json();
+      } finally {
+        setIsProcessing(false);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/categories'] });
@@ -152,11 +160,16 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
 
   const updateCategoryMutation = useMutation({
     mutationFn: async (categoryData: { id: number; name: string; type: string }) => {
-      const res = await apiRequest('PUT', `/api/finance/categories/${categoryData.id}`, {
-        name: categoryData.name,
-        type: categoryData.type
-      });
-      return await res.json();
+      setIsProcessing(true);
+      try {
+        const res = await apiRequest('PUT', `/api/finance/categories/${categoryData.id}`, {
+          name: categoryData.name,
+          type: categoryData.type
+        });
+        return await res.json();
+      } finally {
+        setIsProcessing(false);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/categories'] });
@@ -174,8 +187,13 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
 
   const deleteCategoryMutation = useMutation({
     mutationFn: async (categoryId: number) => {
-      const res = await apiRequest('DELETE', `/api/finance/categories/${categoryId}`);
-      return await res.json();
+      setIsProcessing(true);
+      try {
+        const res = await apiRequest('DELETE', `/api/finance/categories/${categoryId}`);
+        return await res.json();
+      } finally {
+        setIsProcessing(false);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/categories'] });
@@ -192,8 +210,13 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
 
   const addAccountMutation = useMutation({
     mutationFn: async (accountData: { name: string; type: string }) => {
-      const res = await apiRequest('POST', '/api/finance/accounts', accountData);
-      return await res.json();
+      setIsProcessing(true);
+      try {
+        const res = await apiRequest('POST', '/api/finance/accounts', accountData);
+        return await res.json();
+      } finally {
+        setIsProcessing(false);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/accounts'] });
@@ -211,11 +234,16 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
 
   const updateAccountMutation = useMutation({
     mutationFn: async (accountData: { id: number; name: string; type: string }) => {
-      const res = await apiRequest('PUT', `/api/finance/accounts/${accountData.id}`, {
-        name: accountData.name,
-        type: accountData.type
-      });
-      return await res.json();
+      setIsProcessing(true);
+      try {
+        const res = await apiRequest('PUT', `/api/finance/accounts/${accountData.id}`, {
+          name: accountData.name,
+          type: accountData.type
+        });
+        return await res.json();
+      } finally {
+        setIsProcessing(false);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/accounts'] });
@@ -233,8 +261,13 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
 
   const deleteAccountMutation = useMutation({
     mutationFn: async (accountId: number) => {
-      const res = await apiRequest('DELETE', `/api/finance/accounts/${accountId}`);
-      return await res.json();
+      setIsProcessing(true);
+      try {
+        const res = await apiRequest('DELETE', `/api/finance/accounts/${accountId}`);
+        return await res.json();
+      } finally {
+        setIsProcessing(false);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/accounts'] });
@@ -411,8 +444,22 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     }
   };
 
+  // Prevent closing modal when processing
+  const handleOpenChange = (open: boolean) => {
+    if (!open && isProcessing) {
+      // Prevent closing while processing
+      toast({
+        title: "Operation in progress",
+        description: "Please wait until the current operation completes",
+        variant: "destructive"
+      });
+      return;
+    }
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
         <AnimatePresence>
           {showSuccess && (
@@ -856,7 +903,19 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
       </DialogContent>
 
       {/* Confirmation Dialog for Delete Operations */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialog 
+        open={deleteDialogOpen} 
+        onOpenChange={(open) => {
+          if (!open && isProcessing) {
+            toast({
+              title: "Operation in progress",
+              description: "Please wait until the delete operation completes",
+              variant: "destructive"
+            });
+            return;
+          }
+          setDeleteDialogOpen(open);
+        }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center">
