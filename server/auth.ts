@@ -337,16 +337,16 @@ export function setupAuth(app: Express) {
       console.log(`Processing company logo upload for user ${userId}`);
 
       // Get the actual image URL from the request body
+      const userId = (req.user as SelectUser).id;
       const { imageUrl } = req.body;
 
       if (!imageUrl) {
         return res.status(400).json({ message: "No image URL provided" });
       }
 
-      console.log(`Using provided company logo URL: ${imageUrl}`);
+      // Update user with company logo
+      await storage.updateUser(userId, { companyLogo: imageUrl });
 
-      // Here you would update the company info with the logo URL
-      // For now, we'll just return the provided URL
       console.log("Company logo uploaded successfully");
       res.json({ 
         success: true,

@@ -454,10 +454,37 @@ const Settings = () => {
   };
 
   // Handle company logo selection
-  const handleCompanyLogoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      setCompanyLogo(event.target.files[0]);
-    }
+  const handleCompanyLogoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    console.log("Converting company logo to data URL");
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const imageUrl = reader.result as string;
+
+      const response = await fetch("/api/company/logo", {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ imageUrl }),
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Update local user state with new logo
+        queryClient.setQueryData(['user'], (oldData: any) => ({
+          ...oldData,
+          companyLogo: data.logoUrl
+        }));
+        toast({
+          description: "Logo updated successfully",
+        });
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   // Handle triggering company logo upload dialog
