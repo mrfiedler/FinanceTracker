@@ -517,6 +517,142 @@ const AddRevenueModal = ({ isOpen, onClose, revenue, isEditing = false }: AddRev
                   </FormItem>
                 )}
               />
+              
+              {/* New Client Form displayed right below client selection */}
+              {showNewClientForm && (
+                <div className="col-span-2 mt-2 bg-muted/30 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center">
+                      <UserPlus className="h-5 w-5 mr-2 text-primary" />
+                      <h3 className="font-medium">New Client Information</h3>
+                    </div>
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={cancelNewClientForm}
+                      className="h-8 px-2"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <FormField
+                      control={revenueForm.control}
+                      name="newClient.name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Client Name *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Business or client name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={revenueForm.control}
+                      name="newClient.email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email *</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="client@example.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={revenueForm.control}
+                        name="newClient.phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone (Optional)</FormLabel>
+                            <FormControl>
+                              <Input placeholder="+1 555 123 4567" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={revenueForm.control}
+                        name="newClient.businessType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Business Type (Optional)</FormLabel>
+                            {customBusinessTypeMode ? (
+                              <div className="flex space-x-2">
+                                <FormControl>
+                                  <Input
+                                    placeholder="e.g., Tech Startup"
+                                    value={newBusinessType}
+                                    onChange={(e) => {
+                                      setNewBusinessType(e.target.value);
+                                      field.onChange(e.target.value);
+                                    }}
+                                  />
+                                </FormControl>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="mt-0"
+                                  onClick={() => {
+                                    setCustomBusinessTypeMode(false);
+                                    setNewBusinessType("");
+                                    field.onChange("");
+                                  }}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <Select
+                                onValueChange={(value) => {
+                                  if (value === "custom") {
+                                    setCustomBusinessTypeMode(true);
+                                  } else {
+                                    field.onChange(value);
+                                  }
+                                }}
+                                value={field.value || ""}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select type" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="tech">Tech</SelectItem>
+                                  <SelectItem value="healthcare">Healthcare</SelectItem>
+                                  <SelectItem value="finance">Finance</SelectItem>
+                                  <SelectItem value="education">Education</SelectItem>
+                                  <SelectItem value="retail">Retail</SelectItem>
+                                  <SelectItem value="manufacturing">Manufacturing</SelectItem>
+                                  <SelectItem value="custom" className="text-primary">
+                                    <div className="flex items-center">
+                                      <Plus className="mr-2 h-3 w-3" />
+                                      Custom Type
+                                    </div>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            )}
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <FormField
                 control={revenueForm.control}
@@ -754,124 +890,7 @@ const AddRevenueModal = ({ isOpen, onClose, revenue, isEditing = false }: AddRev
               </label>
             </div>
 
-            {/* New Client Form (conditionally rendered) */}
-            {showNewClientForm && (
-              <>
-                <Separator className="my-4" />
-                <div className="bg-muted/30 rounded-lg p-4 mb-2">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center">
-                      <UserPlus className="h-5 w-5 mr-2 text-primary" />
-                      <h3 className="font-medium">New Client Information</h3>
-                    </div>
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={cancelNewClientForm}
-                      className="h-8 px-2"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  <div className="space-y-4">
-                    <FormField
-                      control={revenueForm.control}
-                      name="newClient.name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Client Name *</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Business or client name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={revenueForm.control}
-                      name="newClient.email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email *</FormLabel>
-                          <FormControl>
-                            <Input type="email" placeholder="client@example.com" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={revenueForm.control}
-                        name="newClient.phone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Phone (Optional)</FormLabel>
-                            <FormControl>
-                              <Input placeholder="+1 555 123 4567" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={revenueForm.control}
-                        name="newClient.businessType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Business Type</FormLabel>
-                            <Select
-                              onValueChange={(value) => {
-                                if (value === "custom") {
-                                  setCustomBusinessTypeMode(true);
-                                  field.onChange("");
-                                } else {
-                                  setCustomBusinessTypeMode(false);
-                                  field.onChange(value);
-                                }
-                              }}
-                              value={customBusinessTypeMode ? "custom" : (field.value || "")}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select type" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="retail">Retail</SelectItem>
-                                <SelectItem value="tech">Technology</SelectItem>
-                                <SelectItem value="health">Healthcare</SelectItem>
-                                <SelectItem value="education">Education</SelectItem>
-                                <SelectItem value="finance">Financial</SelectItem>
-                                <SelectItem value="custom">Custom...</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            {customBusinessTypeMode && (
-                              <div className="mt-2">
-                                <Input
-                                  placeholder="Enter business type"
-                                  value={newBusinessType}
-                                  onChange={(e) => {
-                                    setNewBusinessType(e.target.value);
-                                    field.onChange(e.target.value);
-                                  }}
-                                />
-                              </div>
-                            )}
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
+            {/* New client form moved to below client selection dropdown */}
 
             <DialogFooter>
               <Button variant="outline" type="button" onClick={onClose}>
