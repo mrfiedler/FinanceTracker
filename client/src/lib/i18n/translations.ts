@@ -159,6 +159,38 @@ export const translations: TranslationMap = {
     "en": "Financial Summary",
     "pt-BR": "Resumo Financeiro"
   },
+  "dashboard.financeSummary": {
+    "en": "Finance Summary",
+    "pt-BR": "Resumo Financeiro"
+  },
+  "dashboard.currentBalance": {
+    "en": "Current Balance",
+    "pt-BR": "Saldo Atual"
+  },
+  "dashboard.totalRevenue": {
+    "en": "Total Revenue",
+    "pt-BR": "Receita Total"
+  },
+  "dashboard.totalExpenses": {
+    "en": "Total Expenses", 
+    "pt-BR": "Despesas Totais"
+  },
+  "dashboard.outstandingPayments": {
+    "en": "Outstanding Payments",
+    "pt-BR": "Pagamentos Pendentes"
+  },
+  "dashboard.fromLastPeriod": {
+    "en": "from last period",
+    "pt-BR": "do período anterior"
+  },
+  "dashboard.withPendingInvoices": {
+    "en": "with pending invoices",
+    "pt-BR": "com faturas pendentes"
+  },
+  "dashboard.clients": {
+    "en": "clients",
+    "pt-BR": "clientes"
+  },
   "dashboard.revenue": {
     "en": "Revenue",
     "pt-BR": "Receita"

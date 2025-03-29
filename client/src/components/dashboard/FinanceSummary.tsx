@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCurrency } from "@/context/CurrencyContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { formatCurrency } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TrendingUp, TrendingDown, BarChart2, Clock, CalendarIcon } from "lucide-react";
@@ -27,6 +28,7 @@ interface FinanceSummaryData {
 
 const FinanceSummary = () => {
   const { currency } = useCurrency();
+  const { t } = useLanguage();
   const [dateRange, setDateRange] = useState("30");
   const [date, setDate] = useState<DateRange>({ 
     from: undefined,
@@ -49,7 +51,7 @@ const FinanceSummary = () => {
 
   const summaryCards = [
     {
-      title: "Current Balance",
+      title: t('dashboard.currentBalance'),
       amount: financeSummary?.netProfit || 0,
       change: financeSummary?.profitChange || 0,
       icon: <BarChart2 className="h-6 w-6" />,
@@ -57,7 +59,7 @@ const FinanceSummary = () => {
       textColor: "text-[#3DAFC4]"
     },
     {
-      title: "Total Revenue",
+      title: t('dashboard.totalRevenue'),
       amount: financeSummary?.totalRevenue || 0,
       change: financeSummary?.revenueChange || 0,
       icon: <TrendingUp className="h-6 w-6" />,
@@ -65,7 +67,7 @@ const FinanceSummary = () => {
       textColor: "text-[#A3E635]"
     },
     {
-      title: "Total Expenses",
+      title: t('dashboard.totalExpenses'),
       amount: financeSummary?.totalExpenses || 0,
       change: financeSummary?.expensesChange || 0,
       icon: <TrendingDown className="h-6 w-6" />,
@@ -73,7 +75,7 @@ const FinanceSummary = () => {
       textColor: "text-[#C6909A]"
     },
     {
-      title: "Outstanding Payments",
+      title: t('dashboard.outstandingPayments'),
       amount: financeSummary?.outstandingPayments || 0,
       pendingClients: financeSummary?.pendingClients || 0,
       icon: <Clock className="h-6 w-6" />,
@@ -86,7 +88,7 @@ const FinanceSummary = () => {
     <div className="mb-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
         <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
-          Finance Summary
+          {t('dashboard.financeSummary')}
         </h2>
         
         {/* Date range selector - horizontal scrolling on mobile */}
@@ -280,7 +282,7 @@ const FinanceSummary = () => {
                   </div>
                   
                   <div className="mt-4 flex items-center">
-                    {card.title !== "Outstanding Payments" ? (
+                    {card.title !== t('dashboard.outstandingPayments') ? (
                       <>
                         <motion.span 
                           className={`text-sm font-medium flex items-center ${card.change && card.change >= 0 ? 'text-[#A3E635]' : 'text-[#C6909A]'}`}
@@ -325,7 +327,7 @@ const FinanceSummary = () => {
                             }
                           }}
                         >
-                          from last period
+                          {t('dashboard.fromLastPeriod')}
                         </motion.span>
                       </>
                     ) : (
@@ -360,7 +362,7 @@ const FinanceSummary = () => {
                               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#7D6BA7]" />
                             </motion.span>
                           </motion.span>
-                          <span className="ml-1">clients</span>
+                          <span className="ml-1">{t('dashboard.clients')}</span>
                         </motion.span>
                         <motion.span 
                           className="text-sm text-gray-500 dark:text-gray-400 ml-2"
@@ -373,7 +375,7 @@ const FinanceSummary = () => {
                             }
                           }}
                         >
-                          with pending invoices
+                          {t('dashboard.withPendingInvoices')}
                         </motion.span>
                       </>
                     )}
