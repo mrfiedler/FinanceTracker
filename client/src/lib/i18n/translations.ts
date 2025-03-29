@@ -139,6 +139,22 @@ export const translations: TranslationMap = {
     "en": "Dashboard",
     "pt-BR": "Painel"
   },
+  "dashboard.welcome": {
+    "en": "Welcome back! Here's what's happening with your business today.",
+    "pt-BR": "Bem-vindo de volta! Aqui está o que está acontecendo com seu negócio hoje."
+  },
+  "dashboard.viewAchievements": {
+    "en": "View Achievements",
+    "pt-BR": "Ver Conquistas"
+  },
+  "dashboard.exportReport": {
+    "en": "Export Report",
+    "pt-BR": "Exportar Relatório"
+  },
+  "dashboard.export": {
+    "en": "Export",
+    "pt-BR": "Exportar"
+  },
   "dashboard.summary": {
     "en": "Financial Summary",
     "pt-BR": "Resumo Financeiro"
@@ -204,6 +220,10 @@ export const translations: TranslationMap = {
   "finance.title": {
     "en": "Finance",
     "pt-BR": "Finanças"
+  },
+  "finance.pageDescription": {
+    "en": "Manage your revenues and expenses",
+    "pt-BR": "Gerencie suas receitas e despesas"
   },
   "finance.transactions": {
     "en": "Transactions",
@@ -284,6 +304,102 @@ export const translations: TranslationMap = {
   "finance.settings": {
     "en": "Finance Settings",
     "pt-BR": "Configurações Financeiras"
+  },
+  "finance.currentBalance": {
+    "en": "Current Balance",
+    "pt-BR": "Saldo Atual"
+  },
+  "finance.currentMonthRevenue": {
+    "en": "Current Month Revenue",
+    "pt-BR": "Receita do Mês Atual"
+  },
+  "finance.currentMonthExpenses": {
+    "en": "Current Month Expenses",
+    "pt-BR": "Despesas do Mês Atual"
+  },
+  "finance.monthlyBalance": {
+    "en": "Monthly Balance",
+    "pt-BR": "Saldo Mensal"
+  },
+  "finance.outstandingExpenses": {
+    "en": "Outstanding Expenses",
+    "pt-BR": "Despesas Pendentes"
+  },
+  "finance.expensesPaid": {
+    "en": "Expenses Paid",
+    "pt-BR": "Despesas Pagas"
+  },
+  "finance.outstandingRevenue": {
+    "en": "Outstanding Revenue",
+    "pt-BR": "Receita Pendente"
+  },
+  "finance.revenueReceived": {
+    "en": "Revenue Received",
+    "pt-BR": "Receita Recebida"
+  },
+  "finance.monthlyTotal": {
+    "en": "Monthly Total",
+    "pt-BR": "Total Mensal"
+  },
+  "finance.paidTransactionsOnly": {
+    "en": "(paid transactions only)",
+    "pt-BR": "(apenas transações pagas)"
+  },
+  "finance.addExpense": {
+    "en": "Add Expense",
+    "pt-BR": "Adicionar Despesa"
+  },
+  "finance.addRevenue": {
+    "en": "Add Revenue",
+    "pt-BR": "Adicionar Receita"
+  },
+  "finance.all": {
+    "en": "All",
+    "pt-BR": "Todos"
+  },
+  "finance.expenses": {
+    "en": "Expenses",
+    "pt-BR": "Despesas"
+  },
+  "finance.searchTransactions": {
+    "en": "Search transactions...",
+    "pt-BR": "Buscar transações..."
+  },
+  "finance.period": {
+    "en": "Period",
+    "pt-BR": "Período"
+  },
+  "finance.thisMonth": {
+    "en": "This Month",
+    "pt-BR": "Este Mês"
+  },
+  "finance.last7Days": {
+    "en": "Last 7 days",
+    "pt-BR": "Últimos 7 dias"
+  },
+  "finance.last30Days": {
+    "en": "Last 30 days",
+    "pt-BR": "Últimos 30 dias"
+  },
+  "finance.last90Days": {
+    "en": "Last 90 days",
+    "pt-BR": "Últimos 90 dias"
+  },
+  "finance.pastYear": {
+    "en": "Past year",
+    "pt-BR": "Ano passado"
+  },
+  "finance.customRange": {
+    "en": "Custom range",
+    "pt-BR": "Intervalo personalizado"
+  },
+  "finance.allCategories": {
+    "en": "All Categories",
+    "pt-BR": "Todas as Categorias"
+  },
+  "finance.allAccounts": {
+    "en": "All Accounts",
+    "pt-BR": "Todas as Contas"
   },
   "finance.selectClient": {
     "en": "Select Client",
@@ -763,6 +879,14 @@ export const translations: TranslationMap = {
     "en": "Resource not found",
     "pt-BR": "Recurso não encontrado"
   },
+  "error.exportFailed": {
+    "en": "Export failed",
+    "pt-BR": "Falha na exportação"
+  },
+  "error.exportFailedDescription": {
+    "en": "There was an error exporting your financial report.",
+    "pt-BR": "Ocorreu um erro ao exportar seu relatório financeiro."
+  },
   "success.saved": {
     "en": "Changes saved successfully",
     "pt-BR": "Alterações salvas com sucesso"
@@ -778,6 +902,14 @@ export const translations: TranslationMap = {
   "success.deleted": {
     "en": "Deleted successfully",
     "pt-BR": "Excluído com sucesso"
+  },
+  "success.exported": {
+    "en": "Report exported successfully",
+    "pt-BR": "Relatório exportado com sucesso"
+  },
+  "success.exportedDescription": {
+    "en": "Your financial report has been downloaded as a CSV file.",
+    "pt-BR": "Seu relatório financeiro foi baixado como um arquivo CSV."
   },
   "confirm.delete": {
     "en": "Are you sure you want to delete this?",

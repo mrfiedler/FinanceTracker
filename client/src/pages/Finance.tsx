@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useLanguage } from "@/context/LanguageContext";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { bankAccounts } from "@/lib/constants";
 import {
@@ -65,6 +66,14 @@ import { format, subMonths, addMonths, startOfMonth, endOfMonth, differenceInDay
 
 const Finance = () => {
   const { currency } = useCurrency();
+  const { t } = useLanguage();
+  
+  // Define translations for use in nested functions
+  const translations = {
+    paid: t('finance.paid'),
+    unpaid: t('finance.unpaid'),
+    overdue: t('finance.overdue')
+  };
   const [transactionType, setTransactionType] = useState("all");
   const [dateRange, setDateRange] = useState("30");
   const [searchQuery, setSearchQuery] = useState("");
@@ -322,9 +331,9 @@ const Finance = () => {
       
       <div className="page-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="page-title">Finance</h1>
+          <h1 className="page-title">{t('finance.title')}</h1>
           <p className="page-description">
-            Manage your revenues and expenses
+            {t('finance.pageDescription')}
           </p>
         </div>
         <Button 
@@ -334,7 +343,7 @@ const Finance = () => {
           onClick={() => setSettingsModalOpen(true)}
         >
           <Settings className="h-3.5 w-3.5 mr-1.5" />
-          <span>Settings</span>
+          <span>{t('finance.settings')}</span>
         </Button>
       </div>
 
@@ -343,14 +352,14 @@ const Finance = () => {
           <>
             <Card className="overflow-hidden border-l-4 border-l-[#3DAFC4] hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">
-                <CardDescription className="text-sm font-medium">Current Balance</CardDescription>
+                <CardDescription className="text-sm font-medium">{t('finance.currentBalance')}</CardDescription>
                 <CardTitle className="text-2xl font-bold text-[#3DAFC4] flex items-baseline">
                   {isLoading ? (
                     <Skeleton className="h-8 w-28" />
                   ) : (
                     <>
                       {formatCurrency(financeData?.netProfit || 0, currency)}
-                      <span className="text-xs ml-2 text-muted-foreground">(paid transactions only)</span>
+                      <span className="text-xs ml-2 text-muted-foreground">{t('finance.paidTransactionsOnly')}</span>
                     </>
                   )}
                 </CardTitle>
@@ -359,7 +368,7 @@ const Finance = () => {
 
             <Card className="overflow-hidden border-l-4 border-l-[#A3E635] hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">
-                <CardDescription className="text-sm font-medium">Current Month Revenue</CardDescription>
+                <CardDescription className="text-sm font-medium">{t('finance.currentMonthRevenue')}</CardDescription>
                 <CardTitle className="text-2xl font-bold text-[#A3E635] flex items-baseline">
                   {isLoading ? (
                     <Skeleton className="h-8 w-28" />
@@ -373,7 +382,7 @@ const Finance = () => {
             </Card>
             <Card className="overflow-hidden border-l-4 border-l-[#c6909a] hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">
-                <CardDescription className="text-sm font-medium">Current Month Expenses</CardDescription>
+                <CardDescription className="text-sm font-medium">{t('finance.currentMonthExpenses')}</CardDescription>
                 <CardTitle className="text-2xl font-bold text-[#c6909a] flex items-baseline">
                   {isLoading ? (
                     <Skeleton className="h-8 w-28" />
@@ -388,14 +397,14 @@ const Finance = () => {
 
             <Card className="overflow-hidden border-l-4 border-l-[#9F7AEA] hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">
-                <CardDescription className="text-sm font-medium">Monthly Balance</CardDescription>
+                <CardDescription className="text-sm font-medium">{t('finance.monthlyBalance')}</CardDescription>
                 <CardTitle className="text-2xl font-bold text-[#9F7AEA] flex items-baseline">
                   {isLoading ? (
                     <Skeleton className="h-8 w-28" />
                   ) : (
                     <>
                       {formatCurrency((financeData?.paidRevenue || 0) - (financeData?.paidExpenses || 0), currency)}
-                      <span className="text-xs ml-2 text-muted-foreground">(paid transactions only)</span>
+                      <span className="text-xs ml-2 text-muted-foreground">{t('finance.paidTransactionsOnly')}</span>
                     </>
                   )}
                 </CardTitle>
@@ -408,7 +417,7 @@ const Finance = () => {
           <>
             <Card className="overflow-hidden border-l-4 border-l-[#c6909a] hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">
-                <CardDescription className="text-sm font-medium">Outstanding Expenses</CardDescription>
+                <CardDescription className="text-sm font-medium">{t('finance.outstandingExpenses')}</CardDescription>
                 <CardTitle className="text-2xl font-bold text-[#c6909a] flex items-baseline">
                   {isLoading ? (
                     <Skeleton className="h-8 w-28" />
@@ -423,7 +432,7 @@ const Finance = () => {
 
             <Card className="overflow-hidden border-l-4 border-l-[#c6909a] hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">
-                <CardDescription className="text-sm font-medium">Expenses Paid</CardDescription>
+                <CardDescription className="text-sm font-medium">{t('finance.expensesPaid')}</CardDescription>
                 <CardTitle className="text-2xl font-bold text-[#c6909a] flex items-baseline">
                   {isLoading ? (
                     <Skeleton className="h-8 w-28" />
@@ -438,7 +447,7 @@ const Finance = () => {
 
             <Card className="overflow-hidden border-l-4 border-l-[#c6909a] hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">
-                <CardDescription className="text-sm font-medium">Monthly Total</CardDescription>
+                <CardDescription className="text-sm font-medium">{t('finance.monthlyTotal')}</CardDescription>
                 <CardTitle className="text-2xl font-bold text-[#c6909a] flex items-baseline">
                   {isLoading ? (
                     <Skeleton className="h-8 w-28" />
@@ -457,7 +466,7 @@ const Finance = () => {
           <>
             <Card className="overflow-hidden border-l-4 border-l-[#A3E635] hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">
-                <CardDescription className="text-sm font-medium">Outstanding Revenue</CardDescription>
+                <CardDescription className="text-sm font-medium">{t('finance.outstandingRevenue')}</CardDescription>
                 <CardTitle className="text-2xl font-bold text-[#A3E635] flex items-baseline">
                   {isLoading ? (
                     <Skeleton className="h-8 w-28" />
@@ -472,7 +481,7 @@ const Finance = () => {
 
             <Card className="overflow-hidden border-l-4 border-l-[#A3E635] hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">
-                <CardDescription className="text-sm font-medium">Revenue Received</CardDescription>
+                <CardDescription className="text-sm font-medium">{t('finance.revenueReceived')}</CardDescription>
                 <CardTitle className="text-2xl font-bold text-[#A3E635] flex items-baseline">
                   {isLoading ? (
                     <Skeleton className="h-8 w-28" />
@@ -487,7 +496,7 @@ const Finance = () => {
 
             <Card className="overflow-hidden border-l-4 border-l-[#A3E635] hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">
-                <CardDescription className="text-sm font-medium">Monthly Total</CardDescription>
+                <CardDescription className="text-sm font-medium">{t('finance.monthlyTotal')}</CardDescription>
                 <CardTitle className="text-2xl font-bold text-[#A3E635] flex items-baseline">
                   {isLoading ? (
                     <Skeleton className="h-8 w-28" />
@@ -506,7 +515,7 @@ const Finance = () => {
       <Card className="shadow-sm border-border/40 rounded-lg overflow-hidden">
         <CardHeader className="bg-card/70 py-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-            <CardTitle className="text-xl tracking-tight">Transactions</CardTitle>
+            <CardTitle className="text-xl tracking-tight">{t('finance.transactions')}</CardTitle>
             <div className="flex flex-col sm:flex-row gap-3">
               <Button 
                 variant="outline" 
@@ -514,14 +523,14 @@ const Finance = () => {
                 className="flex items-center shadow-sm"
               >
                 <Plus className="mr-1.5 h-3.5 w-3.5" />
-                <span>Add Expense</span>
+                <span>{t('finance.addExpense')}</span>
               </Button>
               <Button 
                 onClick={openAddRevenueModal} 
                 className="flex items-center shadow-sm bg-[#A3E635] hover:bg-[#A3E635]/90 text-black transition-all duration-200 hover:shadow-md"
               >
                 <Plus className="mr-1.5 h-3.5 w-3.5" />
-                <span>Add Revenue</span>
+                <span>{t('finance.addRevenue')}</span>
               </Button>
             </div>
           </div>
@@ -540,7 +549,7 @@ const Finance = () => {
                   )}
                 >
                   <Filter className="h-3.5 w-3.5 mr-1.5" />
-                  All
+                  {t('finance.all')}
                 </Button>
                 <Button 
                   variant={transactionType === "revenue" ? "secondary" : "outline"} 
@@ -552,7 +561,7 @@ const Finance = () => {
                   )}
                 >
                   <div className="h-2 w-2 rounded-full bg-green-500 mr-1.5" />
-                  Revenue
+                  {t('finance.revenue')}
                 </Button>
                 <Button 
                   variant={transactionType === "expense" ? "secondary" : "outline"} 
@@ -564,7 +573,7 @@ const Finance = () => {
                   )}
                 >
                   <div className="h-2 w-2 rounded-full bg-red-500 mr-1.5" />
-                  Expenses
+                  {t('finance.expenses')}
                 </Button>
               </div>
 
@@ -572,7 +581,7 @@ const Finance = () => {
                 <div className="relative flex-grow mb-3 md:mb-0 md:max-w-md">
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search transactions..."
+                    placeholder={t('finance.searchTransactions')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-9 h-9"
@@ -608,7 +617,7 @@ const Finance = () => {
                   <Select value={dateRange} onValueChange={setDateRange}>
                     <SelectTrigger className="h-9 w-[140px]">
                       <Calendar className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-                      <SelectValue placeholder="Period" />
+                      <SelectValue placeholder={t('finance.period')} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="month">This Month</SelectItem>
@@ -626,7 +635,7 @@ const Finance = () => {
                   >
                     <SelectTrigger className="h-9 w-[140px]">
                       <div className="h-3 w-3 rounded-full bg-primary mr-1.5 opacity-70" />
-                      <SelectValue placeholder="Category" />
+                      <SelectValue placeholder={t('finance.category')} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Categories</SelectItem>
@@ -643,7 +652,7 @@ const Finance = () => {
                   >
                     <SelectTrigger className="h-9 w-[140px]">
                       <Wallet className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-                      <SelectValue placeholder="Account" />
+                      <SelectValue placeholder={t('finance.account')} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Accounts</SelectItem>
@@ -668,7 +677,8 @@ const Finance = () => {
                 optimisticUpdates, 
                 updateTransactionStatus,
                 handleEditTransaction,
-                handleDeleteTransaction
+                handleDeleteTransaction,
+                translations
               )}
             </TabsContent>
             <TabsContent value="revenue" className="mt-0">
@@ -679,7 +689,8 @@ const Finance = () => {
                 optimisticUpdates, 
                 updateTransactionStatus,
                 handleEditTransaction,
-                handleDeleteTransaction
+                handleDeleteTransaction,
+                translations
               )}
             </TabsContent>
             <TabsContent value="expense" className="mt-0">
@@ -690,7 +701,8 @@ const Finance = () => {
                 optimisticUpdates, 
                 updateTransactionStatus,
                 handleEditTransaction,
-                handleDeleteTransaction
+                handleDeleteTransaction,
+                translations
               )}
             </TabsContent>
           </Tabs>
@@ -742,7 +754,8 @@ const renderTransactionsTable = (
   optimisticUpdates: {[key: string]: boolean} = {}, 
   updateTransactionStatus: (transaction: any) => void,
   handleEditTransaction?: (transaction: any) => void,
-  handleDeleteTransaction?: (transaction: any) => void
+  handleDeleteTransaction?: (transaction: any) => void,
+  translationStrings?: {paid: string, unpaid: string, overdue: string}
 ) => {
   if (isLoading) {
     return Array(5).fill(0).map((_, index) => (
@@ -803,7 +816,7 @@ const renderTransactionsTable = (
                             ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' 
                             : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
                         }`}>
-                          {isPaid ? 'Paid' : 'Unpaid'}
+                          {isPaid ? (translationStrings?.paid || 'Paid') : (translationStrings?.unpaid || 'Unpaid')}
                         </span>
                         <div 
                           className={`w-10 h-5 rounded-full flex items-center p-0.5 cursor-pointer transition-colors ${
@@ -831,7 +844,7 @@ const renderTransactionsTable = (
               }`}>
                 {transaction.dueDate ? formatDate(transaction.dueDate) : '-'}
                 {transaction.dueDate && new Date(transaction.dueDate) < new Date() && !transaction.isPaid &&
-                  ' (Overdue)'}
+                  ` (${translationStrings?.overdue || 'Overdue'})`}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                 <span>{transaction.description}</span>

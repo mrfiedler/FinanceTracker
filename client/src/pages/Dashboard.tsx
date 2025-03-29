@@ -12,6 +12,7 @@ import CreateQuoteModal from "@/components/modals/CreateQuoteModal";
 import { Button } from "@/components/ui/button";
 import { useModals } from "@/hooks/useModals";
 import { useGamification } from "@/context/GamificationContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { Download, Plus, Award, FileText } from "lucide-react";
@@ -20,6 +21,7 @@ import { formatCurrency } from "@/lib/utils";
 
 const Dashboard = () => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const { 
     expenseModalOpen,
     revenueModalOpen,
@@ -136,8 +138,8 @@ const Dashboard = () => {
       
       // Show success notification
       toast({
-        title: "Report exported successfully",
-        description: "Your financial report has been downloaded as a CSV file.",
+        title: t('success.exported'),
+        description: t('success.exportedDescription'),
         variant: "default",
       });
       
@@ -147,8 +149,8 @@ const Dashboard = () => {
     } catch (error) {
       console.error("Error exporting report:", error);
       toast({
-        title: "Export failed",
-        description: "There was an error exporting your financial report.",
+        title: t('error.exportFailed'),
+        description: t('error.exportFailedDescription'),
         variant: "destructive",
       });
     }
@@ -160,9 +162,9 @@ const Dashboard = () => {
         {/* Dashboard header */}
         <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="page-title">Dashboard</h1>
+            <h1 className="page-title">{t('dashboard.title')}</h1>
             <p className="page-description">
-              Welcome back! Here's what's happening with your business today.
+              {t('dashboard.welcome')}
             </p>
           </div>
           
@@ -175,7 +177,7 @@ const Dashboard = () => {
               >
                 <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <Award className="mr-2 h-4 w-4 text-yellow-500 group-hover:animate-pulse" />
-                <span className="relative z-10">View Achievements</span>
+                <span className="relative z-10">{t('dashboard.viewAchievements')}</span>
               </Button>
             </Link>
             <Button 
@@ -185,8 +187,8 @@ const Dashboard = () => {
               onClick={exportFinancialReport}
             >
               <Download className="mr-2 h-4 w-4 text-blue-500" />
-              <span className="md:inline hidden">Export Report</span>
-              <span className="md:hidden inline">Export</span>
+              <span className="md:inline hidden">{t('dashboard.exportReport')}</span>
+              <span className="md:hidden inline">{t('dashboard.export')}</span>
             </Button>
           </div>
         </div>
