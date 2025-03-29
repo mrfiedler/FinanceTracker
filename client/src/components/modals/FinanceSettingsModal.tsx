@@ -147,7 +147,7 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/categories'] });
       setNewCategoryName("");
-      showSuccessAnimation();
+      showSuccessAnimation("Category added successfully");
     },
     onError: (error: Error) => {
       toast({
@@ -174,7 +174,7 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/categories'] });
       resetCategoryForm();
-      showSuccessAnimation();
+      showSuccessAnimation("Category updated successfully");
     },
     onError: (error: Error) => {
       toast({
@@ -197,7 +197,7 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/categories'] });
-      showSuccessAnimation();
+      showSuccessAnimation("Category deleted successfully");
     },
     onError: (error: Error) => {
       toast({
@@ -221,7 +221,7 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/accounts'] });
       resetAccountForm();
-      showSuccessAnimation();
+      showSuccessAnimation("Account added successfully");
     },
     onError: (error: Error) => {
       toast({
@@ -248,7 +248,7 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/accounts'] });
       resetAccountForm();
-      showSuccessAnimation();
+      showSuccessAnimation("Account updated successfully");
     },
     onError: (error: Error) => {
       toast({
@@ -271,7 +271,7 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/accounts'] });
-      showSuccessAnimation();
+      showSuccessAnimation("Account deleted successfully");
     },
     onError: (error: Error) => {
       toast({
@@ -391,10 +391,18 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     setItemToDelete(null);
   };
 
-  // Success animation
-  const showSuccessAnimation = () => {
+  // Success animation and notification
+  const showSuccessAnimation = (message: string = "Operation completed successfully") => {
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 1500);
+    
+    // Show toast notification inside modal
+    toast({
+      title: "Success",
+      description: message,
+      variant: "default",
+      className: "bg-green-50 text-green-900 border-green-200 dark:bg-green-900/30 dark:text-green-200"
+    });
   };
 
   // Account icon renderer
