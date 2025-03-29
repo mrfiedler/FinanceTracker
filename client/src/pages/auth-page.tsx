@@ -64,7 +64,7 @@ export default function AuthPage() {
       onSuccess: () => {
         toast({
           title: "Login successful",
-          description: "Welcome back to FinanceTracker!",
+          description: "Welcome back to Eluvie!",
         });
         setLocation("/");
       },
@@ -83,7 +83,7 @@ export default function AuthPage() {
       onSuccess: () => {
         toast({
           title: "Registration successful",
-          description: "Welcome to FinanceTracker!",
+          description: "Welcome to Eluvie!",
         });
         setLocation("/");
       },
@@ -104,7 +104,7 @@ export default function AuthPage() {
           {/* Left column: Auth forms */}
           <div className="w-full md:w-1/2 p-6 space-y-4 md:space-y-6 sm:p-8">
             <h1 className="text-xl font-bold leading-tight tracking-tight text-foreground md:text-2xl">
-              Welcome to FinanceTracker
+              Welcome to Eluvie
             </h1>
             <p className="text-muted-foreground">
               Manage your finances, track expenses, and plan your future.
