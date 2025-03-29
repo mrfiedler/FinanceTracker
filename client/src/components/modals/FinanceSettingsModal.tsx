@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
@@ -12,7 +12,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  Card,
+  CardContent, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle,
+} from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { 
   Settings, 
@@ -29,7 +35,7 @@ import {
   Save,
   X,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
 } from "lucide-react";
 import { 
   SiChase, 
@@ -40,7 +46,6 @@ import {
   SiSquare, 
   SiVenmo 
 } from "react-icons/si";
-import { expenseCategories, revenueCategories, bankAccounts } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -54,6 +59,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { apiRequest } from "@/lib/queryClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { bankAccounts } from "@/lib/constants";
 
 // Define interfaces for categories and accounts
 interface Category {
@@ -76,22 +82,26 @@ interface FinanceSettingsModalProps {
 }
 
 const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) => {
-  const [mainTab, setMainTab] = useState("categories");
-  const [categoryTab, setCategoryTab] = useState("expense");
+  const [activeTab, setActiveTab] = useState("categories");
   const [searchQuery, setSearchQuery] = useState("");
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryType, setNewCategoryType] = useState("expense");
-  const [editingCategory, setEditingCategory] = useState<null | Category>(null);
-  const [editingAccount, setEditingAccount] = useState<null | Account>(null);
-
+  const [isEditingCategory, setIsEditingCategory] = useState(false);
+  const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
+  
   const [newAccountName, setNewAccountName] = useState("");
   const [newAccountType, setNewAccountType] = useState("other");
+  const [isEditingAccount, setIsEditingAccount] = useState(false);
+  const [currentAccount, setCurrentAccount] = useState<Account | null>(null);
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{ id: number, type: string, name: string } | null>(null);
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Alert dialog state for deletion confirmation
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{ id: number, type: string, name: string } | null>(null);
+  // Success animation state
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Fetch user's categories and accounts from API
   const { data: categories = [], isLoading: categoriesLoading } = useQuery<Category[]>({
@@ -129,7 +139,7 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/categories'] });
       setNewCategoryName("");
-      showSuccessToast();
+      showSuccessAnimation();
     },
     onError: (error: Error) => {
       toast({
@@ -150,10 +160,8 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/categories'] });
-      setEditingCategory(null);
-      setNewCategoryName("");
-      setNewCategoryType("expense");
-      showSuccessToast();
+      resetCategoryForm();
+      showSuccessAnimation();
     },
     onError: (error: Error) => {
       toast({
@@ -171,7 +179,7 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/categories'] });
-      showSuccessToast();
+      showSuccessAnimation();
     },
     onError: (error: Error) => {
       toast({
@@ -189,9 +197,8 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/accounts'] });
-      setNewAccountName("");
-      setNewAccountType("other");
-      showSuccessToast();
+      resetAccountForm();
+      showSuccessAnimation();
     },
     onError: (error: Error) => {
       toast({
@@ -212,10 +219,8 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/accounts'] });
-      setEditingAccount(null);
-      setNewAccountName("");
-      setNewAccountType("other");
-      showSuccessToast();
+      resetAccountForm();
+      showSuccessAnimation();
     },
     onError: (error: Error) => {
       toast({
@@ -233,7 +238,7 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finance/accounts'] });
-      showSuccessToast();
+      showSuccessAnimation();
     },
     onError: (error: Error) => {
       toast({
@@ -244,29 +249,27 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     }
   });
 
-  const handleAddCategory = () => {
-    if (!newCategoryName.trim()) {
-      toast({
-        title: "Error",
-        description: "Category name cannot be empty",
-        variant: "destructive"
-      });
-      return;
-    }
+  // Filter data based on search query
+  const filteredCategories = categories.filter(
+    (category) => category.label.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-    addCategoryMutation.mutate({ 
-      name: newCategoryName.trim(), 
-      type: newCategoryType 
-    });
-  };
+  const filteredAccounts = accounts.filter(
+    (account) => account.label.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  
+  const expenseCategories = filteredCategories.filter(cat => cat.type === 'expense');
+  const revenueCategories = filteredCategories.filter(cat => cat.type === 'revenue');
 
+  // Category operations
   const handleEditCategory = (category: Category) => {
-    setEditingCategory(category);
+    setCurrentCategory(category);
     setNewCategoryName(category.label);
     setNewCategoryType(category.type);
+    setIsEditingCategory(true);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveCategory = () => {
     if (!newCategoryName.trim()) {
       toast({
         title: "Error",
@@ -276,28 +279,36 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
       return;
     }
 
-    if (editingCategory) {
+    if (isEditingCategory && currentCategory) {
       updateCategoryMutation.mutate({
-        id: editingCategory.id,
+        id: currentCategory.id,
+        name: newCategoryName.trim(),
+        type: newCategoryType
+      });
+    } else {
+      addCategoryMutation.mutate({
         name: newCategoryName.trim(),
         type: newCategoryType
       });
     }
   };
 
-  const handleCancelEdit = () => {
-    setEditingCategory(null);
+  const resetCategoryForm = () => {
+    setCurrentCategory(null);
     setNewCategoryName("");
     setNewCategoryType("expense");
+    setIsEditingCategory(false);
   };
 
+  // Account operations
   const handleEditAccount = (account: Account) => {
-    setEditingAccount(account);
+    setCurrentAccount(account);
     setNewAccountName(account.label);
     setNewAccountType(account.icon);
+    setIsEditingAccount(true);
   };
 
-  const handleSaveAccountEdit = () => {
+  const handleSaveAccount = () => {
     if (!newAccountName.trim()) {
       toast({
         title: "Error",
@@ -307,37 +318,28 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
       return;
     }
 
-    if (editingAccount) {
+    if (isEditingAccount && currentAccount) {
       updateAccountMutation.mutate({
-        id: editingAccount.id,
+        id: currentAccount.id,
+        name: newAccountName.trim(),
+        type: newAccountType
+      });
+    } else {
+      addAccountMutation.mutate({
         name: newAccountName.trim(),
         type: newAccountType
       });
     }
   };
 
-  const handleCancelAccountEdit = () => {
-    setEditingAccount(null);
+  const resetAccountForm = () => {
+    setCurrentAccount(null);
     setNewAccountName("");
     setNewAccountType("other");
+    setIsEditingAccount(false);
   };
 
-  const handleAddAccount = () => {
-    if (!newAccountName.trim()) {
-      toast({
-        title: "Error",
-        description: "Account name cannot be empty",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    addAccountMutation.mutate({
-      name: newAccountName.trim(),
-      type: newAccountType
-    });
-  };
-
+  // Delete operations
   const handleDeleteRequest = (id: number, type: string, name: string) => {
     setItemToDelete({ id, type, name });
     setDeleteDialogOpen(true);
@@ -356,6 +358,13 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     setItemToDelete(null);
   };
 
+  // Success animation
+  const showSuccessAnimation = () => {
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 1500);
+  };
+
+  // Account icon renderer
   const renderAccountIcon = (accountType: string) => {
     switch (accountType) {
       case "default":
@@ -383,27 +392,6 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
     }
   };
 
-  // Filter categories and accounts based on search
-  const filteredExpenseCategories = categories
-    .filter(cat => cat.type === 'expense')
-    .filter(cat => cat.label.toLowerCase().includes(searchQuery.toLowerCase()));
-
-  const filteredRevenueCategories = categories
-    .filter(cat => cat.type === 'revenue')
-    .filter(cat => cat.label.toLowerCase().includes(searchQuery.toLowerCase()));
-
-  const filteredAccounts = accounts.filter(acc => 
-    acc.label.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Success animation state
-  const [showSuccess, setShowSuccess] = useState(false);
-
-  const showSuccessToast = () => {
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 2000);
-  };
-
   // Animation variants
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -425,7 +413,7 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-auto">
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
         <AnimatePresence>
           {showSuccess && (
             <motion.div 
@@ -448,7 +436,7 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
 
         <DialogHeader className="pb-3">
           <DialogTitle className="text-lg flex items-center font-semibold">
-            <Settings className="h-4.5 w-4.5 mr-2 text-primary" />
+            <Settings className="h-5 w-5 mr-2 text-primary" />
             Finance Settings
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground mt-1">
@@ -461,167 +449,203 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
           <SearchIcon className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 h-3.5 w-3.5" />
           <Input
             placeholder="Search categories or accounts..."
-            className="pl-8 h-8 text-sm bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-700"
+            className="pl-8 h-9 text-sm bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-700"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
           />
         </div>
 
-        <Tabs defaultValue="categories" value={mainTab} onValueChange={setMainTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-3 h-9">
-            <TabsTrigger value="categories" className="flex items-center text-sm">
-              <DollarSign className="h-3.5 w-3.5 mr-1.5 text-gray-600 dark:text-gray-400" />
+        <Tabs defaultValue="categories" value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-4 h-10">
+            <TabsTrigger value="categories" className="flex items-center justify-center text-sm">
+              <DollarSign className="h-4 w-4 mr-2 text-gray-600 dark:text-gray-400" />
               Categories
             </TabsTrigger>
-            <TabsTrigger value="accounts" className="flex items-center text-sm">
-              <Wallet className="h-3.5 w-3.5 mr-1.5 text-gray-600 dark:text-gray-400" />
+            <TabsTrigger value="accounts" className="flex items-center justify-center text-sm">
+              <Wallet className="h-4 w-4 mr-2 text-gray-600 dark:text-gray-400" />
               Accounts
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="categories" className="space-y-3">
-            <Tabs defaultValue="expense" value={categoryTab} onValueChange={setCategoryTab}>
-              <TabsList className="mb-3 w-full flex h-8">
-                <TabsTrigger value="expense" className="flex-1 flex items-center justify-center text-xs">
-                  <ArrowDownCircle className="h-3.5 w-3.5 mr-1 text-red-500 dark:text-red-600" />
-                  Expense
-                </TabsTrigger>
-                <TabsTrigger value="revenue" className="flex-1 flex items-center justify-center text-xs">
-                  <ArrowUpCircle className="h-3.5 w-3.5 mr-1 text-green-500 dark:text-green-600" />
-                  Revenue
-                </TabsTrigger>
-              </TabsList>
-
-              {/* Expense Categories */}
-              <TabsContent value="expense">
-                <motion.div
-                  initial="hidden"
-                  animate="visible"
-                  variants={{
-                    visible: {
-                      transition: {
-                        staggerChildren: 0.05
+          {/* Categories Tab */}
+          <TabsContent value="categories" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Category List */}
+              <Card className="border border-gray-200 dark:border-gray-700 shadow-sm">
+                <CardHeader className="pb-2 pt-4">
+                  <CardTitle className="text-base flex items-center justify-between text-gray-800 dark:text-gray-200">
+                    <div className="flex items-center">
+                      <ArrowDownCircle className="h-4 w-4 mr-2 text-red-500 dark:text-red-600" />
+                      Expense Categories
+                    </div>
+                    <Badge className="ml-2 bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300">
+                      {expenseCategories.length}
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-3">
+                  <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={{
+                      visible: {
+                        transition: {
+                          staggerChildren: 0.05
+                        }
                       }
-                    }
-                  }}
-                  className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-[250px] overflow-y-auto pr-1"
-                >
-                  {filteredExpenseCategories.map((category) => (
-                    <motion.div key={category.value} variants={cardVariants}>
-                      <Card className="flex items-center p-2 transition-all hover:shadow-md border border-gray-200 dark:border-gray-700">
-                        <div className="h-8 w-8 rounded-full flex items-center justify-center text-sm mr-2" style={{ backgroundColor: 'rgba(198, 144, 154, 0.2)' }}>
-                          <ArrowDownCircle className="h-4 w-4 text-red-500 dark:text-red-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate text-gray-800 dark:text-gray-200">{category.label}</p>
-                        </div>
-                        <div className="flex space-x-1 shrink-0">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-7 w-7 hover:bg-gray-100 dark:hover:bg-gray-700"
-                            onClick={() => handleEditCategory(category)}
-                          >
-                            <Edit className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-7 w-7 hover:bg-gray-100 dark:hover:bg-gray-700"
-                          >
-                            <Trash2 className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
-                          </Button>
-                        </div>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </motion.div>
-              </TabsContent>
+                    }}
+                    className="space-y-2 max-h-[180px] overflow-y-auto pr-1"
+                  >
+                    {categoriesLoading ? (
+                      <div className="text-center py-4 text-sm text-gray-500">Loading categories...</div>
+                    ) : expenseCategories.length === 0 ? (
+                      <div className="text-center py-4 text-sm text-gray-500">No expense categories found</div>
+                    ) : (
+                      expenseCategories.map((category) => (
+                        <motion.div key={category.id} variants={cardVariants}>
+                          <div className="flex items-center justify-between p-2 rounded-md bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
+                            <div className="flex items-center">
+                              <div className="h-8 w-8 rounded-full flex items-center justify-center text-sm mr-2" 
+                                   style={{ backgroundColor: 'rgba(239, 68, 68, 0.15)' }}>
+                                <ArrowDownCircle className="h-4 w-4 text-red-500 dark:text-red-600" />
+                              </div>
+                              <span className="font-medium text-sm text-gray-800 dark:text-gray-200">
+                                {category.label}
+                              </span>
+                            </div>
+                            <div className="flex space-x-1">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-7 w-7 hover:bg-gray-200 dark:hover:bg-gray-700"
+                                onClick={() => handleEditCategory(category)}
+                              >
+                                <Edit className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-7 w-7 hover:bg-gray-200 dark:hover:bg-gray-700"
+                                onClick={() => handleDeleteRequest(category.id, 'category', category.label)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
+                              </Button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))
+                    )}
+                  </motion.div>
+                </CardContent>
+              </Card>
 
-              {/* Revenue Categories */}
-              <TabsContent value="revenue">
-                <motion.div
-                  initial="hidden"
-                  animate="visible"
-                  variants={{
-                    visible: {
-                      transition: {
-                        staggerChildren: 0.05
+              <Card className="border border-gray-200 dark:border-gray-700 shadow-sm">
+                <CardHeader className="pb-2 pt-4">
+                  <CardTitle className="text-base flex items-center justify-between text-gray-800 dark:text-gray-200">
+                    <div className="flex items-center">
+                      <ArrowUpCircle className="h-4 w-4 mr-2 text-green-500 dark:text-green-600" />
+                      Revenue Categories
+                    </div>
+                    <Badge className="ml-2 bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300">
+                      {revenueCategories.length}
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-3">
+                  <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={{
+                      visible: {
+                        transition: {
+                          staggerChildren: 0.05
+                        }
                       }
-                    }
-                  }}
-                  className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-[250px] overflow-y-auto pr-1"
-                >
-                  {filteredRevenueCategories.map((category) => (
-                    <motion.div key={category.value} variants={cardVariants}>
-                      <Card className="flex items-center p-2 transition-all hover:shadow-md border border-gray-200 dark:border-gray-700">
-                        <div className="h-8 w-8 rounded-full flex items-center justify-center text-sm mr-2" style={{ backgroundColor: 'rgba(163, 230, 53, 0.2)' }}>
-                          <ArrowUpCircle className="h-4 w-4 text-green-500 dark:text-green-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate text-gray-800 dark:text-gray-200">{category.label}</p>
-                        </div>
-                        <div className="flex space-x-1 shrink-0">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-7 w-7 hover:bg-gray-100 dark:hover:bg-gray-700"
-                            onClick={() => handleEditCategory(category)}
-                          >
-                            <Edit className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-7 w-7 hover:bg-gray-100 dark:hover:bg-gray-700"
-                          >
-                            <Trash2 className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
-                          </Button>
-                        </div>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </motion.div>
-              </TabsContent>
-            </Tabs>
+                    }}
+                    className="space-y-2 max-h-[180px] overflow-y-auto pr-1"
+                  >
+                    {categoriesLoading ? (
+                      <div className="text-center py-4 text-sm text-gray-500">Loading categories...</div>
+                    ) : revenueCategories.length === 0 ? (
+                      <div className="text-center py-4 text-sm text-gray-500">No revenue categories found</div>
+                    ) : (
+                      revenueCategories.map((category) => (
+                        <motion.div key={category.id} variants={cardVariants}>
+                          <div className="flex items-center justify-between p-2 rounded-md bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
+                            <div className="flex items-center">
+                              <div className="h-8 w-8 rounded-full flex items-center justify-center text-sm mr-2" 
+                                   style={{ backgroundColor: 'rgba(34, 197, 94, 0.15)' }}>
+                                <ArrowUpCircle className="h-4 w-4 text-green-500 dark:text-green-600" />
+                              </div>
+                              <span className="font-medium text-sm text-gray-800 dark:text-gray-200">
+                                {category.label}
+                              </span>
+                            </div>
+                            <div className="flex space-x-1">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-7 w-7 hover:bg-gray-200 dark:hover:bg-gray-700"
+                                onClick={() => handleEditCategory(category)}
+                              >
+                                <Edit className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-7 w-7 hover:bg-gray-200 dark:hover:bg-gray-700"
+                                onClick={() => handleDeleteRequest(category.id, 'category', category.label)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
+                              </Button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))
+                    )}
+                  </motion.div>
+                </CardContent>
+              </Card>
+            </div>
 
-            {/* Category Edit / Add Form */}
-            <Card className="mt-4 border border-gray-200 dark:border-gray-700 shadow-sm">
-              <CardHeader className="pb-2 pt-3">
+            {/* Category Form */}
+            <Card className="border border-gray-200 dark:border-gray-700 shadow-sm">
+              <CardHeader className="pb-2 pt-4">
                 <CardTitle className="text-base flex items-center text-gray-800 dark:text-gray-200">
-                  {editingCategory ? (
-                    <><Edit className="h-4 w-4 mr-1.5 text-gray-600 dark:text-gray-400" /> Edit Category</>
+                  {isEditingCategory ? (
+                    <><Edit className="h-4 w-4 mr-2 text-primary" /> Edit Category</>
                   ) : (
-                    <><Plus className="h-4 w-4 mr-1.5 text-gray-600 dark:text-gray-400" /> Add New Category</>
+                    <><Plus className="h-4 w-4 mr-2 text-primary" /> Add New Category</>
                   )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 space-y-4">
                 <div>
                   <Label htmlFor="categoryName" className="text-sm font-medium mb-2 block text-gray-700 dark:text-gray-300">
-                    Name
+                    Category Name
                   </Label>
                   <Input 
                     id="categoryName" 
                     placeholder="Enter category name" 
                     value={newCategoryName}
                     onChange={(e) => setNewCategoryName(e.target.value)}
-                    className="h-9 border border-gray-200 dark:border-zinc-700"
+                    className="h-10 border border-gray-200 dark:border-zinc-700"
                   />
                 </div>
 
                 <div>
                   <Label className="text-sm font-medium mb-3 block text-gray-700 dark:text-gray-300">
-                    Type
+                    Category Type
                   </Label>
-                  <RadioGroup value={newCategoryType} onValueChange={setNewCategoryType} className="flex space-x-6">
+                  <RadioGroup value={newCategoryType} onValueChange={setNewCategoryType} className="flex space-x-8">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem 
                         value="expense" 
                         id="expense" 
-                        className="h-4 w-4 border-2 border-gray-300 dark:border-gray-700 text-red-500 dark:text-red-600 focus:ring-red-500" 
+                        className="h-4 w-4 border-2 text-red-500" 
                       />
-                      <Label htmlFor="expense" className="text-sm font-medium cursor-pointer" style={{ color: newCategoryType === 'expense' ? '#FF5E5E' : undefined }}>
+                      <Label htmlFor="expense" className="text-sm font-medium cursor-pointer flex items-center" style={{ color: newCategoryType === 'expense' ? '#ef4444' : undefined }}>
+                        <ArrowDownCircle className="h-4 w-4 mr-1.5 text-red-500" />
                         Expense
                       </Label>
                     </div>
@@ -629,22 +653,23 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
                       <RadioGroupItem 
                         value="revenue" 
                         id="revenue" 
-                        className="h-4 w-4 border-2 border-gray-300 dark:border-gray-700 text-green-500 dark:text-green-600 focus:ring-green-500"
+                        className="h-4 w-4 border-2 text-green-500"
                       />
-                      <Label htmlFor="revenue" className="text-sm font-medium cursor-pointer" style={{ color: newCategoryType === 'revenue' ? '#A3E635' : undefined }}>
+                      <Label htmlFor="revenue" className="text-sm font-medium cursor-pointer flex items-center" style={{ color: newCategoryType === 'revenue' ? '#22c55e' : undefined }}>
+                        <ArrowUpCircle className="h-4 w-4 mr-1.5 text-green-500" />
                         Revenue
                       </Label>
                     </div>
                   </RadioGroup>
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-end space-x-2 p-3 border-t border-gray-200 dark:border-gray-700">
-                {editingCategory ? (
+              <CardFooter className="flex justify-end space-x-2 p-4 border-t border-gray-200 dark:border-gray-700">
+                {isEditingCategory ? (
                   <div className="flex space-x-2 w-full">
                     <Button 
                       variant="outline"
                       className="flex-1 font-medium" 
-                      onClick={handleCancelEdit}
+                      onClick={resetCategoryForm}
                     >
                       <X className="mr-1.5 h-3.5 w-3.5" />
                       Cancel
@@ -652,17 +677,19 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
                     <Button 
                       variant="default"
                       className="flex-1 font-medium" 
-                      onClick={handleSaveEdit}
+                      onClick={handleSaveCategory}
+                      disabled={addCategoryMutation.isPending || updateCategoryMutation.isPending}
                     >
                       <Save className="mr-1.5 h-3.5 w-3.5" />
-                      Save
+                      Save Changes
                     </Button>
                   </div>
                 ) : (
                   <Button 
                     variant="default"
-                    className="w-full h-9 text-sm font-medium" 
-                    onClick={handleAddCategory}
+                    className="w-full h-10 text-sm font-medium" 
+                    onClick={handleSaveCategory}
+                    disabled={addCategoryMutation.isPending}
                   >
                     <Plus className="mr-1.5 h-3.5 w-3.5" />
                     Add Category
@@ -672,83 +699,117 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
             </Card>
           </TabsContent>
 
+          {/* Accounts Tab */}
           <TabsContent value="accounts" className="space-y-4">
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={{
-                visible: {
-                  transition: {
-                    staggerChildren: 0.05
-                  }
-                }
-              }}
-              className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-[250px] overflow-y-auto pr-1"
-            >
-              {filteredAccounts.map((account) => (
-                <motion.div key={account.value} variants={cardVariants}>
-                  <Card className="flex items-center p-2 transition-all hover:shadow-md border border-gray-200 dark:border-gray-700">
-                    <div className="h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-sm mr-2">
-                      {renderAccountIcon(account.value)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate text-gray-800 dark:text-gray-200">{account.label}</p>
-                    </div>
-                    <div className="flex space-x-1 shrink-0">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-7 w-7 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      >
-                        <Edit className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-7 w-7 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      >
-                        <Trash2 className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
-                      </Button>
-                    </div>
-                  </Card>
+            <Card className="border border-gray-200 dark:border-gray-700 shadow-sm">
+              <CardHeader className="pb-2 pt-4">
+                <CardTitle className="text-base flex items-center justify-between text-gray-800 dark:text-gray-200">
+                  <div className="flex items-center">
+                    <Wallet className="h-4 w-4 mr-2 text-blue-500 dark:text-blue-400" />
+                    Your Accounts
+                  </div>
+                  <Badge className="ml-2 bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300">
+                    {accounts.length}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-3">
+                <motion.div
+                  initial="hidden"
+                  animate="visible"
+                  variants={{
+                    visible: {
+                      transition: {
+                        staggerChildren: 0.05
+                      }
+                    }
+                  }}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1"
+                >
+                  {accountsLoading ? (
+                    <div className="text-center py-4 text-sm text-gray-500 col-span-2">Loading accounts...</div>
+                  ) : filteredAccounts.length === 0 ? (
+                    <div className="text-center py-4 text-sm text-gray-500 col-span-2">No accounts found</div>
+                  ) : (
+                    filteredAccounts.map((account) => (
+                      <motion.div key={account.id} variants={cardVariants}>
+                        <div className="flex items-center justify-between p-3 rounded-md bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
+                          <div className="flex items-center">
+                            <div className="h-8 w-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-sm mr-2 text-blue-600 dark:text-blue-400">
+                              {renderAccountIcon(account.icon)}
+                            </div>
+                            <span className="font-medium text-sm text-gray-800 dark:text-gray-200">
+                              {account.label}
+                            </span>
+                          </div>
+                          <div className="flex space-x-1">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-7 w-7 hover:bg-gray-200 dark:hover:bg-gray-700"
+                              onClick={() => handleEditAccount(account)}
+                            >
+                              <Edit className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-7 w-7 hover:bg-gray-200 dark:hover:bg-gray-700"
+                              onClick={() => handleDeleteRequest(account.id, 'account', account.label)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
+                            </Button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))
+                  )}
                 </motion.div>
-              ))}
-            </motion.div>
+              </CardContent>
+            </Card>
 
-            <Card className="mt-4 border border-gray-200 dark:border-gray-700 shadow-sm">
-              <CardHeader className="pb-2 pt-3">
+            {/* Account Form */}
+            <Card className="border border-gray-200 dark:border-gray-700 shadow-sm">
+              <CardHeader className="pb-2 pt-4">
                 <CardTitle className="text-base flex items-center text-gray-800 dark:text-gray-200">
-                  <Plus className="h-4 w-4 mr-1.5 text-gray-600 dark:text-gray-400" />
-                  Add New Account
+                  {isEditingAccount ? (
+                    <><Edit className="h-4 w-4 mr-2 text-primary" /> Edit Account</>
+                  ) : (
+                    <><Plus className="h-4 w-4 mr-2 text-primary" /> Add New Account</>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 space-y-4">
                 <div>
-                  <Label htmlFor="accountName" className="text-sm font-medium mb-2 block text-gray-700 dark:text-gray-300">Account Name</Label>
+                  <Label htmlFor="accountName" className="text-sm font-medium mb-2 block text-gray-700 dark:text-gray-300">
+                    Account Name
+                  </Label>
                   <Input 
                     id="accountName" 
                     placeholder="Enter account name" 
                     value={newAccountName}
                     onChange={(e) => setNewAccountName(e.target.value)}
-                    className="h-9 border border-gray-200 dark:border-zinc-700"
+                    className="h-10 border border-gray-200 dark:border-zinc-700"
                   />
                 </div>
 
                 <div>
-                  <Label className="text-sm font-medium mb-2 block text-gray-700 dark:text-gray-300">Account Type</Label>
-                  <div className="grid grid-cols-4 sm:grid-cols-4 gap-2">
+                  <Label className="text-sm font-medium mb-2 block text-gray-700 dark:text-gray-300">
+                    Account Type
+                  </Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {bankAccounts.slice(0, 8).map((account) => (
                       <Button
                         key={account.value}
                         type="button"
                         variant={newAccountType === account.value ? "default" : "outline"}
-                        className="flex flex-col items-center justify-center py-1 h-14 px-1 transition-all border border-gray-200 dark:border-gray-700"
+                        className="flex flex-col items-center justify-center py-2 h-16 px-2 transition-all border border-gray-200 dark:border-gray-700"
                         onClick={() => setNewAccountType(account.value)}
                       >
                         <div className="flex items-center justify-center h-6">
                           {renderAccountIcon(account.value)}
                         </div>
-                        <span className="text-[10px] mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis w-full text-center text-gray-800 dark:text-gray-200">
+                        <span className="text-[10px] mt-1 whitespace-nowrap overflow-hidden text-ellipsis w-full text-center">
                           {account.label}
                         </span>
                       </Button>
@@ -756,20 +817,67 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-end p-3 border-t border-gray-200 dark:border-gray-700">
-                <Button 
-                  variant="default"
-                  className="w-full h-9 text-sm font-medium" 
-                  onClick={handleAddAccount}
-                >
-                  <Plus className="mr-1.5 h-3.5 w-3.5" />
-                  Add Account
-                </Button>
+              <CardFooter className="flex justify-end space-x-2 p-4 border-t border-gray-200 dark:border-gray-700">
+                {isEditingAccount ? (
+                  <div className="flex space-x-2 w-full">
+                    <Button 
+                      variant="outline"
+                      className="flex-1 font-medium" 
+                      onClick={resetAccountForm}
+                    >
+                      <X className="mr-1.5 h-3.5 w-3.5" />
+                      Cancel
+                    </Button>
+                    <Button 
+                      variant="default"
+                      className="flex-1 font-medium" 
+                      onClick={handleSaveAccount}
+                      disabled={addAccountMutation.isPending || updateAccountMutation.isPending}
+                    >
+                      <Save className="mr-1.5 h-3.5 w-3.5" />
+                      Save Changes
+                    </Button>
+                  </div>
+                ) : (
+                  <Button 
+                    variant="default"
+                    className="w-full h-10 text-sm font-medium" 
+                    onClick={handleSaveAccount}
+                    disabled={addAccountMutation.isPending}
+                  >
+                    <Plus className="mr-1.5 h-3.5 w-3.5" />
+                    Add Account
+                  </Button>
+                )}
               </CardFooter>
             </Card>
           </TabsContent>
         </Tabs>
       </DialogContent>
+
+      {/* Confirmation Dialog for Delete Operations */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center">
+              <AlertCircle className="h-5 w-5 mr-2 text-red-500" />
+              Confirm Deletion
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {itemToDelete && `Are you sure you want to delete "${itemToDelete.name}"? This action cannot be undone.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteConfirm}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };
