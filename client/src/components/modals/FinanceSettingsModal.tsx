@@ -348,11 +348,20 @@ const FinanceSettingsModal = ({ isOpen, onClose }: FinanceSettingsModalProps) =>
       updateAccountMutation.mutate({
         id: editingAccountId,
         name: accountName.trim()
+      }, {
+        onSuccess: () => {
+          setAccountName('');
+          setEditingAccountId(null);
+        }
       });
     } else {
       // Create new account
       createAccountMutation.mutate({
         name: accountName.trim()
+      }, {
+        onSuccess: () => {
+          setAccountName('');
+        }
       });
     }
   };
